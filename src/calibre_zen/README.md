@@ -156,6 +156,7 @@ forms/                a grouped form, laid out by the FORM_* tokens -- see "Form
 download/             the Download metadata dialog: match cards, a preview panel, cover tiles -- see "Download metadata"
 i18n.py               adds locales/<lang>.po to calibre's translator as a fallback -- see "Translations"
 locales/<lang>.po     translations of the strings only this fork has; `he` ships
+toolbars.py           one main toolbar: the device's bar is the main one plus what a device adds -- see "One main toolbar"
 rating.py             calibre's rating widget and rating cells as clickable stars
 dates.py              the calendar a date field opens, in the theme
 reader/               a reader started ahead of time -- see "A reader already running"
@@ -186,6 +187,12 @@ tray/                 the menubar or tray app that runs the host
   icon.py             the icon: the app icon's waves, cut out of a square
   waves.svg           those waves, without the square
   settings.py         the three settings the menu changes
+books/                Goodreads Updater and Book Cleanup, built in -- see "Built-in book tools" below
+  __init__.py         install(): registers the two as calibre's built-in interface actions
+  actions.py          the two toolbar buttons (Qt only)
+  goodreads.py        the #goodreads_linked column from the goodreads identifier
+  epub.py             Book Cleanup over one epub: polish container, chapter files, TOC, ORIGINAL_EPUB
+  cleanup.py          Book Cleanup's rules on one XHTML document (pure lxml)
 icons/
   registry.py         which pack is active; wraps QIcon.ic
   pack.py             a pack: calibre's icon names -> a directory of SVGs
@@ -533,6 +540,35 @@ and their arrangement is left exactly as they left it. It is inserted after
 `init_bar` has recorded `preferred_width`, so the width the bar compares
 against when deciding whether to drop its labels is still the width of the
 buttons alone.
+
+**One main toolbar.** calibre keeps two full layouts, the main toolbar and "the
+main toolbar when a device is connected", and swaps them when a reader is
+plugged in. `toolbars.py` makes the second a list of what a device *adds*
+(`DEVICE_ADDITIONS`: Send to device and the Location manager, the buttons that
+mean nothing without one). A wrap of `BarsManager.init_bars` rebuilds the device
+bar as the main layout with those put in after the books' own buttons and ahead
+of the application's run at the far end, so the two bars cannot drift apart and
+a change to the main toolbar is made once. calibre's swap in `update_bars` is
+untouched. The preference keeps its key, and a layout calibre saved under it
+still works: whatever the main toolbar already has is dropped as a duplicate.
+Preferences -> Toolbars & menus words the entry "Added to the main toolbar when
+a device is connected". The menubar's device variant is unchanged.
+
+**Where a plugin's button goes.** After installing a plugin, calibre asks which
+toolbars and menus to add it to and ticked both main toolbars for everyone.
+A plugin can now say, with a class attribute on its `InterfaceAction`, in the
+same terms as `dont_add_to`:
+
+```python
+default_add_to = frozenset({'toolbar', 'searchbar'})
+```
+
+That is what the dialog ticks (`toolbars.wanted_locations`); the reader can
+still change it, and nothing is added without the dialog. A plugin that says
+nothing gets the main toolbar alone, and one that only makes sense with a
+device names `'toolbar-device'`, which now means "added when a device is
+connected". The attribute is read with `getattr`, so a plugin that sets it still
+loads in a calibre that has never heard of it.
 
 **Labels and size.** The bar names its buttons (`TOOLBAR_LABELS`), under the
 icon, which is calibre's own "Show text under icons" behaviour and so still
@@ -1769,6 +1805,39 @@ positively is not Fusion.
 When the user has chosen the platform style (`using_calibre_style` is false),
 the overlay applies nothing at all.
 
+### Built-in book tools
+
+Two tools that began as calibre plugins are carried in `books/` so every window
+has them without installing anything: **Goodreads Updater** (sets the yes/no
+column `#goodreads_linked` from the `goodreads` identifier) and **Book Cleanup**
+(repairs PDF-converted EPUBs: chapter headings, blank pages, paragraphs broken
+mid-sentence, spacing around punctuation and dashes; the original is kept as
+`ORIGINAL_EPUB`, and its menu has a *Preview changes* that modifies nothing).
+They are not the look, so they are outside the rule above, and not a replaceable
+part, so they have no switch in `features.py`.
+
+They are calibre's own kind of thing, not a patch: `InterfaceActionBase`
+subclasses added to `calibre.customize.builtins.plugins`. That list is read when
+`calibre.customize.ui` is first imported, long before the overlay installs, so
+`books.register()` also initialises them and puts them in the loaded plugins; the
+list entry is what keeps them across a later `initialize_plugins()` (Preferences
+adding or removing a plugin). They appear in Preferences -> Toolbars & menus and
+are not on the default toolbar: the overlay's one addition there stays
+Preferences.
+
+An installed plugin of the same name loses, as calibre does for its own
+built-ins -- the old zips of these two must not give a second button. Only the
+config record is dropped: `remove_plugin` also deletes the zip it names, and that
+can be a file in calibre's own settings folder. The icons are calibre's
+`identifiers.png` and `wizard.png`, which the Tabler pack already maps.
+
+`cleanup.py` never removes an image (the small ornaments are part of a book's
+design) and keeps an em dash style the book itself uses: detected by majority,
+tight `a—b` or spaced `a — b`, counting `--` too. Its rules only insert or delete
+characters, so no word can be lost, and a second run changes nothing.
+`tests/test_books.py` checks all of that, and `test_gui` that the window has both
+buttons with icons.
+
 ## Running without a window
 
 Two ways to run calibre-zen with no main window. Both serve the library with
@@ -2049,6 +2118,7 @@ settings; the runner refuses to start any other way.
 | `test_widgets.py` | widgets painted offscreen and judged by their pixels; the star rating driven through its own mouse, key and wheel events; the calendar's footer and size; both dropdown lists' delegate, sheet and row layout; spin box height; the rich text editor's toolbar and single border |
 | `test_i18n.py` | the translation files compile, keep their placeholders and name only strings that still exist; they sit behind calibre's catalog, not in front of it, and are attached again after a language switch |
 | `test_icons.py` | every mapped glyph is vendored, every vendored glyph is an SVG Qt accepts, `QIcon.ic` serves the mapped names and falls through for the rest |
+| `test_books.py` | the built-in Goodreads Updater and Book Cleanup: both registered as calibre built-ins, an installed plugin of the same name dropped without deleting its file, the `#goodreads_linked` column on a throwaway library, each cleanup rule, no double space, a second run a no-op, no word lost, an epub end to end (chapter file split, TOC rebuilt) and `clean_book` keeping `ORIGINAL_EPUB` |
 | `test_gui.py` | end to end: the real `Main` window, offscreen, on a three-book library. Filter panel, centre, status bar and metadata editor installed; search narrows the list and the count; selecting a book fills the preview; a clean shutdown. And the Your columns form on a library with one custom column of each shape |
 
 `./zen-test theme icons` runs two modules, `-k search` filters by name and

@@ -1118,3 +1118,65 @@ msgstr "שיתוף"
 #: hooks.py
 msgid "Save to disk"
 msgstr "שמירה לדיסק"
+
+#: toolbars.py
+msgid "Added to the main toolbar when a device is connected"
+msgstr "מתווסף לסרגל הכלים הראשי כשהתקן מחובר"
+
+#: books/goodreads.py
+#, python-brace-format
+msgid "The library has no yes/no custom column with the lookup name '{0}'.\nCreate it under Preferences → Add your own columns."
+msgstr "בספרייה אין עמודה מותאמת מסוג כן/לא עם שם החיפוש '{0}'.\nאפשר ליצור אותה ב-העדפות ← הוספת עמודות משלך."
+
+#: books/actions.py
+msgid "Goodreads Updater"
+msgstr "עדכון Goodreads"
+
+#: books/actions.py
+msgid "Update the goodreads_linked column from the goodreads identifiers"
+msgstr "עדכון העמודה goodreads_linked לפי מזהי Goodreads"
+
+#: books/actions.py
+#, python-brace-format
+msgid "Checked {0} book(s), updated {1}."
+msgstr "נבדקו {0} ספרים, עודכנו {1}."
+
+#: books/actions.py
+msgid "Book Cleanup"
+msgstr "ניקוי ספרים"
+
+#: books/actions.py
+msgid "Fix headings, broken paragraphs and punctuation in the selected EPUBs"
+msgstr "תיקון כותרות, פסקאות שבורות ופיסוק בקובצי ה-EPUB שנבחרו"
+
+#: books/actions.py
+msgid "Clean selected books"
+msgstr "ניקוי הספרים שנבחרו"
+
+#: books/actions.py
+msgid "Preview changes (modifies nothing)"
+msgstr "תצוגה מקדימה של השינויים (לא משנה דבר)"
+
+#: books/actions.py
+msgid "Select one or more books first."
+msgstr "יש לבחור קודם ספר אחד או יותר."
+
+#: books/actions.py
+#, python-brace-format
+msgid "Clean the EPUB of {0} book(s)?\n\nThe original file is kept as ORIGINAL_EPUB the first time a book is changed."
+msgstr "לנקות את ה-EPUB של {0} ספרים?\n\nהקובץ המקורי נשמר כ-ORIGINAL_EPUB בפעם הראשונה שספר משתנה."
+
+#: books/actions.py
+#, python-brace-format
+msgid "Checked {0} book(s), would change {1}."
+msgstr "נבדקו {0} ספרים, היו משתנים {1}."
+
+#: books/actions.py
+#, python-brace-format
+msgid "Checked {0} book(s), changed {1}."
+msgstr "נבדקו {0} ספרים, שונו {1}."
+
+#: books/actions.py
+#, python-brace-format
+msgid "{0} book(s) failed, see details."
+msgstr "הניקוי נכשל ב-{0} ספרים, ראה פרטים."

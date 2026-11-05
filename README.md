@@ -108,6 +108,21 @@ CALIBRE_ZEN_DOWNLOAD=0   # calibre's Download metadata dialog back
 
 See [BUILDING.md](BUILDING.md) for packaging and the [guides](docs/README.md) for recurring tasks, including upstream updates.
 
+## Running from source
+
+With an installed Calibre Zen of the same version as `src/calibre/constants.py`, these npm scripts run the tree in place. Nothing is compiled or installed; extra arguments go after `--`.
+
+```sh
+npm start                          # the app, in debug mode
+npm run start:he                   # in Hebrew; start:fresh forgets the settings first
+npm test                           # every test, headless
+npm test -- theme icons -k hover   # some modules, filtered by name
+npm run test:list                  # what would run
+npm run tool -- calibredb list     # a bundled tool
+npm run seed                       # a large generated dev library
+npm run gutenberg                  # a dev library of real Project Gutenberg books
+```
+
 ## Contributing
 
 Issues and pull requests are welcome. Bug reports about calibre itself belong [upstream](https://github.com/kovidgoyal/calibre); anything about the interface belongs here.

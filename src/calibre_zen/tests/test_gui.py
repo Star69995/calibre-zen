@@ -93,6 +93,37 @@ class TestMainWindow(ZenTestCase):
         self.assertIsInstance(getattr(self.gui, 'zen_centre', None), ZenCentre, 'the centre did not install')
         self.assertIsInstance(getattr(self.gui, 'zen_status', None), ZenStatusBar, 'the status bar did not install')
 
+    def test_the_device_toolbar_is_the_main_one_plus_the_device_buttons(self):
+        bm = self.gui.bars_manager
+        plain, device = bm.main_bars
+        names = {ac: name for name, ia in self.gui.iactions.items() for ac in (ia.qaction,)}
+
+        def books(bar):
+            return [names[ac] for ac in bar.added_actions if ac in names]
+
+        self.assertNotIn('Send To Device', books(plain))
+        self.assertEqual([n for n in books(device) if n != 'Send To Device'], books(plain), 'the same buttons, in the same order')
+        self.assertIn('Send To Device', books(device))
+        self.assertTrue(any(ac in device.added_actions for ac in self.gui.location_manager.all_actions), 'the Location manager')
+
+    def test_preferences_calls_the_device_toolbar_what_it_is(self):
+        from calibre.gui2.preferences.toolbar import ConfigWidget
+
+        w = ConfigWidget()
+        w.genesis(self.gui)
+        labels = [w.what.itemText(i) for i in range(w.what.count())]
+        self.assertIn('Added to the main toolbar when a device is connected', labels)
+        self.assertNotIn('The main toolbar when a device is connected', labels)
+
+    def test_the_built_in_book_tools_are_actions_with_icons(self):
+        "books/: Goodreads Updater and Book Cleanup are in the window like calibre's own actions."
+        for name in ('Goodreads Updater', 'Book Cleanup'):
+            with self.subTest(name):
+                self.assertIn(name, self.gui.iactions)
+                self.assertFalse(self.gui.iactions[name].qaction.icon().isNull(), 'no icon')
+        menu = self.gui.iactions['Book Cleanup'].qaction.menu()
+        self.assertEqual([ac.text() for ac in menu.actions()], ['Clean selected books', 'Preview changes (modifies nothing)'])
+
     def test_connect_share_offers_to_keep_sharing(self):
         menu = self.gui.iactions['Connect Share'].share_conn_menu
         ac = getattr(menu, 'keep_sharing_action', None)

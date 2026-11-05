@@ -1,0 +1,19 @@
+{
+  "name": "calibre-zen",
+  "private": true,
+  "description": "Front door to calibre-zen's launchers. There is no JavaScript here; see scripts/dev.mjs.",
+  "type": "module",
+  "engines": {
+    "node": ">=18"
+  },
+  "scripts": {
+    "start": "node scripts/dev.mjs start",
+    "start:fresh": "node scripts/dev.mjs start --fresh",
+    "start:he": "node scripts/dev.mjs start --lang he",
+    "tool": "node scripts/dev.mjs tool",
+    "test": "node scripts/dev.mjs test",
+    "test:list": "node scripts/dev.mjs test --list",
+    "seed": "node scripts/dev.mjs seed",
+    "gutenberg": "node scripts/dev.mjs gutenberg"
+  }
+}

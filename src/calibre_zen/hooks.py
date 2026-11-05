@@ -195,7 +195,7 @@ from calibre_zen import i18n
 # Before the imports below: onboarding/page.py translates at import time.
 i18n.install()
 
-from calibre_zen import centre, dates, devtools, download, editor, filters, lookfeel, onboarding, rating, reader, report, status, update
+from calibre_zen import books, centre, dates, devtools, download, editor, filters, lookfeel, onboarding, rating, reader, report, status, toolbars, update
 from calibre_zen.icons import registry as icon_registry
 from calibre_zen.reader import look as reader_look
 from calibre_zen.report import guard
@@ -272,8 +272,8 @@ def _patch_window_title() -> None:
     Main.setWindowTitle = setWindowTitle
 
 
-TOOLBAR_KEYS = ('action-layout-toolbar', 'action-layout-toolbar-device')
-# What the overlay adds to calibre's toolbars, in order. Read by
+TOOLBAR_KEYS = ('action-layout-toolbar',)
+# What the overlay adds to calibre's main toolbar, in order. Read by
 # _patch_toolbar_layout for a new install, and by the settings import
 # (onboarding/importer.py) for a toolbar that came across from calibre.
 TOOLBAR_ADDITIONS = ('Preferences',)
@@ -331,6 +331,8 @@ def _patch_toolbar_layout() -> None:
 
     for key in TOOLBAR_KEYS:
         gprefs.defaults[key] = with_toolbar_additions(gprefs.defaults.get(key))
+    # The device toolbar is the main one plus what a device adds -- toolbars.py.
+    gprefs.defaults['action-layout-toolbar-device'] = toolbars.DEVICE_ADDITIONS
 
 
 def _patch_toolbar_names() -> None:
@@ -548,6 +550,8 @@ def _patch_palette_manager(pm) -> None:
         guard.run_install('rating', rating.install)
         guard.run_install('dates', dates.install)
         guard.run_install('download', download.install)
+        # Before appearance: its init_bars adds to the bars this one rebuilds.
+        guard.run_install('toolbars', toolbars.install)
         guard.run_install('appearance', appearance.install)
         guard.run_install('update', update.install)
         guard.run_install('reader', reader.install)
@@ -555,6 +559,7 @@ def _patch_palette_manager(pm) -> None:
         guard.run_install('onboarding', onboarding.install)
         guard.run_install('lookfeel', lookfeel.install)
         guard.run_install('keep-sharing', handoff.install)
+        guard.run_install('books', books.install)
         if not self.using_calibre_style:
             # calibre is deferring to the platform style; so do we. Our sheet
             # is written for Fusion and would fight the native one.
