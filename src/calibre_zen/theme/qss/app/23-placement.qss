@@ -19,3 +19,15 @@
 
 /* A separator between two groups of buttons: a hairline, not a frame. */
 #zenPlacement #zenPlaceSep { color: $border; }
+
+/* The list of places above the picture: a tick per row (placement.tick_list), the
+   chosen rows in a light wash rather than a solid block of accent, and room
+   around each row. After 08-itemviews, and by id, so it wins over every
+   ::item:selected rule there, focused or not. */
+#zenPlaceList { padding: ${place_list_pad}px; }
+#zenPlaceList::item { padding: $pad_place_row; border-radius: ${radius_row}px; }
+#zenPlaceList::item:hover { background-color: $hover; }
+#zenPlaceList::item:selected, #zenPlaceList::item:selected:!active {
+    background-color: $pressed;
+    color: palette(text);
+}

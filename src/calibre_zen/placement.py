@@ -15,13 +15,19 @@ It is drawn from the same layouts the window reads (`gprefs['action-layout-*']`)
 and from `toolbars.with_new_button`, the function the install itself uses, so it
 shows what will happen and not an approximation of it. The widgets are laid out,
 not painted, so right-to-left mirrors them without a line of code here.
+
+The list above it is calibre's, a multi-selection list whose chosen rows were a
+solid block of accent with no room between them. Here each row carries a tick
+that mirrors its selection, the chosen ones take a light wash, and
+the list is as tall as its rows, so every place is in view at once. The
+selection stays what calibre reads (`selected_locations`); the tick only shows it.
 """
 
 from __future__ import annotations
 
 from typing import NamedTuple
 
-from qt.core import QFrame, QHBoxLayout, QIcon, QLabel, QVBoxLayout, QWidget, Qt
+from qt.core import QAbstractItemView, QFrame, QHBoxLayout, QIcon, QLabel, QListWidget, QVBoxLayout, QWidget, Qt
 
 from calibre_zen import toolbars
 from calibre_zen.theme.tokens import components
@@ -199,8 +205,50 @@ class PlacementPicture(QWidget):
             self.column.addWidget(place)
 
 
+def show_ticks(places: QListWidget) -> None:
+    "Give every row a tick that says whether it is selected."
+    for row in range(places.count()):
+        item = places.item(row)
+        if item is not None:
+            item.setCheckState(Qt.CheckState.Checked if item.isSelected() else Qt.CheckState.Unchecked)
+
+
+def fit_rows(places: QListWidget) -> None:
+    "As tall as all of its rows, so no place is hidden below a scroll."
+    places.ensurePolished()
+    rows = sum(places.sizeHintForRow(row) + 2 * places.spacing() for row in range(places.count()))
+    places.setVerticalScrollBarPolicy(Qt.ScrollBarPolicy.ScrollBarAlwaysOff)
+    places.setFixedHeight(rows + 2 * (places.frameWidth() + components.PLACE_LIST_PAD))
+
+
+def tick_list(places: QListWidget) -> None:
+    """
+    calibre's list of places, as rows to tick. A row is still selected and
+    unselected by a click anywhere on it, the tick included: it is not made
+    checkable, so there is one state to read and nothing to keep in step but
+    the mark.
+    """
+    places.setObjectName('zenPlaceList')
+    # Already polished by calibre's resize(); the sheet's #zenPlaceList rules
+    # only reach it once it is polished again under its new name.
+    places.style().unpolish(places)
+    places.style().polish(places)
+    places.setSpacing(components.PLACE_LIST_SPACING)
+    places.setHorizontalScrollMode(QAbstractItemView.ScrollMode.ScrollPerPixel)
+    for row in range(places.count()):
+        item = places.item(row)
+        if item is not None:
+            # A list item is user-checkable unless told otherwise, and a click on
+            # its box would then flip the tick and leave the selection alone.
+            item.setFlags(item.flags() & ~Qt.ItemFlag.ItemIsUserCheckable)
+    show_ticks(places)
+    places.itemSelectionChanged.connect(lambda: show_ticks(places))
+    fit_rows(places)
+
+
 def attach(dialog, gui, plugin) -> PlacementPicture:
     "Put the picture under `dialog`'s list of places and keep it in step with the ticks."
+    tick_list(dialog._locations_list)
     picture = PlacementPicture(gui, plugin, dialog)
     layout = dialog._layout
     layout.insertWidget(layout.indexOf(dialog._locations_list) + 1, picture)

@@ -120,6 +120,31 @@ class TestThePicture(ZenTestCase):
         self.assertEqual(d.placement.places, [])
         self.assertTrue(d.placement.findChild(type(d._header_label), 'zenPlaceHint'))
 
+    def test_each_place_wears_a_tick_that_follows_its_selection(self):
+        from qt.core import Qt
+
+        d = self.dialog()
+        places = d._locations_list
+
+        def ticks():
+            return [places.item(i).checkState() == Qt.CheckState.Checked for i in range(places.count())]
+
+        self.assertEqual(ticks(), [True, False, False, False, False])
+        places.item(3).setSelected(True)
+        places.item(0).setSelected(False)
+        self.assertEqual(ticks(), [False, False, False, True, False])
+        self.assertEqual([key for key, _text in d.selected_locations()], ['searchbar'], 'the selection is still what calibre reads')
+        self.assertFalse(places.item(0).flags() & Qt.ItemFlag.ItemIsUserCheckable, 'one state: the tick is only a mark')
+
+    def test_every_place_is_in_view_without_scrolling(self):
+        from qt.core import Qt
+
+        places = self.dialog()._locations_list
+        self.assertEqual(places.objectName(), 'zenPlaceList')
+        self.assertEqual(places.verticalScrollBarPolicy(), Qt.ScrollBarPolicy.ScrollBarAlwaysOff)
+        rows = sum(places.sizeHintForRow(i) for i in range(places.count()))
+        self.assertGreaterEqual(places.height(), rows)
+
     def test_the_new_button_is_picked_out_by_name(self):
         from calibre_zen import placement
 

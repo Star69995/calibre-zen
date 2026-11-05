@@ -217,6 +217,11 @@ PLACE_CHIP_PAD = 6  # either side of the new button's icon and name
 PLACE_SECTION_GAP = 10  # between one place and the next
 PLACE_BAR_MAX = 9  # buttons drawn before the start of a long bar is cut off
 PLACE_MENU_ROWS = 5  # rows drawn of a menu
+# The list of places above the picture: a tick per row, rows with room to aim
+# at, and every place in view without scrolling.
+PAD_PLACE_ROW = '6px 10px'
+PLACE_LIST_PAD = 4  # inside the list's frame, around its rows
+PLACE_LIST_SPACING = 1  # around each row, so twice this between two
 
 # The column picker (centre/columns.py): a popup under the Columns button.
 COLUMNS_PANEL_WIDTH = 300

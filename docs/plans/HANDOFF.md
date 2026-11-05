@@ -21,6 +21,12 @@ a working setup. Delete it, or rewrite it, when it goes stale.
   `test_ipc_endpoints_carry_the_name`,
   `test_the_tray_reopens_the_window_the_way_it_was_started`.
   Last full run: 421 tests, only those four.
+- Linux (a cloud container, 2026-11-05): calibre 9.17's `calibre-9.17.0-x86_64.txz`
+  unpacked anywhere works as `CALIBRE_ZEN_CALIBRE_DEBUG`, once Qt's system
+  libraries are there (`libegl1 libopengl0 libxkbcommon0 libfontconfig1
+  libxcb-cursor0`). Four tests fail there on a clean checkout because there is no
+  GPU for WebEngine: `test_host.HostProcess` (setUpClass) and three in
+  `test_reader.TestSpareReader`. Last run: 419 tests, only those four.
 - Many source files are CRLF. A script that edits them must read with `newline=''`
   and keep the endings, or a multi-line replace silently misses.
 - Hebrew screenshots offscreen need `QT_QPA_FONTDIR=C:\Windows\Fonts` and a forced
@@ -30,7 +36,8 @@ a working setup. Delete it, or rewrite it, when it goes stale.
 ## Built so far (in `docs/plans/ui-workflow/README.md`)
 
 U5 placement picture and correct button placement, U6 Columns picker, U7 step 1
-(settings open while jobs run, clash notice), U8 jobs panel and Preferences footer.
+(settings open while jobs run, clash notice), U8 jobs panel and Preferences footer. The install dialog's list of places as ticked
+rows instead of solid black ones, all in view (U5 follow-up).
 Hebrew translation sweep done, with the `N_()` marker for strings in tables.
 
 ## What is left
