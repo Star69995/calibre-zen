@@ -10,7 +10,7 @@ as `packaging/upstream.json`.
 ## Running and testing from source
 
 Both need a calibre binary of the **same version as `src/calibre/constants.py`**
-(currently 9.15.0). The installed Calibre Zen of that version works; a newer
+(currently 9.17.0). The installed Calibre Zen of that version works; a newer
 upstream calibre does not.
 
 - Tests: `CALIBRE_ZEN_CALIBRE_DEBUG=<path to calibre-debug> ./zen-test [module ...] [-k name]`

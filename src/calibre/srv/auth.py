@@ -100,7 +100,7 @@ def synthesize_nonce(key_order, realm, secret, timestamp=None):
             # global counter
             timestamp = as_hex_unicode(struct.pack(b'!dH', float(monotonic()), nonce_counter))
     h = sha256_hex(key_order.format(timestamp, realm, secret))
-    nonce = ':'.join((timestamp, h))
+    nonce = f'{timestamp}:{h}'
     return nonce
 
 
@@ -170,7 +170,7 @@ class DigestAuth:  # {{{
         return self.H(a2)
 
     def request_digest(self, pw, data):
-        ha1 = self.H(':'.join((self.username, self.realm, pw)))
+        ha1 = self.H(f'{self.username}:{self.realm}:{pw}')
         ha2 = self.H_A2(data)
         # Request-Digest -- RFC 2617 3.2.2.1
         if self.qop:
@@ -254,7 +254,7 @@ class AuthController:
         self.log = log
         self.secret = as_hex_unicode(os.urandom(random.randint(20, 30)))
         self.max_age_seconds = max_age_seconds
-        self.key_order = '{%d}:{%d}:{%d}' % random.choice(tuple(permutations((0, 1, 2))))  # noqa: UP031
+        self.key_order = '{%d}:{%d}:{%d}' % random.choice(tuple(permutations((0, 1, 2))))  # ruff: ignore[printf-string-formatting]
         self.realm = realm
         if '"' in realm:
             raise ValueError('Double-quotes are not allowed in the authentication realm')

@@ -106,7 +106,7 @@ class Base:
         self.signals_to_disconnect = []
         self.setup_ui(parent)
         description = get_tooltip(self.col_metadata)
-        widgets = cast(list[QWidget], self.widgets)
+        widgets = cast('list[QWidget]', self.widgets)
         try:
             widgets[0].setToolTip(description)
             widgets[1].setToolTip(description)
@@ -263,9 +263,10 @@ class LongText(Base):
 class Bool(Base):
     def setup_ui(self, parent):
         name = self.col_metadata['name']
-        self.widgets: list[QWidget] = [QLabel(label_string(name), parent)]
+        widgets: list[QWidget] = [QLabel(label_string(name), parent)]
+        self.widgets = widgets
         w = QWidget(parent)
-        self.widgets.append(w)
+        widgets.append(w)
 
         l = QHBoxLayout()
         l.setContentsMargins(0, 0, 0, 0)
@@ -414,9 +415,10 @@ class DateTimeEdit(DateTimeEditBase):
 class DateTime(Base):
     def setup_ui(self, parent):
         cm = self.col_metadata
-        self.widgets: list[QWidget] = [QLabel(label_string(cm['name']), parent)]
+        widgets: list[QWidget] = [QLabel(label_string(cm['name']), parent)]
+        self.widgets = widgets
         w = QWidget(parent)
-        self.widgets.append(w)
+        widgets.append(w)
         l = QHBoxLayout()
         l.setContentsMargins(0, 0, 0, 0)
         w.setLayout(l)
@@ -1132,7 +1134,7 @@ class BulkBase(Base):
             self.edit_tags_button = QToolButton(parent)
             self.edit_tags_button.setToolTip(_('Open Item editor'))
             self.edit_tags_button.setIcon(QIcon.ic('chapters.png'))
-            self.edit_tags_button.clicked.connect(cast(Any, add_edit_tags_button)[1])
+            self.edit_tags_button.clicked.connect(cast('Any', add_edit_tags_button)[1])
             l.insertWidget(1, self.edit_tags_button)
         l.insertStretch(2)
 
@@ -1442,7 +1444,6 @@ class BulkSeries(BulkBase):
         self.series_start_number.valueChanged.connect(self.a_c_checkbox_changed)
         self.series_increment.valueChanged.connect(self.a_c_checkbox_changed)
         self.remove_series.stateChanged.connect(self.a_c_checkbox_changed)
-        self.main_widget
         self.ignore_change_signals = False
 
     def a_c_checkbox_changed(self):

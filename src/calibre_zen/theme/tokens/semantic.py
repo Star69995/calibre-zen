@@ -126,6 +126,8 @@ class Chrome:
         self.danger_bg = f'rgba({rgb_danger}, {b.danger_bg[i]})'
         self.danger_bg_hover = f'rgba({rgb_danger}, {b.danger_bg_hover[i]})'
 
+        self.success = QColor(schemes.active().success[i]).name()
+
         tooltip = pal.color(QPalette.ColorRole.ToolTipBase)
         self.tooltip_bg = tooltip.name()
         self.tooltip_fg = pal.color(QPalette.ColorRole.ToolTipText).name()

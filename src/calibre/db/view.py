@@ -133,7 +133,6 @@ class View:
                     label = self.cache.backend.field_metadata.custom_field_prefix + label + '_index'
 
             fm = self.field_metadata[label]
-            fm
             if label == 'authors':
                 fmt = partial(format_is_multiple, repl='|')
             elif label in {'tags', 'languages', 'formats'}:
@@ -314,7 +313,9 @@ class View:
             },
         )
 
-    def multisort(self, fields=[], subsort=False, only_ids=None):
+    def multisort(self, fields=None, subsort=False, only_ids=None):
+        if fields is None:
+            fields = []
         sorted_book_ids = self._do_sort(self._map if only_ids is None else only_ids, fields=fields, subsort=subsort)
         if only_ids is None:
             self._map = tuple(sorted_book_ids)
@@ -503,18 +504,16 @@ class View:
         return [self._real_map_filtered_id_to_row[id_] for id_ in ids if id_ in self._real_map_filtered_id_to_row] or None
 
     def remove(self, book_id):
-        try:
-            self._map = tuple(bid for bid in self._map if bid != book_id)
-        except ValueError:
-            pass
-        try:
-            self._map_filtered = tuple(bid for bid in self._map_filtered if bid != book_id)
-        except ValueError:
-            pass
+        self.books_deleted((book_id,))
 
     def books_deleted(self, ids):
-        for book_id in ids:
-            self.remove(book_id)
+        # Rebuild the maps once for all the removed books. Doing it per book
+        # makes deleting many books take time quadratic in the library size.
+        ids = frozenset(ids)
+        if not ids:
+            return
+        self._map = tuple(bid for bid in self._map if bid not in ids)
+        self._map_filtered = tuple(bid for bid in self._map_filtered if bid not in ids)
 
     def books_added(self, ids):
         ids = tuple(ids)

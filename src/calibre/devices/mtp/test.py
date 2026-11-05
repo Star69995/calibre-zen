@@ -9,6 +9,7 @@ from calibre.constants import islinux, iswindows
 from calibre.devices.mtp.driver import MTP_DEVICE
 from calibre.devices.scanner import DeviceScanner
 from calibre.utils.icu import lower
+from calibre.utils.stop_gc import stop_gc
 
 
 class ProgressCallback:
@@ -38,7 +39,6 @@ class TestDeviceInteraction(unittest.TestCase):
         cls.dev.open(cd, 'test_library')
         if cls.dev.free_space()[0] < 10 * (1024**2):
             return
-        cls.dev.filesystem_cache
         cls.storage = cls.dev.filesystem_cache.entries[0]
 
     @classmethod
@@ -171,16 +171,13 @@ class TestDeviceInteraction(unittest.TestCase):
     def measure_memory_usage(self, repetitions, func, *args, **kwargs):
         from calibre.utils.mem import memory
 
-        gc.disable()
-        try:
+        with stop_gc:
             start_mem = memory()
             for i in range(repetitions):
                 func(*args, **kwargs)
             for i in range(3):
                 gc.collect()
             end_mem = memory()
-        finally:
-            gc.enable()
         return end_mem - start_mem
 
     def check_memory(self, once, many, msg, factor=2):

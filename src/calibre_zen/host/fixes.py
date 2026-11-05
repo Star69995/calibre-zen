@@ -66,7 +66,7 @@ ENV = 'CALIBRE_ZEN_SRVFIX'
 OFF_VALUES = frozenset({'0', 'false', 'no', 'off'})
 
 # Cache's @read_api methods whose body runs SQL on the backend's connection.
-# Audited against calibre 9.15's db/cache.py: every @read_api method that
+# Audited against calibre 9.17's db/cache.py: every @read_api method that
 # touches self.backend, less those that only read an attribute, the file
 # system or the in-memory prefs.
 SQL_READ_API = (
@@ -87,6 +87,8 @@ SQL_READ_API = (
     'all_annotations',
     'all_annotation_styles',
     'search_annotations',
+    # The viewer's per-book storage (9.17)
+    'book_storage_for_book',
     # Reading positions and page counts
     'get_last_read_positions',
     'get_pages',

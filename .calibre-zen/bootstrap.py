@@ -28,6 +28,6 @@ if '--zen-selftest' in sys.argv:
     print('gui socket:', gui_socket_address())
     raise SystemExit(0)
 
-from calibre.gui2.main import main  # noqa: E402
+from calibre.gui2.main import main
 
 raise SystemExit(main([constants.__appname__] + sys.argv[1:]))

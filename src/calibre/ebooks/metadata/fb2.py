@@ -44,7 +44,9 @@ class Context:
     def XPath(self, *args):
         return etree.XPath(*args, namespaces=self.namespaces)
 
-    def get_or_create(self, parent, tag, attribs={}, at_start=True):
+    def get_or_create(self, parent, tag, attribs=None, at_start=True):
+        if attribs is None:
+            attribs = {}
         xpathstr = './fb:' + tag
         for n, v in attribs.items():
             xpathstr += f'[@{n}="{v}"]'
@@ -55,7 +57,9 @@ class Context:
             ans = self.create_tag(parent, tag, attribs, at_start)
         return ans
 
-    def create_tag(self, parent, tag, attribs={}, at_start=True):
+    def create_tag(self, parent, tag, attribs=None, at_start=True):
+        if attribs is None:
+            attribs = {}
         ans = parent.makeelement(f'{{{self.fb_ns}}}{tag}')
         ans.attrib.update(attribs)
         if at_start:
@@ -319,8 +323,11 @@ def _set_title(title_info, mi, ctx):
         title.text = mi.title
 
 
-def _set_comments(title_info, mi, ctx):
-    if not mi.is_null('comments'):
+def _set_comments(title_info, mi, ctx, apply_null=False):
+    if mi.is_null('comments'):
+        if apply_null:
+            ctx.clear_meta_tags(title_info, 'annotation')
+    else:
         from calibre.utils.html2text import html2text
 
         ctx.clear_meta_tags(title_info, 'annotation')
@@ -348,32 +355,44 @@ def _set_authors(title_info, mi, ctx):
                     ctx.create_tag(atag, 'last-name', at_start=False).text = ' '.join(author_parts)
 
 
-def _set_publisher(publish_info, mi, ctx):
+def _set_publisher(publish_info, mi, ctx, apply_null=False):
     if mi.is_null('publisher'):
+        if apply_null:
+            ctx.clear_meta_tags(publish_info, 'publisher')
         return
     ctx.clear_meta_tags(publish_info, 'publisher')
     tag = ctx.create_tag(publish_info, 'publisher')
     tag.text = mi.publisher
 
 
-def _set_pubdate(publish_info, mi, ctx):
+def _set_pubdate(publish_info, mi, ctx, apply_null=False):
     if mi.is_null('pubdate'):
+        if apply_null:
+            ctx.clear_meta_tags(publish_info, 'year')
         return
     ctx.clear_meta_tags(publish_info, 'year')
     tag = ctx.create_tag(publish_info, 'year')
     tag.text = strftime('%Y', mi.pubdate)
 
 
-def _set_tags(title_info, mi, ctx):
-    if not mi.is_null('tags'):
+def _set_tags(title_info, mi, ctx, apply_null=False):
+    if mi.is_null('tags'):
+        if apply_null:
+            ctx.clear_meta_tags(title_info, 'genre')
+    else:
         ctx.clear_meta_tags(title_info, 'genre')
         for t in mi.tags:
             tag = ctx.create_tag(title_info, 'genre')
             tag.text = t
 
 
-def _set_series(title_info, mi, ctx):
-    if not mi.is_null('series'):
+def _set_series(title_info, mi, ctx, apply_null=False):
+    if mi.is_null('series'):
+        # An explicitly empty series (as from ebook-meta --series "") also
+        # clears the series, matching the behavior of the OPF writer
+        if apply_null or mi.series is not None:
+            ctx.clear_meta_tags(title_info, 'sequence')
+    else:
         ctx.clear_meta_tags(title_info, 'sequence')
         seq = ctx.get_or_create(title_info, 'sequence')
         seq.set('name', mi.series)
@@ -422,13 +441,13 @@ def set_metadata(stream, mi, apply_null=False, update_timestamp=False):
 
     indent = ti.text
 
-    _set_comments(ti, mi, ctx)
-    _set_series(ti, mi, ctx)
-    _set_tags(ti, mi, ctx)
+    _set_comments(ti, mi, ctx, apply_null)
+    _set_series(ti, mi, ctx, apply_null)
+    _set_tags(ti, mi, ctx, apply_null)
     _set_authors(ti, mi, ctx)
     _set_title(ti, mi, ctx)
-    _set_publisher(pi, mi, ctx)
-    _set_pubdate(pi, mi, ctx)
+    _set_publisher(pi, mi, ctx, apply_null)
+    _set_pubdate(pi, mi, ctx, apply_null)
     _set_cover(ti, mi, ctx)
 
     for child in ti:
@@ -456,8 +475,8 @@ def ensure_namespace(doc):
     # https://bugs.launchpad.net/bugs/1404701
     bare_tags = False
     for x in ('description', 'body'):
-        for x in doc.findall(x):
-            if '{' not in x.tag:
+        for z in doc.findall(x):
+            if '{' not in z.tag:
                 bare_tags = True
                 break
     if bare_tags:
@@ -467,3 +486,42 @@ def ensure_namespace(doc):
         raw = re.sub(r'''<(description|body)\s+xmlns=['"]['"]>''', r'<\1>', raw)
         doc = safe_xml_fromstring(raw)
     return doc
+
+
+def find_tests():
+    import unittest
+    from io import BytesIO
+
+    raw = b'''<?xml version="1.0" encoding="UTF-8"?>
+<FictionBook xmlns="http://www.gribuser.ru/xml/fictionbook/2.0"><description><title-info>
+<genre>sf</genre><author><first-name>A</first-name><last-name>B</last-name></author><book-title>T</book-title>
+<annotation><p>c</p></annotation><sequence name="S" number="2"/></title-info>
+<publish-info><publisher>P</publisher><year>2001</year><sequence name="PS" number="3"/></publish-info>
+</description><body><section><p>x</p></section></body></FictionBook>'''
+
+    class Test(unittest.TestCase):
+        def roundtrip(self, mi, apply_null=False):
+            stream = BytesIO(raw)
+            set_metadata(stream, mi, apply_null=apply_null)
+            stream.seek(0)
+            return get_metadata(stream)
+
+        def test_fb2_metadata_clear(self):
+            mi = get_metadata(BytesIO(raw))
+            self.assertEqual((mi.series, mi.series_index), ('S', 2))
+            # null series without apply_null leaves existing series alone
+            mi.series = None
+            self.assertEqual(self.roundtrip(mi).series, 'S')
+            # explicitly empty series clears it
+            mi.series = ''
+            self.assertIsNone(self.roundtrip(mi).series)
+            # apply_null clears null fields
+            mi.series, mi.tags, mi.publisher, mi.comments = None, [], None, None
+            o = self.roundtrip(mi, apply_null=True)
+            self.assertIsNone(o.series)
+            self.assertEqual(o.tags, [])
+            self.assertIsNone(o.publisher)
+            self.assertIsNone(o.comments)
+            self.assertEqual((o.title, o.authors), ('T', ['A B']))
+
+    return unittest.defaultTestLoader.loadTestsFromTestCase(Test)

@@ -40,6 +40,7 @@ import io
 import operator
 import os
 import re
+from collections.abc import Collection
 from datetime import date
 from xml.etree.ElementTree import Element, ElementTree, SubElement
 from xml.sax.saxutils import escape
@@ -801,7 +802,7 @@ class DocInfo:
         self.thumbnail = None
         self.language = 'en'
         self.creator = None
-        self.creationdate = str(isoformat(date.today()))
+        self.creationdate = str(isoformat(date.today()))  # ruff: ignore[call-date-today]
         self.producer = f'{__appname__} v{__version__}'
         self.numberofpages = '0'
 
@@ -963,7 +964,7 @@ class StyleDefault(LrsAttributes):
 
 
 class Style(LrsContainer, Delegator):
-    def __init__(self, styledefault=StyleDefault()):
+    def __init__(self, styledefault=None):
         LrsContainer.__init__(self, [PageStyle, TextStyle, BlockStyle])
         Delegator.__init__(self, [BookStyle(styledefault=styledefault)])
         self.bookStyle = self.delegates[0]
@@ -1017,10 +1018,10 @@ class Style(LrsContainer, Delegator):
 
 
 class BookStyle(LrsObject, LrsContainer):
-    def __init__(self, styledefault=StyleDefault()):
+    def __init__(self, styledefault=None):
         LrsObject.__init__(self, assignId=True)
         LrsContainer.__init__(self, [Font])
-        self.styledefault = styledefault
+        self.styledefault = styledefault or StyleDefault()
         self.booksetting = BookSetting()
         self.appendFont = self.append
 
@@ -1077,7 +1078,7 @@ class BookSetting(LrsAttributes):
 class LrsStyle(LrsObject, LrsAttributes, LrsContainer):
     """A mixin class for styles."""
 
-    validSettings: list
+    validSettings: Collection[str]
 
     def __init__(self, elementName, defaults=None, alsoAllow=None, **overrides):
         if defaults is None:
@@ -2371,7 +2372,7 @@ class ImageBlock(LrsObject, LrsContainer, LrsAttributes):
         y1='800',
         xsize='600',
         ysize='800',
-        blockStyle=BlockStyle(blockrule='block-fixed'),
+        blockStyle=None,
         alttext=None,
         **settings,
     ):
@@ -2381,7 +2382,7 @@ class ImageBlock(LrsObject, LrsContainer, LrsAttributes):
         self.x0, self.y0, self.x1, self.y1 = int(x0), int(y0), int(x1), int(y1)
         self.xsize, self.ysize = int(xsize), int(ysize)
         self.setRefstream(refstream)
-        self.blockStyle = blockStyle
+        self.blockStyle = blockStyle or BlockStyle(blockrule='block-fixed')
         self.alttext = alttext
 
     def setRefstream(self, refstream):

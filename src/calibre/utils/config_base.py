@@ -154,7 +154,7 @@ class Option:
     def __init__(
         self,
         name,
-        switches=[],
+        switches=None,
         help='',
         type=None,
         choices=None,
@@ -164,6 +164,8 @@ class Option:
         action=None,
         metavar=None,
     ):
+        if switches is None:
+            switches = []
         if choices:
             type = 'choice'
 
@@ -257,7 +259,7 @@ class OptionSet:
         if name in self.preferences:
             self.preferences.remove(name)
 
-    def add_opt(self, name, switches=[], help=None, type=None, choices=None, group=None, default=None, action=None, metavar=None):
+    def add_opt(self, name, switches=None, help=None, type=None, choices=None, group=None, default=None, action=None, metavar=None):
         """
         Add an option to this section.
 
@@ -277,6 +279,8 @@ class OptionSet:
                            `None, 'count'`. For choices and boolean options,
                            action is automatically set correctly.
         """
+        if switches is None:
+            switches = []
         pref = Option(
             name,
             switches=switches,
@@ -349,7 +353,7 @@ class OptionSet:
                 try:
                     options = json_loads(src)
                     if not isinstance(options, dict):
-                        raise Exception('options is not a dictionary')
+                        raise TypeError('options is not a dictionary')
                 except Exception as err:
                     try:
                         print(f'Failed to parse options string with error: {err}')

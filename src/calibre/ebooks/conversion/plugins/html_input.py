@@ -138,7 +138,7 @@ class HTMLInput(InputFormatPlugin):
         from calibre.utils.localization import canonicalize_lang
 
         self.opts = opts
-        css_parser.log.setLevel(logging.WARN)
+        css_parser.log.setLevel(logging.WARNING)
         self.OEB_STYLES = OEB_STYLES
         oeb = create_oebbook(log, None, opts, self, encoding=opts.input_encoding, populate=False)
         self.oeb = oeb
@@ -341,10 +341,10 @@ class HTMLInput(InputFormatPlugin):
                 item.resolve_css_imports = False
                 item.override_css_fetch = lambda url: (None, '')
                 self.stylesheets_to_process.append(item)
-            item.data
+            item.data  # ruff: ignore[useless-expression]
             self.added_resources[link] = href
 
         nlink = self.added_resources[link]
         if frag:
-            nlink = '#'.join((nlink, frag))
+            nlink = f'{nlink}#{frag}'
         return nlink
