@@ -1,0 +1,19 @@
+/* The column picker -- calibre_zen/centre/columns.py. A popup like a menu, a
+   search box, a tick per column with arrows, and Add column / Reset below. */
+
+#zenColumnsPanel {
+    background-color: $menu_bg;
+    border: 1px solid $border_strong;
+    border-radius: ${radius_panel}px;
+}
+#zenColumnsPanel #zenColumnsScroll, #zenColumnsPanel #zenColumnsScroll > QWidget > QWidget { background: transparent; }
+#zenColumnsPanel #zenColumnsNone { color: $muted; }
+#zenColumnsPanel #zenColumnsRule { background-color: $border_weak; max-height: 1px; min-height: 1px; border: none; }
+#zenColumnsPanel #zenColumnMove, #zenColumnsPanel #zenColumnsAdd, #zenColumnsPanel #zenColumnsReset {
+    background-color: transparent;
+    border: 1px solid transparent;
+    border-radius: ${status_segment_radius}px;
+    padding: 2px 6px;
+}
+#zenColumnsPanel #zenColumnMove:hover, #zenColumnsPanel #zenColumnsAdd:hover, #zenColumnsPanel #zenColumnsReset:hover { background-color: $hover; }
+#zenColumnsPanel #zenColumnsAdd:disabled { color: $muted; }

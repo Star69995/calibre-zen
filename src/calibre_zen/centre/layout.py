@@ -30,6 +30,7 @@ from qt.core import QHBoxLayout, QMenu, QSplitter, Qt, QToolButton, QVBoxLayout,
 
 from calibre.gui2 import gprefs
 from calibre_zen.centre import grid
+from calibre_zen.centre.columns import ColumnsButton
 from calibre_zen.centre.preview import PreviewPane
 from calibre_zen.icons import registry
 from calibre_zen.theme import generate, rewrite
@@ -157,6 +158,8 @@ class CentreToolbar(QWidget):
         layout.addWidget(gui.search_bar, 1)
         self.preview_toggle = PreviewToggle(self)
         layout.addWidget(self.preview_toggle, 0)
+        self.columns = ColumnsButton(gui, self)
+        layout.addWidget(self.columns, 0)
         self.switcher = ViewSwitcher(gui, self)
         layout.addWidget(self.switcher, 0)
 
@@ -240,6 +243,7 @@ class ZenCentre(QWidget):
     def attach(self) -> None:
         self.preview.attach()
         self.toolbar.switcher.refresh()
+        self.toolbar.columns.attach()
 
     def refresh_palette(self) -> None:
         "The palette changed; re-ink what we drew ourselves."

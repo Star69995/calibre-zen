@@ -48,7 +48,7 @@ def forms(msgid: str, msgstr: str) -> list[tuple[str, str]]:
 
 
 def msgids_in_source() -> set[str]:
-    "Every literal handed to `_()`, `__()` or `ngettext()` in the package, tests excepted."
+    "Every literal handed to `_()`, `__()`, `N_()` or `ngettext()` in the package, tests excepted."
     found = set()
     root = os.path.dirname(i18n.__file__)
     for folder, dirs, files in os.walk(root):
@@ -65,7 +65,7 @@ def msgids_in_source() -> set[str]:
                     wanted = node.args[:1]
                 elif not isinstance(node.func, ast.Name):
                     continue
-                elif node.func.id in ('_', '__'):
+                elif node.func.id in ('_', '__', 'N_'):
                     wanted = node.args[:1]
                 elif node.func.id == 'ngettext':
                     wanted = node.args[:2]

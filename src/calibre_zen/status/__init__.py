@@ -61,6 +61,10 @@ Six wraps, all from outside, no upstream file edited:
     follows a server started from anywhere -- the menu, the command line, or
     `autolaunch_server` at startup.
 
+`Preferences.__init__`
+    The jobs segment again, in the button row of the dialog that hides the
+    bar (footer.py).
+
 Off with `CALIBRE_ZEN_STATUS=0`, which gives calibre's bar back exactly.
 """
 
@@ -182,8 +186,9 @@ def install() -> bool:
         ConnectShareAction.content_server_state_changed = content_server_state_changed
     except AttributeError, TypeError:
         return False
-    from calibre_zen.status import layout_menu
+    from calibre_zen.status import footer, layout_menu
 
     layout_menu.install()
+    footer.install()
     _installed = True
     return True

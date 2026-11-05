@@ -28,9 +28,10 @@ falls back to `default` for an unknown layout, and calibre's dialog is back.
 """
 
 from calibre_zen import features
+from calibre_zen.i18n import N_
 
 LAYOUT_KEY = 'zen'
-LAYOUT_TITLE = 'Compact (calibre-zen)'
+LAYOUT_TITLE = N_('Compact (calibre-zen)')
 PREF_KEY = 'edit_metadata_single_layout'
 
 _installed = False

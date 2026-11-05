@@ -71,3 +71,82 @@ class TestWhereAPluginGoes(ZenTestCase):
     def test_the_device_entry_is_worded_as_in_preferences(self):
         _got, d = self.ticked()
         self.assertEqual(d._locations_list.item(1).text(), 'Added to the main toolbar when a device is connected')
+
+
+class TestWhereANewButtonGoes(ZenTestCase):
+    def test_on_the_main_toolbar_it_goes_before_the_application_buttons(self):
+        layout = ('Add Books', None, 'View', None, 'Help', 'Preferences')
+        self.assertEqual(toolbars.with_new_button(layout, 'Mine', 'toolbar'), ('Add Books', None, 'View', 'Mine', None, 'Help', 'Preferences'))
+
+    def test_a_bar_that_ends_with_books_gets_it_last(self):
+        self.assertEqual(toolbars.with_new_button(('Add Books', 'View'), 'Mine', 'toolbar'), ('Add Books', 'View', 'Mine'))
+        self.assertEqual(toolbars.with_new_button((), 'Mine', 'toolbar'), ('Mine',))
+
+    def test_any_other_place_appends(self):
+        self.assertEqual(toolbars.with_new_button(('A', 'Preferences'), 'Mine', 'searchbar'), ('A', 'Preferences', 'Mine'))
+        self.assertEqual(toolbars.with_new_button(('Send To Device',), 'Mine', 'toolbar-device'), ('Send To Device', 'Mine'))
+
+    def test_an_install_that_appended_is_corrected(self):
+        before = ('Add Books', None, 'Help', 'Preferences')
+        after = before + ('Mine',)
+        self.assertEqual(toolbars.placed(before, after, 'toolbar'), ('Add Books', 'Mine', None, 'Help', 'Preferences'))
+
+    def test_a_change_that_is_not_an_append_is_left_alone(self):
+        self.assertEqual(toolbars.placed(('A', 'B'), ('B', 'A'), 'toolbar'), ('B', 'A'))
+        self.assertEqual(toolbars.placed(('A',), ('A',), 'toolbar'), ('A',))
+        self.assertEqual(toolbars.placed(('A', 'Preferences'), ('A', 'Preferences', 'Mine'), 'searchbar'), ('A', 'Preferences', 'Mine'))
+
+
+class TestThePicture(ZenTestCase):
+    LOCATIONS = TestWhereAPluginGoes.LOCATIONS + [('context-menu', 'The context menu')]
+
+    def dialog(self, **attrs):
+        from calibre.gui2.dialogs.choose_plugin_toolbars import ChoosePluginToolbarsDialog
+        from calibre_zen.tests.base import app
+
+        app()
+        plugin = type('Plugin', (), {'name': 'Mine', **attrs})()
+        d = ChoosePluginToolbarsDialog(None, plugin, list(self.LOCATIONS))
+        self.addCleanup(d.deleteLater)
+        return d
+
+    def test_a_place_is_drawn_for_each_tick_and_follows_them(self):
+        d = self.dialog()
+        self.assertEqual(len(d.placement.places), 1, 'the main toolbar is ticked')
+        d._locations_list.item(3).setSelected(True)
+        self.assertEqual(len(d.placement.places), 2)
+        d._locations_list.item(0).setSelected(False)
+        d._locations_list.item(3).setSelected(False)
+        self.assertEqual(d.placement.places, [])
+        self.assertTrue(d.placement.findChild(type(d._header_label), 'zenPlaceHint'))
+
+    def test_the_new_button_is_picked_out_by_name(self):
+        from calibre_zen import placement
+
+        d = self.dialog()
+        chips = d.placement.findChildren(placement.NewChip)
+        self.assertEqual(len(chips), 1)
+        self.assertEqual(chips[0].findChild(type(d._header_label), 'zenPlaceNewText').text(), 'Mine')
+
+    def test_a_menu_is_drawn_as_rows_and_a_bar_as_a_row(self):
+        d = self.dialog(default_add_to=frozenset({'toolbar', 'context-menu'}))
+        from qt.core import QFrame
+
+        names = sorted(p.findChild(QFrame, 'zenPlaceBar') is not None for p in d.placement.places)
+        self.assertEqual(names, [False, True])
+
+    def test_only_a_place_the_plugin_asked_for_is_called_recommended(self):
+        asked = self.dialog(default_add_to=frozenset({'searchbar'}))
+        self.assertIn('Recommended', asked._locations_list.item(3).text())
+        self.assertNotIn('Recommended', asked._locations_list.item(0).text())
+        silent = self.dialog()
+        self.assertTrue(all('Recommended' not in silent._locations_list.item(i).text() for i in range(silent._locations_list.count())))
+
+    def test_a_long_bar_is_cut_at_the_start_and_keeps_the_new_button(self):
+        from calibre_zen import placement
+
+        entries = list(range(20))
+        shown, at, cut = placement.window(entries, 19, 9)
+        self.assertEqual((len(shown), shown[at], cut), (9, 19, True))
+        shown, at, cut = placement.window(entries[:5], 4, 9)
+        self.assertEqual((len(shown), shown[at], cut), (5, 4, False))

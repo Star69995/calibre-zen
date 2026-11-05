@@ -33,6 +33,7 @@ guessed -- a held icon stayed (31, 35, 40) against a #24262a window.
 from qt.core import QActionGroup, QMenu, QSizePolicy, Qt, QToolButton, QWidget
 
 from calibre_zen import features
+from calibre_zen.i18n import N_
 from calibre_zen.theme.tokens import schemes
 
 _installed = False
@@ -42,10 +43,10 @@ _installed = False
 # Lightest to darkest after the default. 'dim' is not a value calibre's
 # preference takes -- see apply().
 MODES = (
-    ('system', 'Match system', 'device-desktop'),
-    ('light', 'Light', 'sun'),
-    ('dim', 'Dim', 'brightness-half'),
-    ('dark', 'Dark', 'moon'),
+    ('system', N_('Match system'), 'device-desktop'),
+    ('light', N_('Light'), 'sun'),
+    ('dim', N_('Dim'), 'brightness-half'),
+    ('dark', N_('Dark'), 'moon'),
 )
 
 

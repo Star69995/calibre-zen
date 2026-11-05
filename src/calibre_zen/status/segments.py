@@ -287,11 +287,26 @@ class JobsSegment(Segment):
     had stalled, and the best would promise a conversion was nearly done.
     """
 
-    def __init__(self, gui, parent=None):
+    def __init__(self, gui, parent=None, hide_idle: bool = False):
         super().__init__(gui, 'progress', parent)
         self.percent = None
         self.connected = False
-        self.clicked.connect(self.open_list)
+        # In a dialog's footer there is no room to say "No jobs": it appears
+        # when there is something to see (status/footer.py).
+        self.hide_idle = hide_idle
+        self.panel = None
+        self.clicked.connect(self.toggle_panel)
+
+    def toggle_panel(self) -> None:
+        "Open the panel of jobs above the segment, or put it away."
+        from calibre_zen.status.jobs_panel import JobsPanel
+
+        if self.panel is None:
+            self.panel = JobsPanel(self)
+        if self.panel.isVisible():
+            self.panel.close()
+        else:
+            self.panel.show_above()
 
     def attach(self) -> None:
         manager = getattr(self.gui, 'job_manager', None)
@@ -305,7 +320,7 @@ class JobsSegment(Segment):
         self.refresh()
 
     def open_list(self) -> None:
-        "calibre's own button owns the Jobs window; ask it rather than the dialog."
+        "The panel's last line: calibre's own button owns the Jobs window; ask it rather than the dialog."
         button = getattr(self.gui, 'jobs_button', None)
         if button is not None:
             button.toggle()
@@ -319,7 +334,7 @@ class JobsSegment(Segment):
         if not jobs:
             self.percent = None
             self.setText(_('No jobs'))
-            self.setToolTip(_('Nothing is running in the background\nClick to open the Jobs window'))
+            self.setToolTip(_('Nothing is running in the background'))
         else:
             text = ngettext('{} job', '{} jobs', len(jobs)).format(len(jobs))
             if self.percent is not None:
@@ -328,8 +343,10 @@ class JobsSegment(Segment):
             try:
                 self.setToolTip(manager.get_tooltip())
             except Exception:
-                self.setToolTip(_('Click to open the Jobs window'))
+                self.setToolTip(_('Click to see the jobs'))
         self.setProperty('zenBusy', 'yes' if jobs else '')
+        if self.hide_idle:
+            self.setVisible(bool(jobs))
         style = self.style()
         if style is not None:
             style.unpolish(self)

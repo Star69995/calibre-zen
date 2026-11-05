@@ -1,0 +1,21 @@
+/* The picture in the plugin install dialog -- calibre_zen/placement.py. A bar or
+   a short menu per ticked place, the buttons already there as icons and the new
+   one in the accent. */
+
+#zenPlacement #zenPlaceTitle, #zenPlacement #zenPlaceHint { color: $muted; }
+
+#zenPlacement #zenPlaceBar, #zenPlacement #zenPlaceMenu {
+    background-color: $surface;
+    border: 1px solid $border;
+    border-radius: ${radius_row}px;
+}
+
+#zenPlacement #zenPlaceNew {
+    background-color: $selected_soft;
+    border: 1px solid $accent;
+    border-radius: ${radius_row}px;
+}
+#zenPlacement #zenPlaceNewText { color: palette(window-text); font-weight: $weight_heading; }
+
+/* A separator between two groups of buttons: a hairline, not a frame. */
+#zenPlacement #zenPlaceSep { color: $border; }

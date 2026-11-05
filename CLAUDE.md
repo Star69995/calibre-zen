@@ -51,6 +51,36 @@ tag. Two overlay tests fail on purpose when upstream adds something the fork mus
 decide about (`test_srvfix` audit, `test_reader_look` colours); the guide says how
 to answer each.
 
+## Checking a change
+
+Every change a person can see is checked before it is called done, and shown.
+
+- **Hebrew and English, always.** Run it in both (`.\calibre-zen.cmd -Lang he`,
+  then without), not only the language you wrote it in. In Hebrew the whole window
+  is right to left, so look for: the order of toolbar buttons, tabs, columns and
+  menus mirrored; arrows and chevrons that mean "next" or "back" pointing the right
+  way; alignment and padding written with logical sides (start/end, not
+  left/right); text cut off in the wrong place; and mixed-direction text (file
+  names, numbers, `Ctrl+K`, English plugin names inside a Hebrew line) in the
+  order a reader expects. Fix the layout, not only the translation.
+- **Screenshots for approval.** Take them in both languages, and in light and dark
+  when the look changed, then show them with the full path of each file. Use the
+  offscreen tool in the overlay README ("Screenshots without taking the machine",
+  `CALIBRE_ZEN_SHOT_DIR`), not a screen grab, and keep them under
+  `.calibre-zen\shots\<topic>\` (git-ignored). Show the state that changed:
+  with and without a device, a menu open, a selection made. A change is not
+  accepted until the screenshots have been seen, and screenshots are not
+  committed unless a guide uses them (`docs/guides/design/`).
+- **Tests are not a replacement.** A passing test says the object exists, not that
+  it looks right. A refactor that touches UI code gets before and after
+  screenshots too, which is how "behaviour did not change" is shown.
+- **Plans.** The work in progress is in `docs/plans/` (index in `docs/README.md`).
+  Tick or delete an item there when it is done.
+- **Code standard.** New and changed code meets "The standard the code is held
+  to" in `docs/plans/code-quality/README.md`: one job per function, no repeated
+  logic, one declared place for every setting, no magic numbers, one way to
+  record a failure, cheap on the hot path.
+
 ## General working rules
 
 Inlined from the maintainer's global `~/.claude/CLAUDE.md` so they travel with

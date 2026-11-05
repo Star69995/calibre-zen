@@ -29,6 +29,7 @@ from qt.core import QColor, QFont, QItemSelectionModel, QPainter, QPainterPath, 
 
 from calibre.gui2 import qapplication_or_fail
 from calibre_zen.download.chrome import colors
+from calibre_zen.i18n import N_
 from calibre_zen.theme.tokens import components, primitives
 
 # The page header's sort menu: a label, the model column calibre sorts by and
@@ -36,11 +37,11 @@ from calibre_zen.theme.tokens import components, primitives
 # (it sorts with reverse=order == AscendingOrder), so "best first" is
 # descending on the rank and "newest first" is ascending on the date.
 SORTS = (
-    ('Best match', 0, Qt.SortOrder.DescendingOrder),
-    ('Title', 1, Qt.SortOrder.DescendingOrder),
-    ('Newest', 2, Qt.SortOrder.AscendingOrder),
-    ('With a cover', 3, Qt.SortOrder.AscendingOrder),
-    ('With a summary', 4, Qt.SortOrder.AscendingOrder),
+    (N_('Best match'), 0, Qt.SortOrder.DescendingOrder),
+    (N_('Title'), 1, Qt.SortOrder.DescendingOrder),
+    (N_('Newest'), 2, Qt.SortOrder.AscendingOrder),
+    (N_('With a cover'), 3, Qt.SortOrder.AscendingOrder),
+    (N_('With a summary'), 4, Qt.SortOrder.AscendingOrder),
 )
 
 

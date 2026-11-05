@@ -201,6 +201,28 @@ STATUS_MARGIN_X = 6  # the bar's own inset; set on the layout, not in the sheet,
 STATUS_MARGIN_Y = 1  # because a plain QWidget's padding does not move its layout
 STATUS_PROGRESS = 2  # the job segment's progress rule, drawn along its bottom edge
 STATUS_PROGRESS_INSET = 6  # how far short of the segment's ends that rule stops
+# The panel the jobs segment opens: one row per job, a stop button, and a link
+# to calibre's own Jobs window. Over the window as a popup, so nothing stays open.
+JOBS_PANEL_WIDTH = 340
+JOBS_PANEL_PAD = 10  # inside the panel, and between its rows
+JOBS_PANEL_ROWS = 8  # jobs listed before "and N more"
+JOBS_PANEL_REFRESH_MS = 500  # how often the open panel re-reads the jobs' progress
+JOBS_BAR_HEIGHT = 4  # a job's thin progress bar
+# The picture in the plugin install dialog (placement.py): each ticked place as a
+# bar or a short menu, with the new button picked out.
+PLACE_ICON = 20  # a button in the picture
+PLACE_GAP = 6  # between buttons, and between a heading and its bar
+PLACE_PAD = 6  # inside a bar or a menu
+PLACE_CHIP_PAD = 6  # either side of the new button's icon and name
+PLACE_SECTION_GAP = 10  # between one place and the next
+PLACE_BAR_MAX = 9  # buttons drawn before the start of a long bar is cut off
+PLACE_MENU_ROWS = 5  # rows drawn of a menu
+
+# The column picker (centre/columns.py): a popup under the Columns button.
+COLUMNS_PANEL_WIDTH = 300
+COLUMNS_PANEL_HEIGHT = 360  # the list's height before it scrolls
+COLUMNS_PAD = 10  # inside the panel, and between its parts
+COLUMNS_GAP = 6  # between rows, and between the panel and its button
 # }}}
 
 # Forms -- see calibre_zen/forms/. A grouped form in the shape of macOS System

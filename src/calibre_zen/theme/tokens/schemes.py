@@ -42,6 +42,7 @@ through exactly the path the light/dark switch already uses.
 import os
 from dataclasses import dataclass, field, replace
 
+from calibre_zen.i18n import N_
 from calibre_zen.theme.tokens import primitives as p
 
 ENV_VAR = 'CALIBRE_ZEN_SCHEME'
@@ -169,8 +170,8 @@ class Scheme:
 # is the thing every screenshot in this project's history was taken against.
 ZEN = Scheme(
     name='zen',
-    title='Blue',
-    note='One blue accent, the overlay’s original palette',
+    title=N_('Blue'),
+    note=N_('One blue accent, the overlay’s original palette'),
     radius=p.RADIUS,
     dark={
         'Window': p.NEUTRAL_DARK[20],
@@ -432,11 +433,11 @@ def shadcn(name: str, title: str, note: str, ramp: dict) -> Scheme:
     )
 
 
-NEUTRAL = shadcn('neutral', 'Neutral', 'Grey with no tint at all', p.NEUTRAL)
-STONE = shadcn('stone', 'Stone', 'Warm grey, tinted brown', p.STONE)
-ZINC = shadcn('zinc', 'Zinc', 'Cool grey, tinted blue', p.ZINC)
-OLIVE = shadcn('olive', 'Olive', 'Warm grey, tinted yellow-green', p.OLIVE)
-MIST = shadcn('mist', 'Mist', 'Cool grey, tinted teal', p.MIST)
+NEUTRAL = shadcn('neutral', N_('Neutral'), N_('Grey with no tint at all'), p.NEUTRAL)
+STONE = shadcn('stone', N_('Stone'), N_('Warm grey, tinted brown'), p.STONE)
+ZINC = shadcn('zinc', N_('Zinc'), N_('Cool grey, tinted blue'), p.ZINC)
+OLIVE = shadcn('olive', N_('Olive'), N_('Warm grey, tinted yellow-green'), p.OLIVE)
+MIST = shadcn('mist', N_('Mist'), N_('Cool grey, tinted teal'), p.MIST)
 
 
 # Order is menu order: the presets, then the odd one out.

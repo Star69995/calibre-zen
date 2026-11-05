@@ -160,6 +160,207 @@ class TestMainWindow(ZenTestCase):
         # Right after calibre's own restarts.
         self.assertEqual(texts.index(ac.text()) - 1, texts.index('Restart ignoring third party plugins'))
 
+    # ------------------------------------------------- settings while jobs run
+
+    def running_job(self):
+        "A job the manager counts as running, removed again when the test ends."
+        from calibre_zen.tests.test_busy import Job
+
+        job = Job('Convert Alpha', 40)
+        manager = self.gui.job_manager
+        manager.jobs.append(job)
+        self.addCleanup(manager.jobs.remove, job)
+        self.assertTrue(manager.has_jobs())
+        return job
+
+    # ------------------------------------------------- the column picker
+
+    def columns_view(self):
+        from calibre_zen.centre import table
+
+        view = self.gui.library_view
+        self.addCleanup(lambda: view.apply_state(table.arrange(view.get_default_state(), view.column_map)))
+        return view
+
+    def test_the_picker_offers_the_columns_that_do_something_and_pins_details(self):
+        from calibre_zen.centre import columns
+
+        view = self.columns_view()
+        found = columns.columns_for(view)
+        keys = [c.key for c in found]
+        self.assertNotIn('authors', keys, 'folded into Details')
+        self.assertNotIn('series', keys)
+        self.assertNotIn('ondevice', keys)
+        self.assertEqual(keys[0], 'title', 'the shown ones come first, Details in front')
+        self.assertTrue(found[0].locked and found[0].visible)
+        self.assertEqual(found[0].title, 'Details')
+
+    def test_a_tick_hides_and_shows_a_column_through_calibre(self):
+        from calibre_zen.centre import columns
+
+        view = self.columns_view()
+        shown = [c.key for c in columns.columns_for(view) if c.visible and not c.locked]
+        self.assertTrue(shown, 'no column to hide')
+        key = shown[0]
+        columns.set_visible(view, key, False)
+        self.assertFalse(next(c for c in columns.columns_for(view) if c.key == key).visible)
+        columns.set_visible(view, key, True)
+        self.assertTrue(next(c for c in columns.columns_for(view) if c.key == key).visible)
+
+    def test_the_arrows_move_a_column_but_never_in_front_of_details(self):
+        from calibre_zen.centre import columns
+
+        view = self.columns_view()
+        shown = [c.key for c in columns.columns_for(view) if c.visible]
+        self.assertGreaterEqual(len(shown), 3, shown)
+        first, second = shown[1], shown[2]
+        self.assertTrue(columns.move(view, second, -1))
+        now = [c.key for c in columns.columns_for(view) if c.visible]
+        self.assertEqual(now[1:3], [second, first])
+        self.assertFalse(columns.move(view, now[1], -1), 'Details is in front and stays there')
+        self.assertFalse(columns.move(view, 'title', 1), 'and does not move')
+
+    def test_reset_brings_back_the_default_columns(self):
+        from calibre_zen.centre import columns
+
+        view = self.columns_view()
+        before = [c.key for c in columns.columns_for(view) if c.visible]
+        columns.set_visible(view, before[1], False)
+        columns.reset(view)
+        after = [c.key for c in columns.columns_for(view) if c.visible]
+        self.assertIn(before[1], after, 'the column that was hidden is back')
+        self.assertEqual(after[0], 'title')
+
+    def test_the_panel_searches_and_follows_a_tick(self):
+        from calibre_zen.centre import columns
+
+        self.columns_view()
+        button = self.gui.zen_centre.toolbar.columns
+        button.toggle_panel()
+        self.addCleanup(button.panel.close)
+        panel = button.panel
+        self.assertGreater(len(panel.findChildren(columns.ColumnRow)), 1)
+        panel.search.setText('zzzz-nothing')
+        self.assertEqual(len(panel.findChildren(columns.ColumnRow)), 0)
+        panel.search.setText('')
+        rows = {r.column.key: r for r in panel.findChildren(columns.ColumnRow)}
+        key = next(k for k, r in rows.items() if r.check.isEnabled())
+        rows[key].check.setChecked(not rows[key].column.visible)
+        again = {r.column.key: r for r in panel.findChildren(columns.ColumnRow)}
+        self.assertNotEqual(again[key].column.visible, rows[key].column.visible)
+
+    def test_the_button_is_there_for_the_table_only(self):
+        from unittest import mock
+
+        button = self.gui.zen_centre.toolbar.columns
+        with mock.patch.object(self.gui.grid_view_button, 'isChecked', return_value=True):
+            button.refresh()
+            self.assertTrue(button.isHidden())
+        with mock.patch.object(self.gui.grid_view_button, 'isChecked', return_value=False):
+            button.refresh()
+            self.assertFalse(button.isHidden())
+
+    # ------------------------------------------------- jobs in the status bar
+
+    def test_the_jobs_segment_opens_a_panel_with_each_job(self):
+        from calibre_zen.status.jobs_panel import JobRow
+
+        self.running_job()
+        segment = self.gui.zen_status.jobs
+        segment.refresh()
+        segment.toggle_panel()
+        self.addCleanup(segment.panel.close)
+        panel = segment.panel
+        self.assertTrue(panel.isVisible())
+        rows = panel.findChildren(JobRow)
+        self.assertEqual(len(rows), 1)
+        self.assertEqual(rows[0].state.text(), '40%')
+        self.assertEqual(rows[0].bar.value(), 40)
+        self.assertIn('Convert Alpha', rows[0].name.text())
+        self.assertTrue(rows[0].stop.isEnabled())
+        segment.toggle_panel()
+        self.assertFalse(panel.isVisible(), 'a second click puts it away')
+
+    def test_the_panel_follows_a_job_without_being_rebuilt(self):
+        job = self.running_job()
+        segment = self.gui.zen_status.jobs
+        segment.toggle_panel()
+        self.addCleanup(segment.panel.close)
+        row = segment.panel.rows[0]
+        job.percent = 75
+        segment.panel.refresh()
+        self.assertIs(segment.panel.rows[0], row)
+        self.assertEqual(row.state.text(), '75%')
+
+    def test_the_panel_says_so_when_nothing_runs(self):
+        from qt.core import QLabel
+
+        segment = self.gui.zen_status.jobs
+        segment.toggle_panel()
+        self.addCleanup(segment.panel.close)
+        self.assertEqual(segment.panel.rows, [])
+        self.assertIsNotNone(segment.panel.findChild(QLabel, 'zenJobsNone'))
+
+    def test_preferences_carries_the_same_segment_and_it_shows_with_a_job(self):
+        from calibre.gui2.preferences.main import Preferences
+
+        d = Preferences(self.gui)
+        self.addCleanup(d.deleteLater)
+        strip = d.zen_jobs
+        self.assertTrue(strip.isHidden(), 'nothing to see, nothing shown')
+        self.running_job()
+        strip.refresh()
+        self.assertFalse(strip.isHidden())
+        self.assertIn('40%', strip.text())
+
+    def test_preferences_opens_while_a_job_runs(self):
+        from unittest import mock
+
+        self.running_job()
+        opened = []
+
+        class Dialog:
+            do_restart = False
+            run_wizard_requested = mock.MagicMock()
+
+            def __init__(self, *args, **kwargs):
+                opened.append(args)
+
+            def exec(self):
+                return 0
+
+        with mock.patch('calibre.gui2.actions.preferences.Preferences', Dialog):
+            self.gui.iactions['Preferences'].do_config()
+        self.assertEqual(len(opened), 1, 'calibre refused to open Preferences')
+        self.assertTrue(self.gui.job_manager.has_jobs(), 'the door was left open for everything else')
+
+    def test_a_page_that_clashes_is_held_back_with_the_job_named(self):
+        from unittest import mock
+
+        from calibre.gui2.preferences.main import Preferences
+
+        self.running_job()
+        d = Preferences(self.gui, initial_plugin=('Advanced', 'Plugins'))
+        self.addCleanup(d.deleteLater)
+        d.changed_signal()
+        with mock.patch.object(Preferences, 'zen_busy_notice') as notice:
+            d.accept()
+        notice.assert_called_once()
+        self.assertIn('plugin', notice.call_args.args[0])
+        self.assertEqual(d.stack.currentIndex(), 1, 'the person was left on the page, edits intact')
+
+    def test_an_unchanged_page_is_never_held_back(self):
+        from unittest import mock
+
+        from calibre.gui2.preferences.main import Preferences
+
+        self.running_job()
+        d = Preferences(self.gui, initial_plugin=('Advanced', 'Plugins'))
+        self.addCleanup(d.deleteLater)
+        with mock.patch.object(Preferences, 'zen_busy_notice') as notice:
+            d.commit()
+        notice.assert_not_called()
+
     def test_app_sheet_and_palette_are_applied(self):
         from qt.core import QPalette
 

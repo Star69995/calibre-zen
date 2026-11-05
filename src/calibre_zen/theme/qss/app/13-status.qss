@@ -9,15 +9,15 @@ QStatusBar::item { border: none; }
    calibre put there: the layout toggles, the Layout button and All actions are
    matched by descent rather than by name, because they are calibre's widgets
    and renaming them would be a change to upstream's objects for our benefit. */
-#zenStatusBar QToolButton {
+#zenStatusBar QToolButton, QToolButton#zenStatusSegment {
     background-color: transparent;
     border: 1px solid transparent;
     border-radius: ${status_segment_radius}px;
     padding: $status_pad;
     color: palette(window-text);
 }
-#zenStatusBar QToolButton:hover { background-color: $hover; }
-#zenStatusBar QToolButton:pressed { background-color: $pressed; }
+#zenStatusBar QToolButton:hover, QToolButton#zenStatusSegment:hover { background-color: $hover; }
+#zenStatusBar QToolButton:pressed, QToolButton#zenStatusSegment:pressed { background-color: $pressed; }
 /* A layout toggle is on or off, and the bar is the only place in the window
    where that state is shown, so it gets an outline as well as a fill. */
 #zenStatusBar QToolButton:checked { background-color: $pressed; border-color: $border; }
@@ -31,3 +31,27 @@ QStatusBar::item { border: none; }
 /* Readings: text, and nothing that invites a click. */
 #zenStatusCounts, #zenStatusDevice { color: $muted; padding: 0px 4px; }
 #zenStatusMessage { color: palette(window-text); padding: 0px 4px; }
+
+/* The panel the jobs segment opens (status/jobs_panel.py): a popup like a menu,
+   with a row per job and a hairline above the link to the full list. */
+#zenJobsPanel {
+    background-color: $menu_bg;
+    border: 1px solid $border_strong;
+    border-radius: ${radius_panel}px;
+}
+#zenJobsPanel #zenJobName { color: palette(window-text); }
+#zenJobsPanel #zenJobState { color: $muted; }
+#zenJobsPanel #zenJobBar {
+    min-height: ${jobs_bar_height}px;
+    max-height: ${jobs_bar_height}px;
+}
+#zenJobsPanel #zenJobStop, #zenJobsPanel #zenJobsAll {
+    background-color: transparent;
+    border: 1px solid transparent;
+    border-radius: ${status_segment_radius}px;
+    padding: 2px 6px;
+}
+#zenJobsPanel #zenJobStop:hover, #zenJobsPanel #zenJobsAll:hover { background-color: $hover; }
+#zenJobsPanel #zenJobStop:disabled { color: $muted; }
+#zenJobsPanel #zenJobsRule { background-color: $border_weak; max-height: 1px; min-height: 1px; border: none; }
+#zenJobsPanel #zenJobsNone { color: $muted; }

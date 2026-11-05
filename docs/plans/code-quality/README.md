@@ -40,6 +40,54 @@ place and confirm it before changing it**, and treat line numbers as approximate
 - After a structural change (new shared module, moved files) update
   `src/calibre_zen/README.md` and `CLAUDE.md` in the same pass.
 - User-visible text goes through `_()`; keep placeholders exactly.
+- Follow "Checking a change" in `CLAUDE.md`. A refactor that touches UI code is
+  checked in Hebrew and English with before and after screenshots, which is how
+  "behaviour did not change" is shown, and the screenshots are shown for approval.
+- This plan runs alongside [the UI workflow plan](../ui-workflow/README.md), which
+  has one order for both. Refactors and features never share a commit.
+
+## The standard the code is held to
+
+Sections A to J are findings. This section is the rule they are measured against,
+and the one new code is written to, so the next review finds less. Where a rule
+has a number, a tool or a test can check it; the rest are judgement, and a review
+says which one a change breaks.
+
+1. **One job per function.** A function does one thing and is named for it.
+   Aim for under about 40 lines and three levels of nesting. The offenders are
+   listed in D4.
+2. **No repeated logic.** The second copy of a non-trivial block is extracted, not
+   tolerated until a third. Check for an existing helper first, as `CLAUDE.md`
+   already says. Sections B and C are this rule applied to what is there.
+3. **Reusable pieces are small and general.** A helper takes what varies as
+   arguments and knows nothing about its first caller. It lives in the lowest
+   module that can hold it, and it has a test.
+4. **Dependencies point one way.** Lower layers never import higher ones:
+   `theme/` and the settings registry, then widgets and features, then `hooks.py`.
+   A module with no Qt in it stays free of Qt, so the rest can use it early
+   (`features.py` is the counterexample, see B1). No upward import such as
+   `onboarding/importer.py` reaching into `hooks`.
+5. **Settings live in one declared place** (section I). Code never parses an
+   environment variable or a `gprefs` key by hand.
+6. **No magic numbers or strings.** A size, a delay or a state name is a token or a
+   named constant in the module that owns it (D5, D6).
+7. **Change one thing in one place.** Adding a language, a colour scheme, an icon
+   pack, a column or a switch is one entry in one file, as the README already
+   promises for fonts and icon packs. Where it takes more, that is a finding.
+8. **Failures are handled one way.** Cosmetic wraps fail soft on purpose, and the
+   failure is recorded through the same helper everywhere (B2). Nothing swallows
+   an exception without leaving a trace.
+9. **Every wrap of upstream** is made from outside, is idempotent, can be switched
+   off, and goes through the one wrap helper (C3).
+10. **Comments say why.** Names say what. A counted comment ("six wraps") is wrong
+    sooner or later, so say what the wraps are for (G).
+11. **Cheap on the hot path.** Nothing is recomputed per paint, per keystroke or per
+    row that can be cached or computed once. Measure before optimising, and keep
+    what was measured next to the code, as the README does (section J).
+12. **Tools enforce what they can.** `ruff` runs in CI with the repo's
+    `pyproject.toml`. Complexity and length rules (function length, branches,
+    arguments) are to be enabled at the thresholds above after checking what they
+    flag today, so a threshold starts at the current worst case and tightens.
 
 ## A. Real defects (fix first, each is small)
 
@@ -279,10 +327,78 @@ in `classify.frames`; `status/layout_menu.py:90` and `editor/__init__.py:71` ski
 the `except AttributeError, TypeError: return False` guard the other `install()`
 functions use.
 
+## I. Settings and configuration (new)
+
+Measured on 2026-11-05 for this plan: **41** distinct `CALIBRE_ZEN_*` environment
+names read across **28** modules, and **42** `gprefs` keys starting `zen_`
+spread over **24**. Each is a string literal at its point of use, with its own
+default and its own parsing (B1 is only the "off" switch). Nothing lists them, so
+adding one, finding one, or documenting one all mean a search, and the README's
+list of switches (`README.md:98-104`) already shows only some of them.
+
+- **I1. One registry.** A Qt-free module, `settings.py`, declares every setting
+  once: name, kind (switch, choice, number, text), default, where it is stored
+  (environment, `gprefs`, or both, with which one wins), a one-line description,
+  and the module that owns it. Typed accessors (`settings.get(CENTRE)`) replace
+  the inline `os.environ.get(...)` and `gprefs['zen_...']`. B1's `env_flag` and
+  `OFF_VALUES` become part of it, and the "off" parse is written once, with one
+  casing rule.
+- **I2. Generated, not written.** The switch list in the README and the table in
+  `CLAUDE.md` are printed from the registry by a small script, and a test fails
+  when the README is out of date. A setting that is read but not declared fails a
+  test too (a grep for `CALIBRE_ZEN_` and `zen_` keys outside the registry).
+- **I3. Defaults in one file.** The tunable numbers that are now literals in code
+  (D5) go to the token modules or to the registry, grouped by area, so a person
+  who wants a different delay, size or limit edits a file with a comment on each
+  line, and nothing else. Keep the layers from "Tokens" in the overlay README:
+  `.qss` templates name only tokens.
+- **I4. Documented where it is read.** `--help` for `calibre-zen`, or a
+  `settings --list` command, prints the registry, so an environment variable is
+  discoverable without reading source.
+- **I5. Migration is explicit.** A renamed key keeps its old name for one release,
+  declared in the registry as an alias, instead of a private fallback somewhere.
+- **I6. The brand in one place.** The display name already has a constant
+  (`zen_display_name`), but the literal "Calibre Zen" is spelled out in about 28
+  files (checked by `grep`): dialogs, the tray, update and report texts,
+  onboarding, packaging, the issue template. Declare the product's display name,
+  short name, repository, releases and issues addresses and installer ids once,
+  have every visible string read from it, and add a test that fails when a literal
+  brand name appears anywhere else. This is a prerequisite of the separate
+  branding in [the releases plan](../releases/README.md).
+
+Do I1 and I2 as one change and convert the readers module by module afterwards;
+each module is a small commit that must not change behaviour (see the ground
+rules), and the casing difference in `report/__init__.py:52` is called out when it
+is reached.
+
+## J. Efficiency: measure first (new)
+
+Nothing here is a finding yet, which is the point: guesses about speed are
+cheap and wrong. Before changing anything for speed, record the numbers, using the
+scripts in `docs/plans/modes/measure/` where they fit.
+
+- **Startup.** What the overlay adds to the time to the first window and to the
+  memory at idle, per install in `hooks.install`. The install list is the natural
+  place to time each entry (the `_INSTALLS` tuple of D2 makes that one loop).
+- **Paint and scroll.** The known suspects are `centre/table.py:294 row_ends` (on
+  every cell paint, H) and the per-paint colour lookups behind C1. Measure
+  scrolling a library of 2,000 books, which the measure scripts can generate.
+- **Cost of a refactor.** The shared helpers of B and C must not make a hot path
+  slower; the same measurement before and after is the proof.
+- A result that matters is written next to the code it justifies, as the README
+  already does for Qt findings.
+
 ## Suggested order
 
+This is the order for the clean-up alone. B1 is now part of I. When the UI work is going on too, use
+the combined order in [the UI workflow plan](../ui-workflow/README.md#one-order-for-both-plans):
+it moves B1, B2 and C3 ahead of the UI features, and D2 (toolbar code into
+`toolbars.py`) ahead of the toolbar features.
+
 1. **A** (defects), each with a test where one is cheap. A1/A2 first.
-2. **B1** then **B2** (the two helpers; they touch many files but are mechanical).
+2. **I** (the settings registry, which includes B1), then **B2** (the helpers; they
+   touch many files but are mechanical). **J** starts here with the baseline
+   measurements, so later steps can show they did not make anything slower.
 3. **E1** (get the Windows suite green, which makes every later step safer).
 4. **F** (bring `books/` in line and document it), **G** (docs).
 5. **C3** (shared wrap helper, closes A2 properly), then the rest of **C**.

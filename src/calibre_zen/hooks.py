@@ -133,6 +133,11 @@ What is patched, and why it is patched rather than edited:
         beside a side panel, then a grid of cover tiles, with one footer line.
         CALIBRE_ZEN_DOWNLOAD=0.
 
+    PreferencesAction.do_config / Preferences.commit
+        Wrapped -- see busy.py. Settings open while jobs run; a save is held
+        back, with the reason and the jobs named, only for a page that would
+        clash with them. CALIBRE_ZEN_BUSY=0.
+
     look_feel.ConfigWidget.genesis
         Wrapped -- see lookfeel.py. Preferences -> Look & feel opens on a notice
         that these settings pull against this app's look, with a button that
@@ -195,7 +200,7 @@ from calibre_zen import i18n
 # Before the imports below: onboarding/page.py translates at import time.
 i18n.install()
 
-from calibre_zen import books, centre, dates, devtools, download, editor, filters, lookfeel, onboarding, rating, reader, report, status, toolbars, update
+from calibre_zen import books, busy, centre, dates, devtools, download, editor, filters, lookfeel, onboarding, rating, reader, report, status, toolbars, update
 from calibre_zen.icons import registry as icon_registry
 from calibre_zen.reader import look as reader_look
 from calibre_zen.report import guard
@@ -558,6 +563,7 @@ def _patch_palette_manager(pm) -> None:
         guard.run_install('reader-look', reader_look.install)
         guard.run_install('onboarding', onboarding.install)
         guard.run_install('lookfeel', lookfeel.install)
+        guard.run_install('busy', busy.install)
         guard.run_install('keep-sharing', handoff.install)
         guard.run_install('books', books.install)
         if not self.using_calibre_style:

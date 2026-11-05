@@ -91,6 +91,15 @@ def attach() -> bool:
     return True
 
 
+def N_(msgid: str) -> str:
+    """
+    `msgid`, unchanged: a mark that a string in a table is translated later, by
+    `_()` where it is shown. It is what lets `locales/<lang>.po` and the tests
+    see the string, which a bare literal in a tuple would hide from them.
+    """
+    return msgid
+
+
 def override(msgid: str) -> str:
     """
     `msgid` as our catalog has it, else as calibre's does.

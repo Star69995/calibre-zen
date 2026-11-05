@@ -27,6 +27,8 @@ from typing import NamedTuple
 
 from qt.core import QIcon, QMenu, Qt, QToolButton
 
+from calibre_zen.i18n import N_
+
 PREF_KEY = 'zen_features'
 OFF_VALUES = frozenset({'0', 'false', 'no', 'off'})
 
@@ -41,18 +43,19 @@ class Feature(NamedTuple):
 # Menu order: top of the window to the bottom, then the two that are
 # everywhere at once.
 FEATURES = (
-    Feature('icons', 'CALIBRE_ZEN_ICONS', 'Line icons', "One line-drawn icon set. Off: calibre's own colour icons."),
-    Feature('filters', 'CALIBRE_ZEN_FILTERS', 'Filter panel', "Flat filter lists you drill into. Off: the Tag browser's tree."),
-    Feature('centre', 'CALIBRE_ZEN_CENTRE', 'Preview and table', "A preview above the book list, and the list as a table. Off: calibre's book list."),
-    Feature('status', 'CALIBRE_ZEN_STATUS', 'Status bar', "Library, sort, counts, server and jobs in the bar. Off: calibre's status bar."),
-    Feature('editor', 'CALIBRE_ZEN_EDITOR', 'Compact editor', "Edit metadata in a smaller window with tabs. Off: calibre's own layouts."),
-    Feature('rating', 'CALIBRE_ZEN_RATING', 'Star ratings', "Ratings as five stars you click. Off: calibre's drop-down of stars."),
-    Feature('dates', 'CALIBRE_ZEN_DATES', 'Calendar', "Date fields open a calendar drawn in the theme. Off: Qt's own calendar."),
-    Feature('download', 'CALIBRE_ZEN_DOWNLOAD', 'Download metadata', "Matches as cards and covers as tiles. Off: calibre's table and grid."),
-    Feature('reader', 'CALIBRE_ZEN_READER', 'Ready reader', 'A reader waits in the background, so books open at once. Off: each book starts a new reader.'),
-    Feature('reader-look', 'CALIBRE_ZEN_READER_LOOK', 'Reader look', "The reader's menus, settings and panels in the same look. Off: calibre's own."),
-    Feature('splits', 'CALIBRE_ZEN_SPLIT', 'Split buttons', 'A split tool button lights only the half under the pointer. Off: the whole button lights.'),
-    Feature('popups', 'CALIBRE_ZEN_ROUND_POPUPS', 'Rounded menus', 'Menus, tooltips and lists with rounded corners. Off: square windows behind them.'),
+    Feature('icons', 'CALIBRE_ZEN_ICONS', N_('Line icons'), N_("One line-drawn icon set. Off: calibre's own colour icons.")),
+    Feature('filters', 'CALIBRE_ZEN_FILTERS', N_('Filter panel'), N_("Flat filter lists you drill into. Off: the Tag browser's tree.")),
+    Feature('centre', 'CALIBRE_ZEN_CENTRE', N_('Preview and table'), N_("A preview above the book list, and the list as a table. Off: calibre's book list.")),
+    Feature('status', 'CALIBRE_ZEN_STATUS', N_('Status bar'), N_("Library, sort, counts, server and jobs in the bar. Off: calibre's status bar.")),
+    Feature('editor', 'CALIBRE_ZEN_EDITOR', N_('Compact editor'), N_("Edit metadata in a smaller window with tabs. Off: calibre's own layouts.")),
+    Feature('rating', 'CALIBRE_ZEN_RATING', N_('Star ratings'), N_("Ratings as five stars you click. Off: calibre's drop-down of stars.")),
+    Feature('dates', 'CALIBRE_ZEN_DATES', N_('Calendar'), N_("Date fields open a calendar drawn in the theme. Off: Qt's own calendar.")),
+    Feature('download', 'CALIBRE_ZEN_DOWNLOAD', N_('Download metadata'), N_("Matches as cards and covers as tiles. Off: calibre's table and grid.")),
+    Feature('busy', 'CALIBRE_ZEN_BUSY', N_('Settings while jobs run'), N_("Preferences opens during a job; only a clashing change waits. Off: calibre's refusal.")),
+    Feature('reader', 'CALIBRE_ZEN_READER', N_('Ready reader'), N_('A reader waits in the background, so books open at once. Off: each book starts a new reader.')),
+    Feature('reader-look', 'CALIBRE_ZEN_READER_LOOK', N_('Reader look'), N_("The reader's menus, settings and panels in the same look. Off: calibre's own.")),
+    Feature('splits', 'CALIBRE_ZEN_SPLIT', N_('Split buttons'), N_('A split tool button lights only the half under the pointer. Off: the whole button lights.')),
+    Feature('popups', 'CALIBRE_ZEN_ROUND_POPUPS', N_('Rounded menus'), N_('Menus, tooltips and lists with rounded corners. Off: square windows behind them.')),
 )
 BY_KEY = {f.key: f for f in FEATURES}
 

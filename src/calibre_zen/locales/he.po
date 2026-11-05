@@ -765,17 +765,28 @@ msgstr "האבחון הועתק"
 msgid "No jobs"
 msgstr "אין משימות"
 
-#: status/segments.py:322
-msgid ""
-"Nothing is running in the background\n"
-"Click to open the Jobs window"
-msgstr ""
-"שום דבר לא רץ ברקע\n"
-"לחץ כדי לפתוח את חלון המשימות"
+#: status/segments.py, status/jobs_panel.py
+msgid "Nothing is running in the background"
+msgstr "שום דבר לא רץ ברקע"
 
-#: status/segments.py:331
-msgid "Click to open the Jobs window"
-msgstr "לחץ כדי לפתוח את חלון המשימות"
+#: status/segments.py
+msgid "Click to see the jobs"
+msgstr "לחץ כדי לראות את המשימות"
+
+#: status/jobs_panel.py
+msgid "Stop this job"
+msgstr "עצור משימה זו"
+
+#: status/jobs_panel.py
+msgid "Open the Jobs window"
+msgstr "פתח את חלון המשימות"
+
+#: status/jobs_panel.py
+#, python-brace-format
+msgid "and {} more job"
+msgid_plural "and {} more jobs"
+msgstr[0] "ועוד משימה אחת"
+msgstr[1] "ועוד {} משימות"
 
 #: status/segments.py:382
 #, python-brace-format
@@ -1180,3 +1191,301 @@ msgstr "נבדקו {0} ספרים, שונו {1}."
 #, python-brace-format
 msgid "{0} book(s) failed, see details."
 msgstr "הניקוי נכשל ב-{0} ספרים, ראה פרטים."
+
+#: busy.py
+msgid "Adding, removing or switching off a plugin changes the code a running job is using."
+msgstr "הוספה, הסרה או כיבוי של תוסף משנים קוד שמשימה פעילה משתמשת בו."
+
+#: busy.py
+msgid "This change only takes effect after a restart, and a restart ends the jobs that are running."
+msgstr "השינוי הזה נכנס לתוקף רק אחרי הפעלה מחדש, והפעלה מחדש מסיימת את המשימות שרצות."
+
+#: busy.py
+msgid "Unnamed job"
+msgstr "משימה ללא שם"
+
+#: busy.py
+#, python-brace-format
+msgid "and {} more"
+msgstr "ועוד {}"
+
+#: busy.py
+msgid "Running now:"
+msgstr "רצות עכשיו:"
+
+#: busy.py
+msgid "Wait for the running jobs"
+msgstr "המתן לסיום המשימות"
+
+#: busy.py
+msgid "This change has to wait until the jobs are done."
+msgstr "השינוי הזה צריך לחכות עד שהמשימות יסתיימו."
+
+#: busy.py
+msgid "Back to the page"
+msgstr "חזרה לעמוד"
+
+#: tables (N_)
+msgid "Line icons"
+msgstr "אייקוני קו"
+
+#: tables (N_)
+msgid "One line-drawn icon set. Off: calibre's own colour icons."
+msgstr "ערכת אייקונים אחת מצוירת בקווים. כבוי: האייקונים הצבעוניים של calibre."
+
+#: tables (N_)
+msgid "Filter panel"
+msgstr "לוח מסננים"
+
+#: tables (N_)
+msgid "Flat filter lists you drill into. Off: the Tag browser's tree."
+msgstr "רשימות מסננים שטוחות שנכנסים אליהן. כבוי: העץ של דפדפן התגיות."
+
+#: tables (N_)
+msgid "Preview and table"
+msgstr "תצוגה מקדימה וטבלה"
+
+#: tables (N_)
+msgid "A preview above the book list, and the list as a table. Off: calibre's book list."
+msgstr "תצוגה מקדימה מעל רשימת הספרים, והרשימה כטבלה. כבוי: רשימת הספרים של calibre."
+
+#: tables (N_)
+msgid "Status bar"
+msgstr "שורת מצב"
+
+#: tables (N_)
+msgid "Library, sort, counts, server and jobs in the bar. Off: calibre's status bar."
+msgstr "ספרייה, מיון, ספירות, שרת ומשימות בשורה. כבוי: שורת המצב של calibre."
+
+#: tables (N_)
+msgid "Compact editor"
+msgstr "עורך קומפקטי"
+
+#: tables (N_)
+msgid "Edit metadata in a smaller window with tabs. Off: calibre's own layouts."
+msgstr "עריכת מטא-נתונים בחלון קטן יותר עם לשוניות. כבוי: הפריסות של calibre."
+
+#: tables (N_)
+msgid "Star ratings"
+msgstr "דירוג בכוכבים"
+
+#: tables (N_)
+msgid "Ratings as five stars you click. Off: calibre's drop-down of stars."
+msgstr "דירוג כחמישה כוכבים שלוחצים עליהם. כבוי: הרשימה הנפתחת של calibre."
+
+#: tables (N_)
+msgid "Calendar"
+msgstr "לוח שנה"
+
+#: tables (N_)
+msgid "Date fields open a calendar drawn in the theme. Off: Qt's own calendar."
+msgstr "שדות תאריך פותחים לוח שנה בעיצוב הערכה. כבוי: לוח השנה של Qt."
+
+#: tables (N_)
+msgid "Download metadata"
+msgstr "הורדת מטא-נתונים"
+
+#: tables (N_)
+msgid "Matches as cards and covers as tiles. Off: calibre's table and grid."
+msgstr "התאמות ככרטיסים וכריכות כאריחים. כבוי: הטבלה והרשת של calibre."
+
+#: tables (N_)
+msgid "Settings while jobs run"
+msgstr "הגדרות בזמן שמשימות רצות"
+
+#: tables (N_)
+msgid "Preferences opens during a job; only a clashing change waits. Off: calibre's refusal."
+msgstr "ההעדפות נפתחות גם בזמן משימה; רק שינוי מתנגש ממתין. כבוי: הסירוב של calibre."
+
+#: tables (N_)
+msgid "Ready reader"
+msgstr "קורא מוכן"
+
+#: tables (N_)
+msgid "A reader waits in the background, so books open at once. Off: each book starts a new reader."
+msgstr "קורא ממתין ברקע, כך שספרים נפתחים מיד. כבוי: כל ספר מפעיל קורא חדש."
+
+#: tables (N_)
+msgid "Reader look"
+msgstr "מראה הקורא"
+
+#: tables (N_)
+msgid "The reader's menus, settings and panels in the same look. Off: calibre's own."
+msgstr "התפריטים, ההגדרות והחלוניות של הקורא באותו מראה. כבוי: אלה של calibre."
+
+#: tables (N_)
+msgid "Split buttons"
+msgstr "כפתורים מפוצלים"
+
+#: tables (N_)
+msgid "A split tool button lights only the half under the pointer. Off: the whole button lights."
+msgstr "כפתור מפוצל מאיר רק את החצי שמתחת למצביע. כבוי: כל הכפתור מואר."
+
+#: tables (N_)
+msgid "Rounded menus"
+msgstr "תפריטים מעוגלים"
+
+#: tables (N_)
+msgid "Menus, tooltips and lists with rounded corners. Off: square windows behind them."
+msgstr "תפריטים, חלוניות עזרה ורשימות עם פינות מעוגלות. כבוי: חלונות מרובעים מאחוריהם."
+
+#: tables (N_)
+msgid "Best match"
+msgstr "ההתאמה הטובה ביותר"
+
+#: tables (N_)
+msgid "With a cover"
+msgstr "עם כריכה"
+
+#: tables (N_)
+msgid "With a summary"
+msgstr "עם תקציר"
+
+#: tables (N_)
+msgid "Compact (calibre-zen)"
+msgstr "קומפקטי (calibre-zen)"
+
+#: tables (N_)
+msgid "Neutral"
+msgstr "ניטרלי"
+
+#: tables (N_)
+msgid "Grey with no tint at all"
+msgstr "אפור ללא גוון בכלל"
+
+#: tables (N_)
+msgid "Stone"
+msgstr "אבן"
+
+#: tables (N_)
+msgid "Warm grey, tinted brown"
+msgstr "אפור חם בגוון חום"
+
+#: tables (N_)
+msgid "Zinc"
+msgstr "אבץ"
+
+#: tables (N_)
+msgid "Cool grey, tinted blue"
+msgstr "אפור קר בגוון כחול"
+
+#: tables (N_)
+msgid "Olive"
+msgstr "זית"
+
+#: tables (N_)
+msgid "Warm grey, tinted yellow-green"
+msgstr "אפור חם בגוון צהוב-ירוק"
+
+#: tables (N_)
+msgid "Mist"
+msgstr "ערפל"
+
+#: tables (N_)
+msgid "Cool grey, tinted teal"
+msgstr "אפור קר בגוון טורקיז"
+
+#: tables (N_)
+msgid "Blue"
+msgstr "כחול"
+
+#: tables (N_)
+msgid "One blue accent, the overlay’s original palette"
+msgstr "גוון כחול אחד, הפלטה המקורית של השכבה"
+
+#: tables (N_)
+msgid "Match system"
+msgstr "לפי המערכת"
+
+#: tables (N_)
+msgid "Light"
+msgstr "בהיר"
+
+#: tables (N_)
+msgid "Dim"
+msgstr "עמום"
+
+#: tables (N_)
+msgid "Dark"
+msgstr "כהה"
+
+#: toolbars.py, placement.py
+msgid "The buttons on the search bar"
+msgstr "הכפתורים בשורת החיפוש"
+
+#: toolbars.py, placement.py
+msgid "The context menu for the books in the calibre library"
+msgstr "תפריט ההקשר של הספרים בספריית calibre"
+
+#: toolbars.py, placement.py
+msgid "The context menu for the split book list"
+msgstr "תפריט ההקשר של רשימת הספרים המפוצלת"
+
+#: toolbars.py, placement.py
+msgid "The context menu for the books on the device"
+msgstr "תפריט ההקשר של הספרים בהתקן"
+
+#: toolbars.py, placement.py
+msgid "The context menu for the Cover browser"
+msgstr "תפריט ההקשר של דפדפן הכריכות"
+
+#: toolbars.py, placement.py
+msgid "You can also customise the plugin locations using <b>Preferences -> Interface -> Toolbars</b>"
+msgstr "אפשר גם להתאים את מיקומי התוסף ב-<b>העדפות ← ממשק ← סרגלי כלים ותפריטים</b>"
+
+#: toolbars.py, placement.py
+#, python-brace-format
+msgid "{} · Recommended"
+msgstr "{} · מומלץ"
+
+#: toolbars.py, placement.py
+msgid "Tick a place to see where the button will appear."
+msgstr "סמן מקום כדי לראות היכן הכפתור יופיע."
+
+#: centre/columns.py
+msgid "Columns cannot be added to this list."
+msgstr "אי אפשר להוסיף עמודות לרשימה הזו."
+
+#: centre/columns.py
+msgid "Restart calibre first: a column was added or changed and has not taken effect yet."
+msgstr "הפעל את calibre מחדש קודם: עמודה נוספה או שונתה והשינוי עדיין לא נכנס לתוקף."
+
+#: centre/columns.py
+msgid "Create a column of your own"
+msgstr "צור עמודה משלך"
+
+#: centre/columns.py
+msgid "The table is drawn around this column, so it stays."
+msgstr "הטבלה בנויה סביב העמודה הזו, ולכן היא נשארת."
+
+#: centre/columns.py
+msgid "Move toward the start"
+msgstr "הזז לכיוון ההתחלה"
+
+#: centre/columns.py
+msgid "Move toward the end"
+msgstr "הזז לכיוון הסוף"
+
+#: centre/columns.py
+msgid "Find a column"
+msgstr "חפש עמודה"
+
+#: centre/columns.py
+msgid "Add column"
+msgstr "הוסף עמודה"
+
+#: centre/columns.py
+msgid "Back to the default columns"
+msgstr "חזרה לעמודות ברירת המחדל"
+
+#: centre/columns.py
+msgid "No column matches."
+msgstr "אף עמודה לא תואמת."
+
+#: centre/columns.py
+msgid "Columns"
+msgstr "עמודות"
+
+#: centre/columns.py
+msgid "Choose which columns the list shows, and in what order"
+msgstr "בחר אילו עמודות הרשימה מציגה, ובאיזה סדר"

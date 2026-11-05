@@ -28,8 +28,22 @@ from __future__ import annotations
 
 import traceback
 
+from calibre_zen.i18n import N_
+
 # What a device adds, until the reader chooses otherwise in Preferences -> Toolbars & menus.
 DEVICE_ADDITIONS = ('Send To Device', 'Location Manager')
+
+# Strings of calibre's own, shown in the dialogs this file changes, that calibre's
+# Hebrew catalog does not have. Listed so locales/<lang>.po can answer them: the
+# catalog is only consulted for what is named in this package (tests/test_i18n.py).
+CALIBRE_LOCATION_NAMES = (
+    N_('The buttons on the search bar'),
+    N_('The context menu for the books in the calibre library'),
+    N_('The context menu for the split book list'),
+    N_('The context menu for the books on the device'),
+    N_('The context menu for the Cover browser'),
+    N_('You can also customise the plugin locations using <b>Preferences -> Interface -> Toolbars</b>'),
+)
 
 _installed = False
 
@@ -94,6 +108,53 @@ def device_layout(main, extras, iactions=None) -> tuple:
     return tuple(main[:at] + ([None] if at else []) + added + main[at:])
 
 
+# The places whose layout keeps the application's own buttons at the far end
+# (`appearance.TRAILING`), so a button added to them goes in before that run.
+KEEPS_TRAILING = frozenset({'toolbar'})
+
+
+def with_new_button(layout, name, key: str) -> tuple:
+    """
+    `layout`, the buttons already in place `key`, with `name` added where an
+    install puts it.
+
+    calibre appends, which on the main toolbar puts a new plugin after Help and
+    Preferences, and a bar that no longer ends with them has no far end to push
+    them to (`appearance.trailing_start`). So there it goes in before that run;
+    anywhere else it goes last. Used by the picture the install dialog draws and
+    by the install itself, so what is shown is what is done.
+    """
+    layout = list(layout or ())
+    if key not in KEEPS_TRAILING:
+        return tuple(layout + [name])
+    from calibre_zen.theme.appearance import TRAILING
+
+    at = len(layout)
+    while at > 0 and (layout[at - 1] is None or layout[at - 1] in TRAILING):
+        at -= 1
+    return tuple(layout[:at] + [name] + layout[at:])
+
+
+def placed(before, after, key: str) -> tuple:
+    """
+    What `key`'s layout should be once an install has changed it from `before`
+    to `after`: the buttons the install appended, put where `with_new_button`
+    says. A change that is not an append is left exactly as it is.
+    """
+    before, after = tuple(before or ()), tuple(after or ())
+    if after == before or after[: len(before)] != before:
+        return after
+    ans = before
+    for name in after[len(before) :]:
+        ans = with_new_button(ans, name, key)
+    return ans
+
+
+def recommended_label(text: str) -> str:
+    "A place the plugin itself asked for, as the install dialog lists it."
+    return _('{} · Recommended').format(text)
+
+
 def device_label(key: str, text: str) -> str:
     "The Preferences wording for a location: only the device toolbar's differs."
     return _('Added to the main toolbar when a device is connected') if key == 'toolbar-device' else text
@@ -106,8 +167,10 @@ def install() -> bool:
         return True
     from calibre.gui2.bars import BarsManager
     from calibre.gui2.dialogs.choose_plugin_toolbars import ChoosePluginToolbarsDialog
+    from calibre.gui2.preferences.plugins import ConfigWidget as PluginsConfigWidget
     from calibre.gui2.preferences.toolbar import ConfigWidget
 
+    orig_check = PluginsConfigWidget.check_for_add_to_toolbars
     orig_init_bars = BarsManager.init_bars
     orig_genesis = ConfigWidget.genesis
     orig_dialog = ChoosePluginToolbarsDialog.__init__
@@ -136,13 +199,40 @@ def install() -> bool:
         orig_dialog(self, parent, plugin, [(key, device_label(key, text)) for key, text in locations])
         self.locations = locations
         wanted = wanted_locations(plugin)
-        for row, (key, _text) in enumerate(locations):
+        says = getattr(plugin, 'default_add_to', None) is not None
+        for row, (key, text) in enumerate(locations):
             item = self._locations_list.item(row)
             if item is not None:
                 item.setSelected(key in wanted)
+                if says and key in wanted:
+                    item.setText(recommended_label(device_label(key, text)))
+        try:
+            from calibre_zen import placement
+
+            placement.attach(self, getattr(parent, 'gui', None), plugin)
+        except Exception:
+            # The dialog without its picture is calibre's whole dialog.
+            traceback.print_exc()
+
+    def check_for_add_to_toolbars(self, plugin, previously_installed=True):
+        from calibre.gui2 import gprefs
+
+        keys = ['action-layout-' + key for key in KEEPS_TRAILING]
+        before = {k: tuple(gprefs.get(k) or ()) for k in keys}
+        ans = orig_check(self, plugin, previously_installed)
+        try:
+            for k in keys:
+                now = tuple(gprefs.get(k) or ())
+                fixed = placed(before[k], now, k[len('action-layout-') :])
+                if fixed != now:
+                    gprefs[k] = fixed
+        except Exception:
+            traceback.print_exc()
+        return ans
 
     BarsManager.init_bars = init_bars
     ConfigWidget.genesis = genesis
     ChoosePluginToolbarsDialog.__init__ = dialog_init
+    PluginsConfigWidget.check_for_add_to_toolbars = check_for_add_to_toolbars
     _installed = True
     return True

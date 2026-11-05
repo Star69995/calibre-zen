@@ -137,6 +137,7 @@ filters/              the tag browser, replaced -- see "The filter panel" below
 centre/               the centre pane -- see "The centre pane" below
   __init__.py         install(): the seven wraps
   layout.py           ZenCentre, the toolbar strip and the Grid/Table switcher
+  columns.py          the Columns button and its panel -- see "Choosing columns"
   preview.py          PreviewPane: the metadata header above the list
   table.py            the Details column: arrangement, delegate, covers
   grid.py             how big a cover-grid tile is: default/compact/tiny
@@ -148,6 +149,8 @@ status/               the status bar, rebuilt -- see "The status bar" below
   bar.py              ZenStatusBar: one layout across the whole bar, and the
                       adoption of calibre's own widgets into it
   segments.py         a segment: library, sort, counts, server, jobs
+  jobs_panel.py       the popup the jobs segment opens: a row per job, Stop, a link to the Jobs window
+  footer.py           the same segment in Preferences' button row, which hides the bar
 editor/               the single-book metadata editor -- see "The metadata editor"
   __init__.py         install(): adds the layout and wraps its Preferences choice
   dialog.py           MetadataSingleDialogZen: calibre's editor, laid out compact
@@ -158,6 +161,8 @@ download/             the Download metadata dialog: match cards, a preview panel
 i18n.py               adds locales/<lang>.po to calibre's translator as a fallback -- see "Translations"
 locales/<lang>.po     translations of the strings only this fork has; `he` ships
 toolbars.py           one main toolbar: the device's bar is the main one plus what a device adds -- see "One main toolbar"
+busy.py               Preferences opens while jobs run; only a clashing save waits -- see "Settings while jobs run"
+placement.py          the picture in the plugin install dialog: where the new button will be -- see "Where a plugin's button goes"
 rating.py             calibre's rating widget and rating cells as clickable stars
 dates.py              the calendar a date field opens, in the theme
 reader/               a reader started ahead of time -- see "A reader already running"
@@ -571,6 +576,20 @@ device names `'toolbar-device'`, which now means "added when a device is
 connected". The attribute is read with `getattr`, so a plugin that sets it still
 loads in a calibre that has never heard of it.
 
+The dialog also draws the result (`placement.py`). Under the list of places, each
+ticked place is a bar of icons or a short menu with the buttons already there and
+the new one picked out by name, and ticking or unticking a place redraws it. A place
+the plugin asked for by name carries "Recommended"; one it said nothing about does
+not, since then every tick is only the default. The picture and the install both
+use `toolbars.with_new_button`, so what is drawn is what is done: calibre appends a
+button to the layout, which on the main toolbar put it after Help and Preferences
+and left the bar with no far end to push them to (`appearance.trailing_start`), so
+the install is wrapped (`PluginsConfigWidget.check_for_add_to_toolbars`) and a
+button that was appended goes in before that run instead. The widgets are laid out,
+not painted, so right-to-left mirrors them. A few of calibre's own place names have
+no Hebrew in its catalog; they are listed in `toolbars.CALIBRE_LOCATION_NAMES` so
+`locales/he.po` can answer them.
+
 **Labels and size.** The bar names its buttons (`TOOLBAR_LABELS`), under the
 icon, which is calibre's own "Show text under icons" behaviour and so still
 goes icon-only on a window too narrow for every caption. Icons are 20/24/28/36px
@@ -790,10 +809,34 @@ smaller label but an unreadable one, and an explicitly configured spacing,
 because that is a number the reader typed. `CALIBRE_ZEN_GRID=<name>` overrides
 the stored choice for a session.
 
-What is not done: how a grid tile is *drawn*, and the reference's "Add column"
-pill -- calibre's column-header context menu already does that job. Header labels stay centred, because `HeaderView.paintSection`
+What is not done: how a grid tile is *drawn*. Header labels stay centred, because `HeaderView.paintSection`
 hard-codes `AlignHCenter` (`views.py:125`) and changing one flag would mean
 reimplementing its sort-indicator and elide handling.
+
+### Choosing columns
+
+Hiding a column used to mean right-clicking a header, Hide, or Show column and a
+submenu, one at a time; nothing on screen said so, and ordering was dragging
+headers blind. `centre/columns.py` puts a **Columns** button in the strip, beside the
+Grid/Table switcher and shown for the table only. It opens a popup with a tick per
+column, a search box for a library with many custom columns, an up and a down arrow on
+each shown column, **Add column** and **Reset**.
+
+It adds no setting and sections nothing itself. Show, hide, the defaults and Add
+column go through `column_header_context_handler`, so "you must not hide all
+columns" and the restart a new column may need are calibre's own, and Add column is
+disabled with the reason when `CreateNewCustomColumn.must_restart()` says a restart is
+owed. Order is `QHeaderView.moveSection`, which calibre already saves from. Reset
+applies `get_default_state()` through `table.arrange`, so the Details arrangement
+survives it. The arrangement stays the state dict under this fork's own key.
+
+Not offered: `authors` and `series`, which are folded into Details and hidden (a
+switch for them would do nothing visible), and calibre's `ondevice` and `inlibrary`.
+Details is shown, first and cannot be moved, because the table is drawn around it.
+The panel is a popup, placed by `popovers.place`, the rule the jobs panel shares:
+the end edge on the button's, kept on the screen, mirrored in right-to-left. Arrows
+rather than drag handles, because a drag inside a popup is lost the moment the pointer
+leaves it.
 
 ### One shape for every tile
 
@@ -983,7 +1026,17 @@ own layout toggles sit between the two.
 | layout | calibre's own toggles, moved | calibre's own behaviour; the Layout button's popup is a menu of the same toggles (`status/layout_menu.py`) |
 | report | nothing, it is a door | a menu: the GitHub issue form with the environment and this session's Zen errors prefilled (`report/issue.py`), Reddit, Copy diagnostics, and where calibre's own bugs go |
 | server | on, and the port | starts or stops it |
-| jobs | how many, and how far | opens the Jobs window |
+| jobs | how many, and how far | a popup above it: each job with its own bar and a Stop button, and a last line that opens calibre's Jobs window (`status/jobs_panel.py`) |
+
+**Jobs while a dialog is open.** Preferences is application-modal and hides the
+status bar, so `status/footer.py` wraps `Preferences.__init__` and puts the same
+`JobsSegment` at the start of its button row. It is the same class reading the same
+`JobManager`, so nothing is counted twice, it is hidden while there are no jobs, and
+it is clickable, which a window of its own would not be above a modal dialog. The
+panel is a `Qt.Popup`, so nothing stays open on its own: it closes at the next click
+anywhere, and re-reads the jobs on a timer only while it is showing. Stop goes
+through `JobManager.kill_job`, so calibre's own refusals (device jobs, jobs that
+cannot be stopped) still apply, and the button is disabled for those.
 
 Not one of those clicks is implemented here. A menu segment shows the QMenu
 that already belongs to calibre's action -- the same object the toolbar button
@@ -1519,6 +1572,30 @@ moved or removed -- and a settings folder gets a pointer back to the first
 page. The answer is kept per path, so Next does not ask twice, and a no does
 not get upstream's error on top. Nothing here writes; the path is only recorded.
 `CALIBRE_ZEN_IMPORT_FROM=<dir>` imports from elsewhere; `=0` hides the page.
+
+### Settings while jobs run
+
+calibre's `PreferencesAction.do_config` refuses to open Preferences at all while a
+job runs, "Cannot configure while there are running jobs", even to look at a page
+or change a colour. A job runs in a worker process with the options it was queued
+with, so most settings cannot reach one. `busy.py` wraps two methods and moves the
+refusal from the door to the moment it matters:
+
+- **`do_config`**: calibre's own check is `job_manager.has_jobs()`, the first
+  thing it asks. For that one question the manager answers no, once (`open_once`
+  puts the real method back as it answers); the rest of `do_config` is calibre's.
+- **`Preferences.commit`**: with a job running and the page changed (its Apply
+  button is enabled), a page that clashes is not saved. `AbortCommit`, which the
+  dialog already answers by leaving the person on the page with their edits intact,
+  follows a notice that names the reason and the running jobs with their progress.
+  A page nobody changed is never held back.
+
+What clashes is `busy.CLASHES`, page module name to reason, in the words the person
+reads: today the Plugins page. Any page with `restart_critical` is held back too,
+without being listed, because a restart ends the jobs. The list is a first guess,
+to be settled by the survey in `docs/plans/ui-workflow/` (U7), and moving a page in
+or out is one line. Changing library and export/import still refuse, as in calibre.
+`CALIBRE_ZEN_BUSY=0` gives calibre's refusal back.
 
 ### Preferences -> Look & feel
 
@@ -2150,6 +2227,9 @@ settings; the runner refuses to start any other way.
 | `test_i18n.py` | the translation files compile, keep their placeholders and name only strings that still exist; they sit behind calibre's catalog, not in front of it, and are attached again after a language switch |
 | `test_icons.py` | every mapped glyph is vendored, every vendored glyph is an SVG Qt accepts, `QIcon.ic` serves the mapped names and falls through for the rest |
 | `test_books.py` | the built-in Goodreads Updater and Book Cleanup: both registered as calibre built-ins, an installed plugin of the same name dropped without deleting its file, the `#goodreads_linked` column on a throwaway library, each cleanup rule, no double space, a second run a no-op, no word lost, an epub end to end (chapter file split, TOC rebuilt) and `clean_book` keeping `ORIGINAL_EPUB` |
+| `test_toolbars.py` | the device bar's arithmetic, where a plugin's button goes by default, where an install puts it, and the install dialog's picture (one place per tick, the new button named, "Recommended" only for a place the plugin asked for) |
+| `test_gui.py` (columns) | the picker offers what does something and pins Details, a tick hides and shows through calibre, the arrows move a column but not in front of Details, Reset, the search, the button for the table only |
+| `test_busy.py` | which Preferences page clashes with a running job and why, the notice's lines, and the one question calibre asks at the door |
 | `test_gui.py` | end to end: the real `Main` window, offscreen, on a three-book library. Filter panel, centre, status bar and metadata editor installed; search narrows the list and the count; selecting a book fills the preview; a clean shutdown. And the Your columns form on a library with one custom column of each shape |
 
 `./zen-test theme icons` runs two modules, `-k search` filters by name and
