@@ -154,6 +154,8 @@ editor/               the single-book metadata editor -- see "The metadata edito
   files.py            the Cover & files tab: the cover, its actions, the book's files
 forms/                a grouped form, laid out by the FORM_* tokens -- see "Forms"
 download/             the Download metadata dialog: match cards, a preview panel, cover tiles -- see "Download metadata"
+i18n.py               adds locales/<lang>.po to calibre's translator as a fallback -- see "Translations"
+locales/<lang>.po     translations of the strings only this fork has; `he` ships
 rating.py             calibre's rating widget and rating cells as clickable stars
 dates.py              the calendar a date field opens, in the theme
 reader/               a reader started ahead of time -- see "A reader already running"
@@ -191,6 +193,37 @@ icons/
   assets/<pack>/      the vendored glyphs, and the pack's licence
   vendor.py           copy newly mapped glyphs out of a downloaded icon set
 ```
+
+### Translations
+
+calibre ships one compiled catalog per language inside the binary this fork is
+laid on top of, and it has no entry for a string only we wrote, so those showed
+in English in an otherwise translated window. They are translated here instead:
+`locales/<lang>.po`, compiled in memory by calibre's own `msgfmt` when the
+language is picked and added to calibre's translator with `add_fallback`.
+calibre's catalog is asked first and keeps every string it has; ours answer for
+the rest. Nothing is written to the install directory.
+
+Two details are why `i18n.py` is not a one-line call. The wizard's language box
+runs `set_translators()` again, which builds a new translator, so that call is
+wrapped to attach ours to the new one. And some modules translate at import
+(`STEPS` in `onboarding/page.py`), so `hooks.py` installs `i18n` before it
+imports them.
+
+To translate a string, write it with `_()` as usual; to ship it in a language,
+add a `msgid`/`msgstr` pair to that language's `.po`. Keep the placeholders
+(`%s`, `%(name)d`, `{0}`, `{}`) exactly, put `&` before a letter the way the
+English does, and give each entry a `#:` reference to where it is used.
+`tests/test_i18n.py` checks every file compiles, keeps its placeholders and has
+no entry whose string is gone; it does not insist that a language is complete,
+so a new string never fails the suite for want of a translation. A language with
+no file is left on calibre's catalog alone. Add one by dropping in `<lang>.po`.
+
+The one exception to "calibre's catalog is asked first" is `i18n.override()`,
+for the few calibre strings this fork words differently -- today the toolbar's
+"Share" (calibre: "Connect/share") and "Save to disk", which is a line long in
+Hebrew. It asks our catalog first and calibre's second; the msgid is the
+literal argument, so `test_i18n.py` still sees it is in use.
 
 ### Tokens
 
@@ -500,6 +533,15 @@ and their arrangement is left exactly as they left it. It is inserted after
 `init_bar` has recorded `preferred_width`, so the width the bar compares
 against when deciding whether to drop its labels is still the width of the
 buttons alone.
+
+**Labels and size.** The bar names its buttons (`TOOLBAR_LABELS`), under the
+icon, which is calibre's own "Show text under icons" behaviour and so still
+goes icon-only on a window too narrow for every caption. Icons are 20/24/28/36px
+for calibre's four sizes. `hooks._patch_toolbar_names` shortens two captions so
+they are not cut off: "Connect/share" becomes "Share" and Hebrew "Save to
+disk" becomes "שמירה לדיסק". A plugin's button is calibre's to place -- after
+installing one it offers to add it to the toolbars -- and takes the same size
+and caption.
 
 ### The filter panel
 
@@ -1281,6 +1323,15 @@ alpha 0. It has to be set before the platform window exists, which means at
 `Polish` -- by the time anything holds a reference to a menu it is usually too
 late.
 
+On Windows that attribute alone does nothing: Qt only makes a window per-pixel
+translucent (`WS_EX_LAYERED`) if it is also frameless, so the attribute is
+accepted and the corners stay a black block -- measured on screen, `#000000`
+against `#0C0C0C` behind. `shape()` therefore also sets `FramelessWindowHint`
+there, and `NoDropShadowWindowHint`, because the system's shadow is a rectangle
+of its own that would show through the same corners. The shadow is the price of
+the corners. Check it on a real window, not offscreen: read the corner pixel off
+the screen and compare it with the one just outside the menu.
+
 Nothing there knows any widget by name. The rule is **a top-level popup**
 (`Qt::Popup` or `Qt::ToolTip`), which is what those three have in common and
 what every other rounded thing in the sheet -- a group box, a list, a tab pane
@@ -1958,8 +2009,8 @@ button red -- and defaults to `text`.
 re-weights every icon as it is rendered, because a set drawn for a 24px box is a
 marker pen at 18px and they have to be re-weighted together or the toolbar stops
 looking like one set. `TOOLBAR_ICON_SIZE` re-scales calibre's five size
-settings: its own scale runs to 48px, which was drawn for detailed colour icons
-and makes a line icon a diagram. The sizes are hard-coded in
+settings: its own scale runs to 64px, which was drawn for detailed colour icons
+and makes a line icon a diagram; ours stops at 36. The sizes are hard-coded in
 `BarsManager.apply_settings`, so the overlay sets them after it runs; the user's
 setting still chooses, only the scale under it changes.
 
@@ -1996,6 +2047,7 @@ settings; the runner refuses to start any other way.
 | `test_identity.py` | the fork's names and versions, the upstream pin, that no upstream file is changed except the listed ones, and that the overlay has no bare `assert` (the bundle runs `-OO`) |
 | `test_theme.py` | every scheme, in both polarities and both darknesses, renders with no placeholder left and balanced braces; templates only name known tokens; the marks render to files |
 | `test_widgets.py` | widgets painted offscreen and judged by their pixels; the star rating driven through its own mouse, key and wheel events; the calendar's footer and size; both dropdown lists' delegate, sheet and row layout; spin box height; the rich text editor's toolbar and single border |
+| `test_i18n.py` | the translation files compile, keep their placeholders and name only strings that still exist; they sit behind calibre's catalog, not in front of it, and are attached again after a language switch |
 | `test_icons.py` | every mapped glyph is vendored, every vendored glyph is an SVG Qt accepts, `QIcon.ic` serves the mapped names and falls through for the rest |
 | `test_gui.py` | end to end: the real `Main` window, offscreen, on a three-book library. Filter panel, centre, status bar and metadata editor installed; search narrows the list and the count; selecting a book fills the preview; a clean shutdown. And the Your columns form on a library with one custom column of each shape |
 

@@ -6,4 +6,6 @@ QTreeView::item:hover {
     background: $hover;
     border: 1px solid transparent;
     border-radius: ${radius_control}px;
+    border-top-left-radius: 0;
+    border-bottom-left-radius: 0;
 }

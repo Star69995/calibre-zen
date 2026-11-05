@@ -11,6 +11,11 @@ QAbstractItemView {
 
 QListView, QTreeView { border-radius: ${radius_panel}px; }
 QListView::item, QTreeView::item { border-radius: ${radius_row}px; padding: 2px; }
+/* A tree's branch column is painted in the row's own fill, and an item starts
+   right after it: with the item's left corners rounded, the two meet as a
+   square block and a white notch where the curve cuts away from it. The seam
+   side is square, so the column and the item read as the one row. */
+QTreeView::item { border-top-left-radius: 0; border-bottom-left-radius: 0; }
 QListView::item:hover, QTreeView::item:hover { background-color: $hover; }
 /* Once ::item carries box properties, Qt paints the row from these rules and
    no longer falls back to selection-background-color for a selected one --
