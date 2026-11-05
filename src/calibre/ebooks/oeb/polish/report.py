@@ -232,7 +232,8 @@ def chars_data(container, book_locale, *args):
         return nmap.get(name, len(nmap)), numeric_sort_key(name)
 
     for i, (codepoint, usage) in enumerate(cc.chars.items()):
-        yield Char(i, safe_chr(codepoint), codepoint, sorted(usage, key=sort_key), cc.counter[codepoint])
+        if c := safe_chr(codepoint):
+            yield Char(i, c, codepoint, sorted(usage, key=sort_key), cc.counter[codepoint])
 
 
 CSSRule = namedtuple('CSSRule', 'selector location')
@@ -311,8 +312,11 @@ def css_data(container, book_locale, result_data, *args):
             tag = elem.tag.rpartition('}')[-1]
             if elem.attrib:
                 attribs = ' '.join('{}="{}"'.format(k, prepare_string_for_xml(elem.get(k, ''), True)) for k in elem.keys())
-                return f'<{tag} {attribs}>'
-            ans = tt_cache[elem] = f'<{tag}>'
+                ans = f'<{tag} {attribs}>'
+            else:
+                ans = f'<{tag}>'
+            tt_cache[elem] = ans
+        return ans
 
     def matches_for_selector(selector, select, class_map, rule):
         lsel = selector.lower()

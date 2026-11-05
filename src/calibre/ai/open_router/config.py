@@ -53,7 +53,7 @@ if TYPE_CHECKING:
     from calibre.ai.open_router.backend import Model as AIModel
 
 
-def backend() -> Any:  # noqa: ANN401
+def backend() -> Any:  # ruff: ignore[any-type]
     for plugin in available_ai_provider_plugins():
         if plugin.name == OpenRouterAI.name:
             return plugin.builtin_live_module
@@ -276,7 +276,6 @@ class ChooseModel(Dialog):
         if ci.isValid():
             return ci.data(Qt.ItemDataRole.UserRole).id
         return ''
-        self.models.currentIndex().data(Qt.ItemDataRole.UserRole).id
 
     @model_id.setter
     def model_id(self, val: str) -> None:
@@ -508,7 +507,7 @@ class ConfigWidget(QWidget):
         return True
 
     def select_model(self, model_id: str, for_text: bool) -> None:
-        model_choice_target = cast(Model, self.sender())
+        model_choice_target = cast('Model', self.sender())
         caps = AICapabilities.text_to_text if for_text else AICapabilities.text_to_image
         d = ChooseModel(model_id, caps, self)
         if d.exec() == QDialog.DialogCode.Accepted:

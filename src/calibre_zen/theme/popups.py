@@ -41,9 +41,9 @@ does to a native window rather than to a painted one, so it gets its own way
 back: a compositor that disagrees should cost the corners, not the theme.
 """
 
-from calibre.constants import iswindows
 from qt.core import QEvent, QObject, Qt, QWidget
 
+from calibre.constants import iswindows
 from calibre_zen import features
 
 _installed = False
@@ -97,7 +97,7 @@ class PopupShaper(QObject):
     to reject all of them but one kind.
     """
 
-    def eventFilter(self, obj, ev):  # noqa: N802  (matching the Qt name is the point)
+    def eventFilter(self, obj, ev):
         if ev.type() == POLISH and isinstance(obj, QWidget) and is_popup(obj):
             try:
                 shape(obj)

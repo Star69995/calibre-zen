@@ -1175,7 +1175,7 @@ class TestChannel(ZenTestCase):
         for m in (channel.CLOSING, 'nonsense', channel.RELEASE):
             t = threading.Thread(target=send, args=(m,))
             t.start()
-            self.assertTrue(wait_until(lambda: not t.is_alive(), 3000))
+            self.assertTrue(wait_until(lambda t=t: not t.is_alive(), 3000))
         self.assertEqual(answers, [True, False, False])
         self.assertEqual(got, [channel.CLOSING, channel.RELEASE])
 

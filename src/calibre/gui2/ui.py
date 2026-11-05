@@ -107,7 +107,7 @@ def add_quick_start_guide(library_view, refresh_cover_browser=None):
     mi = get_metadata(buf, 'epub')
     with PersistentTemporaryFile('.epub') as tmp:
         tmp.write(buf.getvalue())
-    library_view.model().add_books([tmp.name], ['epub'], [mi])
+    library_view.model().db.add_books([tmp.name], ['epub'], [mi])
     os.remove(tmp.name)
     library_view.model().books_added(1)
     if refresh_cover_browser is not None:
@@ -1019,6 +1019,16 @@ class Main(
                     det_msg=traceback.format_exc(),
                     show=True,
                 )
+        elif msg.startswith('save-book-storage:'):
+            from calibre.gui2.viewer.integration import save_book_storage_in_gui
+
+            try:
+                if not save_book_storage_in_gui(self.library_broker, msg[len('save-book-storage:') :]):
+                    print('Failed to update book storage for book from viewer, book or library not found.', file=sys.stderr)
+            except Exception:
+                import traceback
+
+                traceback.print_exc()
         elif msg.startswith('bookedited:'):
             parts = msg.split(':')[1:]
             try:
@@ -1338,6 +1348,9 @@ class Main(
     def read_settings(self):
         self.restore_geometry(gprefs, 'calibre_main_window_geometry', get_legacy_saved_geometry=lambda: config['main_window_geometry'])
         self.read_layout_settings()
+        # The Tag browser tree is built only if its pane is visible, which is
+        # known only now. It must be built before its expansion is restored.
+        self.tb_widget.set_pane_is_visible(self.layout_container.tag_browser_button.isChecked())
         self._restore_tb_expansion_state()
 
     def write_settings(self):

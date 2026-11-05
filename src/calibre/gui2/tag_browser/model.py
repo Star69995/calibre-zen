@@ -48,6 +48,8 @@ class TagTreeItem:  # {{{
     icon_config_dir = ''
     file_icon_provider = None
     eval_formatter = EvalFormatter()
+    # True for hierarchical nodes that have no books of their own, only children
+    is_folder = False
 
     def __init__(
         self,
@@ -428,6 +430,7 @@ class TagsModel(QAbstractItemModel):  # {{{
     def __init__(self, parent, prefs=gprefs):
         QAbstractItemModel.__init__(self, parent)
         self.use_position_based_index_on_next_recount = False
+        self.last_build_fingerprint = None
         self.prefs = prefs
         self.node_map = {}
         self.category_nodes = []
@@ -453,7 +456,10 @@ class TagsModel(QAbstractItemModel):  # {{{
         self.filter_categories_by = None
         self.collapse_model = 'disable'
         self.row_map = []
+        self.categories = OrderedDict()
+        self.hierarchical_categories = {}
         self.db = None
+        self.tree_is_built = False
         self.root_item = self.create_node(icon_map=self.icon_state_map)
         self._build_in_progress = False
         self.reread_collapse_model({}, rebuild=False)
@@ -544,10 +550,14 @@ class TagsModel(QAbstractItemModel):  # {{{
             self.collapse_model = 'disable'
         else:
             self.collapse_model = self.prefs['tags_browser_partition_method']
-        if rebuild:
+        if rebuild and self.tree_is_built:
             self.rebuild_node_tree(state_map)
 
-    def set_database(self, db, hidden_categories=None):
+    def set_database(self, db, hidden_categories=None, build_tree=True):
+        """
+        Use build_tree=False to not build the tree, for example because it is
+        not visible. ensure_tree_built() builds it.
+        """
         self.beginResetModel()
         self.value_icons = self.prefs['tags_browser_value_icons']
         hidden_cats = db.new_api.pref('tag_browser_hidden_categories', None)
@@ -564,7 +574,13 @@ class TagsModel(QAbstractItemModel):  # {{{
             self.hidden_categories = hidden_categories
 
         self.db = db
-        self._run_rebuild()
+        # The versions of the categories of a different library say nothing
+        # about whether the current sub-trees can be used again
+        self.last_category_versions = {}
+        if build_tree:
+            self._run_rebuild()
+        else:
+            self._clear_tree()
         self.endResetModel()
 
     def reset_tag_browser(self):
@@ -579,7 +595,8 @@ class TagsModel(QAbstractItemModel):  # {{{
         for cat in hidden_cats:
             if cat in db.field_metadata:
                 self.hidden_categories.add(cat)
-        self._run_rebuild()
+        if self.tree_is_built:
+            self._run_rebuild()
         self.endResetModel()
 
     def _cached_notes_map(self, category):
@@ -627,7 +644,9 @@ class TagsModel(QAbstractItemModel):  # {{{
     def reset_notes_and_link_maps(self):
         self.link_map = self.notes_map = None
 
-    def rebuild_node_tree(self, state_map={}):
+    def rebuild_node_tree(self, state_map=None):
+        if state_map is None:
+            state_map = {}
         if self._build_in_progress:
             print('Tag browser build already in progress')
             traceback.print_stack()
@@ -636,20 +655,165 @@ class TagsModel(QAbstractItemModel):  # {{{
         # print()
         self._build_in_progress = True
         self.beginResetModel()
-        self._run_rebuild(state_map=state_map)
-        self.endResetModel()
-        self._build_in_progress = False
+        try:
+            self._run_rebuild(state_map=state_map)
+        finally:
+            self.endResetModel()
+            self._build_in_progress = False
 
-    def _run_rebuild(self, state_map={}):
+    def _run_rebuild(self, state_map=None):
+        # Take the fingerprint before building, so that a write that happens in
+        # another thread while we build is not counted as already displayed
+        if state_map is None:
+            state_map = {}
+        fingerprint = self.current_build_fingerprint()
+        versions, signature = self.current_category_versions(), self.subtree_signature()
         self.reset_notes_and_link_maps()
-        for node in self.node_map.values():
-            node.break_cycles()
-        del node  # Clear reference to node in the current frame
-        self.node_map.clear()
+        # The sub-tree of a category whose items cannot have changed is kept
+        # instead of being built again, so only the nodes that are not part of
+        # the new tree have their cycles broken
+        old_node_map = self.node_map
+        self.reusable_subtrees = self.find_reusable_subtrees(versions, signature)
+        # A build that fails leaves the tree partly built, so its sub-trees
+        # must not be used again. The versions are recorded only on success.
+        self.last_category_versions = {}
+        self.node_map = {}
         self.category_nodes = []
         self.hierarchical_categories = {}
         self.root_item = self.create_node(icon_map=self.icon_state_map)
-        self._rebuild_node_tree(state_map=state_map)
+        try:
+            self._rebuild_node_tree(state_map=state_map)
+        finally:
+            self.reusable_subtrees = {}
+            new_node_map = self.node_map
+            for node_id, node in old_node_map.items():
+                if node_id not in new_node_map:
+                    node.break_cycles()
+            node = None  # Clear reference to node in the current frame
+            old_node_map.clear()
+        self.last_build_fingerprint = fingerprint
+        self.last_category_versions, self.last_subtree_signature = versions, signature
+        self.tree_is_built = True
+
+    def _clear_tree(self):
+        old_node_map = self.node_map
+        self.node_map = {}
+        self.category_nodes = []
+        self.categories = OrderedDict()
+        self.row_map = []
+        self.hierarchical_categories = {}
+        self.root_item = self.create_node(icon_map=self.icon_state_map)
+        for node in old_node_map.values():
+            node.break_cycles()
+        old_node_map.clear()
+        self.reset_notes_and_link_maps()
+        self.last_build_fingerprint = None
+        self.tree_is_built = False
+
+    def ensure_tree_built(self):
+        """
+        Build the tree if it has not been built, see set_database(). Use before
+        using the tree, categories or nodes from outside the Tag browser.
+        """
+        if not self.tree_is_built:
+            self.rebuild_node_tree()
+
+    def current_category_versions(self):
+        db = self.db
+        if db is None:
+            return {}
+        return db.new_api.categories_cache.versions(db.field_metadata)
+
+    def subtree_signature(self):
+        """Everything apart from the items themselves that changes how a category sub-tree is built"""
+        db = self.db
+        if db is None:
+            return None
+        return (
+            config['sort_tags_by'],
+            self.collapse_model,
+            self.filter_categories_by,
+            self.prefs['tags_browser_collapse_at'],
+            self.prefs['tags_browser_collapse_fl_at'],
+            self.prefs['tag_browser_folders_first'],
+            tuple(db.prefs.get('tag_browser_dont_collapse', self.prefs['tag_browser_dont_collapse']) or ()),
+            tuple(self.icon_state_map),
+            tuple(sorted(db.new_api.pref('categories_using_hierarchy', ()))),
+            bool(db.data.get_base_restriction() or db.data.get_search_restriction()),
+        )
+
+    def find_reusable_subtrees(self, versions, signature):
+        """
+        The category nodes of the current tree whose sub-tree can be used again,
+        because neither their items nor the way they are displayed can have
+        changed since it was built.
+        """
+        ans = {}
+        root = getattr(self, 'root_item', None)
+        if root is None or signature is None or signature != getattr(self, 'last_subtree_signature', None):
+            return ans
+        if self.db is not None and (self.db.data.get_base_restriction() or self.db.data.get_search_restriction()):
+            # The items are restricted to the books of the Virtual library, and
+            # get_categories() does not cache them, so they are not tracked
+            return ans
+        last = getattr(self, 'last_category_versions', None) or {}
+        for node in getattr(root, 'children', ()):
+            key = node.category_key
+            # User categories and grouped search terms take their items from
+            # other categories, saved searches and news are not categories of
+            # items at all, and the rating category is modified in place
+            if not key or key.startswith('@') or key in ('search', 'news', 'rating'):
+                continue
+            version = versions.get(key)
+            if version is not None and last.get(key) == version:
+                ans[key] = node
+        return ans
+
+    def reuse_subtree(self, category, old, state_map):
+        """Move the sub-tree built for a category on an earlier build to its new category node"""
+        category.children = old.children
+        old.children = []
+        node_map = self.node_map
+        stack = list(category.children)
+        while stack:
+            node = stack.pop()
+            node_map[id(node)] = node
+            node.boxed = False
+            # The icon rules or the preferences for showing icons can have
+            # changed, so the icon is computed again using the current ones
+            node.category_custom_icons = self.category_custom_icons
+            node.value_icons = self.value_icons
+            node.value_icon_cache = self.value_icon_cache
+            node.icon_state_map[0] = node.icon = None
+            tag = node.tag
+            if node.type == TagTreeItem.TAG and tag is not None:
+                tag.state = state_map.get((tag.name, tag.category), 0)
+            stack.extend(node.children)
+        for child in category.children:
+            child.parent = category
+
+    def current_build_fingerprint(self):
+        db = self.db
+        if db is None:
+            return None
+        base_restriction = db.data.get_base_restriction()
+        search_restriction = db.data.get_search_restriction()
+        # Which books a Virtual library matches can depend on any field, so
+        # when one is in use a change to any field can change the item counts
+        all_fields = bool(base_restriction or search_restriction)
+        return (
+            db.new_api.categories_cache.fingerprint(db.field_metadata, all_fields=all_fields),
+            base_restriction,
+            search_restriction,
+            config['sort_tags_by'],
+            self.collapse_model,
+            self.filter_categories_by,
+        )
+
+    def categories_unchanged_since_last_build(self):
+        """True if nothing the Tag browser displays can have changed since the tree was last built"""
+        fp = self.current_build_fingerprint()
+        return fp is not None and fp == self.last_build_fingerprint
 
     def _rebuild_node_tree(self, state_map):
         # Note that _get_category_nodes can indirectly change the
@@ -740,6 +904,10 @@ class TagsModel(QAbstractItemModel):  # {{{
 
         eval_formatter = EvalFormatter()
         intermediate_nodes = {}
+        # ids of the Tag objects created for the intermediate components of
+        # hierarchical names, that is, the ones that have no books of their own
+        folder_tags = set()
+        folders_first = self.prefs['tag_browser_folders_first']
 
         if data is None:
             print('_create_node_tree: no data!')
@@ -765,6 +933,15 @@ class TagsModel(QAbstractItemModel):  # {{{
             if len(components) == 0 or '.'.join(components) != name:
                 components = [name]
             return components
+
+        def sort_folders_first(node):
+            # The sort is stable, so the chosen sort order is kept among the
+            # folders and among the other items. Category nodes such as
+            # partitions and sub user categories are not moved.
+            node.children.sort(key=lambda c: c.type == TagTreeItem.TAG and not c.is_folder)
+            for c in node.children:
+                if c.children:
+                    sort_folders_first(c)
 
         def process_one_node(category, collapse_model, book_rating_map, state_map):  # {{{
             collapse_letter = None
@@ -962,6 +1139,11 @@ class TagsModel(QAbstractItemModel):  # {{{
                         if (comp, child_key) in child_map:
                             node_parent = child_map[(comp, child_key)]
                             t = node_parent.tag
+                            if i == len(components) - 1:
+                                # An item with books of its own was merged
+                                # into an intermediate node
+                                folder_tags.discard(id(t))
+                                node_parent.is_folder = False
                             t.is_hierarchical = '5state' if tag.category != 'search' else '3state'
                             if tag.id_set is not None and t.id_set is not None:
                                 t.id_set = t.id_set | tag.id_set
@@ -982,6 +1164,7 @@ class TagsModel(QAbstractItemModel):  # {{{
                                         t.is_searchable = t.is_editable = False
                                         t.search_expression = None
                                     intermediate_nodes[original_name, child_key] = t
+                                    folder_tags.add(id(t))
                             else:
                                 t = tag
                                 if not in_uc:
@@ -990,6 +1173,8 @@ class TagsModel(QAbstractItemModel):  # {{{
                             t.is_hierarchical = '5state' if t.category != 'search' else '3state'
                             t.name = comp
                             node_parent = self.create_node(parent=node_parent, data=t, is_gst=is_gst, tooltip=tt, icon_map=self.icon_state_map)
+                            if id(t) in folder_tags:
+                                node_parent.is_folder = True
                             child_map[(comp, child_key)] = node_parent
 
                         # Correct the average rating for the node
@@ -1000,6 +1185,8 @@ class TagsModel(QAbstractItemModel):  # {{{
                                 total += rating / 2.0
                                 count += 1
                         node_parent.cached_average_rating = float(total) / count if total and count else 0
+            if folders_first:
+                sort_folders_first(category)
             return
 
         # }}}
@@ -1010,6 +1197,10 @@ class TagsModel(QAbstractItemModel):  # {{{
         assert cnt_db is not None
         with cnt_db.new_api.safe_read_lock:  # needed as we read from book_value_map
             for category in self.category_nodes:
+                old = self.reusable_subtrees.pop(category.category_key, None)
+                if old is not None:
+                    self.reuse_subtree(category, old, state_map.get(category.category_key, {}))
+                    continue
                 process_one_node(
                     category,
                     collapse_model,

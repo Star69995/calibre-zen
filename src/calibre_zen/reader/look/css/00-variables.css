@@ -75,6 +75,7 @@ $font_faces
   --zen-danger: $light_danger; /* destructive text and glyphs */
   --zen-danger-bg: $light_danger_bg; /* a destructive control's tint */
   --zen-danger-bg-hover: $light_danger_bg_hover; /* the same under the pointer */
+  --zen-success: $light_success; /* a confirmation: text and glyphs */
   --zen-link: $light_link; /* a link inside the chrome */
   --zen-tooltip-bg: $light_tooltip_bg; /* a tooltip: dark in both modes */
   --zen-tooltip-fg: $light_tooltip_fg; /* text on a tooltip */
@@ -92,6 +93,9 @@ $font_faces
   --zen-ring: 0 0 0 2px var(--zen-ring-color), 0 0 0 5px var(--zen-ring-glow); /* the whole focus ring, as a box-shadow */
   --zen-shadow-sm: 0 1px 2px rgb($shadow_ink / 0.06), 0 1px 3px rgb($shadow_ink / 0.1); /* a control that lifts a little: a raised button, a chip */
   --zen-shadow-lg: 0 4px 8px -2px rgb($shadow_ink / 0.08), 0 16px 40px -8px rgb($shadow_ink / 0.18); /* a floating surface: the menu card, a popover, the selection bar */
+  --zen-shadow-faint: rgb($shadow_ink / 0.08); /* the colour of a shadow, for the page's own box-shadows: barely there */
+  --zen-shadow-mid: rgb($shadow_ink / 0.14); /* the same, a card lifted a little */
+  --zen-shadow-deep: rgb($shadow_ink / 0.2); /* the same, a surface that floats */
 }
 
 /* ---- The same names, dark (and Dim, when the overlay is on Dim) ---- */
@@ -117,6 +121,7 @@ $font_faces
   --zen-danger: $dark_danger;
   --zen-danger-bg: $dark_danger_bg;
   --zen-danger-bg-hover: $dark_danger_bg_hover;
+  --zen-success: $dark_success;
   --zen-link: $dark_link;
   --zen-tooltip-bg: $dark_tooltip_bg;
   --zen-tooltip-fg: $dark_tooltip_fg;
@@ -135,6 +140,10 @@ $font_faces
      faint light edge on top, and a deeper, tighter shadow than light needs. */
   --zen-shadow-sm: 0 1px 2px rgb($shadow_ink / 0.4);
   --zen-shadow-lg: 0 12px 32px -4px rgb($shadow_ink / 0.55), inset 0 1px 0 var(--zen-edge);
+  /* a shadow barely shows on a dark page, so these are heavier than light's */
+  --zen-shadow-faint: rgb($shadow_ink / 0.3);
+  --zen-shadow-mid: rgb($shadow_ink / 0.5);
+  --zen-shadow-deep: rgb($shadow_ink / 0.6);
 }
 
 /*
@@ -155,15 +164,26 @@ $font_faces
   --calibre-color-window-foreground: var(--zen-fg) !important;
   --calibre-color-window-error-foreground: var(--zen-danger) !important;
   --calibre-color-window-hover-foreground: var(--zen-fg) !important;
+  --calibre-color-window-success-foreground: var(--zen-success) !important;
   --calibre-color-link-foreground: var(--zen-link) !important;
   --calibre-color-faded-text: var(--zen-muted) !important;
   --calibre-color-border: var(--zen-border) !important;
   --calibre-color-border-subtle: var(--zen-border-weak) !important;
+  --calibre-color-border-strong: var(--zen-border-strong) !important;
+  --calibre-color-border-control: var(--zen-muted) !important;
+  --calibre-color-shadow-faint: var(--zen-shadow-faint) !important;
+  --calibre-color-shadow: var(--zen-shadow-mid) !important;
+  --calibre-color-shadow-strong: var(--zen-shadow-deep) !important;
   --calibre-color-scrollbar-thumb: var(--zen-scroll) !important;
   --calibre-color-scrollbar-thumb-hover: var(--zen-scroll-hover) !important;
   --calibre-color-surface-1: var(--zen-tint-1) !important;
   --calibre-color-surface-2: var(--zen-tint-2) !important;
   --calibre-color-surface-3: var(--zen-tint-3) !important;
+  --calibre-color-faint-background: var(--zen-tint-2) !important;
+  --calibre-color-placeholder-background: var(--zen-tint-1) !important;
+  --calibre-color-progress-track: var(--zen-track) !important;
+  --calibre-color-rating-empty-star: color-mix(in srgb, var(--zen-fg) 20%, transparent) !important;
+  --calibre-color-loading-overlay-background: color-mix(in srgb, var(--zen-surface) 55%, transparent) !important;
 
   --calibre-color-bar-background: var(--zen-raised) !important;
   --calibre-color-bar-foreground: var(--zen-fg) !important;

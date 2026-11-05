@@ -469,6 +469,7 @@ class Boss(QObject):
             self.global_undo.open_book(container)
             self.gui.update_window_title()
             self.gui.file_list.current_edited_name = None
+            self.gui.toc_view.currently_editing = None
             self.gui.file_list.build(container, preserve_state=False)
             self.gui.action_save.setEnabled(False)
             self.update_global_history_actions()
@@ -1286,7 +1287,7 @@ class Boss(QObject):
         if ret is True:
             ed = self.gui.central.current_editor
             if getattr(ed, 'has_line_numbers', False):
-                getattr(ed, 'editor').setFocus(Qt.FocusReason.OtherFocusReason)
+                ed.editor.setFocus(Qt.FocusReason.OtherFocusReason)
             else:
                 self.gui.saved_searches.setFocus(Qt.FocusReason.OtherFocusReason)
         else:
@@ -1323,7 +1324,7 @@ class Boss(QObject):
         if ret is True:
             ed = self.gui.central.current_editor
             if getattr(ed, 'has_line_numbers', False):
-                getattr(ed, 'editor').setFocus(Qt.FocusReason.OtherFocusReason)
+                ed.editor.setFocus(Qt.FocusReason.OtherFocusReason)
             else:
                 self.gui.saved_searches.setFocus(Qt.FocusReason.OtherFocusReason)
         else:
@@ -1341,7 +1342,7 @@ class Boss(QObject):
         if ret is True:
             ed = self.gui.central.current_editor
             if getattr(ed, 'has_line_numbers', False):
-                getattr(ed, 'editor').setFocus(Qt.FocusReason.OtherFocusReason)
+                ed.editor.setFocus(Qt.FocusReason.OtherFocusReason)
 
     def find_initial_text(self, text):
         from calibre.gui2.tweak_book.search import get_search_regex
@@ -2183,11 +2184,13 @@ class Boss(QObject):
                     self.sync_preview_to_editor()
             if name is not None:
                 self.gui.file_list.mark_name_as_current(name)
+                self.gui.toc_view.mark_name_as_current(name)
             if ed.has_line_numbers:
                 self.gui.cursor_position_widget.update_position(*ed.cursor_position)
         else:
             actions['go-to-line-number'].setEnabled(False)
             self.gui.file_list.clear_currently_edited_name()
+            self.gui.toc_view.clear_currently_edited_name()
 
     def update_cursor_position(self):
         ed = self.gui.central.current_editor

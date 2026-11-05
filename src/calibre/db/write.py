@@ -21,13 +21,34 @@ def sqlite_datetime(x):
     return isoformat(x, sep=' ') if isinstance(x, datetime) else x
 
 
-def single_text(x):
+def long_text(x):
     if x is None:
         return x
     if not isinstance(x, str):
         x = x.decode(preferred_encoding, 'replace')
     x = x.strip()
     return x or None
+
+
+# All whitespace except the non-breaking spaces: NO-BREAK SPACE, FIGURE SPACE
+# and NARROW NO-BREAK SPACE
+breaking_whitespace_pat = re.compile(r'[^\S\xa0\u2007\u202f]+')
+
+
+def normalize_whitespace(x: str) -> str:
+    """Collapse runs of whitespace into a single space, preserving non-breaking spaces"""
+    # isascii() is O(1) and str.split() is much faster than the regex, so
+    # only use the regex when there is actually a non-breaking space present
+    if x.isascii() or ('\xa0' not in x and '\u202f' not in x and '\u2007' not in x):
+        return ' '.join(x.split())
+    return breaking_whitespace_pat.sub(' ', x).strip(' ')
+
+
+def single_text(x):
+    x = long_text(x)
+    if x is None:
+        return x
+    return normalize_whitespace(x)
 
 
 series_index_pat = re.compile(r'(.*)\s+\[([.0-9]+)\]$')
@@ -59,7 +80,7 @@ def multiple_text(sep, ui_sep, x):
     ui_sep = ui_sep.strip()
     repsep = ',' if ui_sep == ';' else ';'
     x = (y.strip().replace(ui_sep, repsep) for y in x if y.strip())
-    return tuple(' '.join(y.split()) for y in x if y)
+    return tuple(normalize_whitespace(y) for y in x if y)
 
 
 def adapt_datetime(x):
@@ -144,7 +165,9 @@ def get_adapter(name, metadata):
             m = metadata['is_multiple']
             ans = partial(multiple_text, m['ui_to_list'], m['list_to_ui'])
         else:
-            ans = single_text
+            # The builtin comments field has datatype text but stores HTML,
+            # so its whitespace must be preserved
+            ans = long_text if name == 'comments' else single_text
     elif dt == 'series':
         ans = single_text
     elif dt == 'datetime':
@@ -156,7 +179,7 @@ def get_adapter(name, metadata):
     elif dt == 'bool':
         ans = adapt_bool
     elif dt == 'comments':
-        ans = single_text
+        ans = long_text
     elif dt == 'rating':
 
         def ans(x):
@@ -371,6 +394,12 @@ def many_one(book_id_val_map, db, field, allow_case_change, *args):
             sql.format(table.link_table, m['link_column']),
             ((book_id, book_id, item_id) for book_id, item_id in updated.items()),
         )
+        if is_custom_series:
+            # The rows were inserted with index 1.0, make the in-memory index agree. Otherwise custom_series_index() skips writing
+            # the index when the new index equals the one the book had before the series was changed, leaving 1.0 in the database
+            index_map = field.index_field.table.book_col_map
+            for book_id in updated:
+                index_map[book_id] = 1.0
 
     # Remove no longer used items
     remove = {item_id: item_val for item_id, item_val in table.id_map.items() if not table.col_book_map.get(item_id, False)}

@@ -130,7 +130,9 @@ class UnBinary:
     DOUBLE_ANGLE_RE = re.compile(rb'([<>])\1')
     EMPTY_ATOMS = ({}, {})
 
-    def __init__(self, bin, path, manifest={}, map=HTML_MAP, atoms=EMPTY_ATOMS):
+    def __init__(self, bin, path, manifest=None, map=HTML_MAP, atoms=EMPTY_ATOMS):
+        if manifest is None:
+            manifest = {}
         self.manifest = manifest
         self.tag_map, self.attr_map, self.tag_to_attr_map = map
         self.is_html = map is HTML_MAP
@@ -194,7 +196,7 @@ class UnBinary:
         if state == 'close tag':
             if not tag_name:
                 raise LitError('Tag ends before it begins.')
-            buf.write(encode(''.join(('</', tag_name, '>'))))
+            buf.write(encode(f'</{tag_name}>'))
             dynamic_tag = 0
             tag_name = None
             state = 'text'
@@ -379,7 +381,7 @@ class UnBinary:
                     doc, frag = urldefrag(href[1:])
                     path = self.item_path(doc)
                     if frag:
-                        path = '#'.join((path, frag))
+                        path = f'{path}#{frag}'
                     path = urlnormalize(path)
                     buf.write(encode(f'"{path}"'))
                     state = 'get attr'
@@ -758,7 +760,7 @@ class LitFile:
                 content = self.decrypt(content)
                 control = control[csize:]
             elif guid == LZXCOMPRESS_GUID:
-                reset_table = self.get_file('/'.join(('::DataSpace/Storage', name, 'Transform', LZXCOMPRESS_GUID, 'InstanceData/ResetTable')))
+                reset_table = self.get_file('/'.join(('::DataSpace/Storage', name, 'Transform', LZXCOMPRESS_GUID, 'InstanceData/ResetTable')))  # ruff: ignore[static-join-to-f-string]
                 content = self.decompress(content, control, reset_table)
                 control = control[csize:]
             else:
@@ -832,7 +834,7 @@ class LitFile:
         return b''.join(result)
 
     def get_atoms(self, entry):
-        name = '/'.join(('/data', entry.internal, 'atom'))
+        name = '/'.join(('/data', entry.internal, 'atom'))  # ruff: ignore[static-join-to-f-string]
         if name not in self.entries:
             return {}, {}
         data = self.get_file(name)
@@ -881,7 +883,7 @@ class LitContainer:
         if entry is None:
             content = OPF_DECL + self._read_meta()
         elif 'spine' in entry.state:
-            internal = '/'.join(('/data', entry.internal, 'content'))
+            internal = '/'.join(('/data', entry.internal, 'content'))  # ruff: ignore[static-join-to-f-string]
             raw = self._litfile.get_file(internal)
             manifest = self._litfile.manifest
             atoms = self._litfile.get_atoms(entry)
@@ -892,7 +894,7 @@ class LitContainer:
             content = re.sub(pat, '', content)
             content = re.sub(r'<(/{0,1})form>', r'<\1div>', content)
         else:
-            internal = '/'.join(('/data', entry.internal))
+            internal = '/'.join(('/data', entry.internal))  # ruff: ignore[static-join-to-f-string]
             content = self._litfile.get_file(internal)
         return content
 

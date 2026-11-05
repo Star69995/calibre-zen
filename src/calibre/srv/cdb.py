@@ -9,19 +9,20 @@ from io import BytesIO
 
 from calibre import as_unicode, sanitize_file_name
 from calibre.db.cli import module_for_cmd
+from calibre.db.errors import BooksNotRemoved
 from calibre.ebooks.metadata.meta import get_metadata
 from calibre.srv.changes import books_added, books_deleted, metadata
 from calibre.srv.errors import HTTPBadRequest, HTTPForbidden, HTTPNotFound
 from calibre.srv.metadata import book_as_json
 from calibre.srv.routes import endpoint, json, msgpack_or_json
-from calibre.srv.utils import get_db, get_library_data
+from calibre.srv.utils import get_db, get_library_data, is_recipe_fmt
 from calibre.utils.imghdr import what
 from calibre.utils.localization import canonicalize_lang, reverse_lang_map_for_ui
 from calibre.utils.serialize import MSGPACK_MIME, json_loads, msgpack_loads
 from calibre.utils.speedups import ReadOnlyFileBuffer
 from polyglot.binary import from_base64_bytes
 
-receive_data_methods = {'GET', 'POST'}
+receive_data_methods = {'POST'}
 
 
 @endpoint('/cdb/cmd/{which}/{version=0}', postprocess=msgpack_or_json, methods=receive_data_methods, cache_control='no-cache')
@@ -63,11 +64,6 @@ def cdb_run(ctx, rd, which, version):
             tb = traceback.format_exc()
         return {'err': as_unicode(err), 'tb': tb}
     return {'result': result}
-
-
-def is_recipe_fmt(fmt: str) -> bool:
-    fmt = fmt.lower().removeprefix('original_')
-    return fmt in ('recipe', 'downloaded_recipe')
 
 
 @endpoint(
@@ -141,7 +137,12 @@ def cdb_delete_book(ctx, rd, book_ids, library_id):
         ids = {int(x) for x in book_ids.split(',')}
     except Exception:
         raise HTTPBadRequest(f'invalid book_ids: {book_ids}')
-    db.remove_books(ids)
+    try:
+        db.remove_books(ids)
+    except BooksNotRemoved as err:
+        if err.removed:
+            ctx.notify_changes(db.backend.library_path, books_deleted(err.removed))
+        raise
     ctx.notify_changes(db.backend.library_path, books_deleted(ids))
     return {}
 
@@ -219,11 +220,11 @@ def cdb_set_fields(ctx, rd, book_id, library_id):
     if added_formats:
         for data in added_formats:
             try:
-                fmt = data['ext'].upper()
+                fmt = sanitize_file_name(data['ext']).upper()
             except Exception:
                 raise HTTPBadRequest('Format has no extension')
             if fmt:
-                if fmt.lower() in ('recipe', 'original_recipe'):
+                if is_recipe_fmt(fmt):
                     raise HTTPForbidden('Cannot use the add book interface to add recipe files, as they allow code execution')
                 try:
                     fmt_data = from_base64_bytes(data['data_url'].split(',', 1)[-1])
@@ -241,7 +242,7 @@ def cdb_set_fields(ctx, rd, book_id, library_id):
             rmap = reverse_lang_map_for_ui()
 
             def to_lang_code(x):
-                return rmap.get(x, canonicalize_lang(x))
+                return rmap.get(x, canonicalize_lang(x))  # ruff: ignore[function-uses-loop-variable]
 
             if isinstance(value, str):
                 value = (value,)

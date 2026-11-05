@@ -8,6 +8,7 @@ from contextlib import closing
 from io import BytesIO
 
 from calibre.constants import iswindows
+from calibre.db.errors import BooksNotRemoved
 from calibre.db.tests.base import BaseTest
 from calibre.ptempfile import TemporaryDirectory
 
@@ -215,9 +216,11 @@ class FilesystemTest(BaseTest):
         with open(fpath, 'rb') as f:
             with self.assertRaises(IOError):
                 cache.set_field('title', {1: 'Moved'})
-            with self.assertRaises(IOError):
+            with self.assertRaises(BooksNotRemoved):
                 cache.remove_books({1})
         self.assertNotEqual(cache.field_for('title', 1), 'Moved', 'Title was changed despite file lock')
+        self.assertIn(1, self.init_cache(cl).all_book_ids(), 'Book was removed from the database despite file lock')
+        self.assertTrue(os.path.exists(fpath), 'Book file was removed despite file lock')
 
         # Test on folder with hardlinks
         from calibre.ptempfile import TemporaryDirectory
@@ -436,6 +439,21 @@ class FilesystemTest(BaseTest):
             finally:
                 apsw.Connection = orig_connection
             self.assertEqual(step_calls['count'], 1)
+
+    def test_backup_database_unlockable_destination(self):
+        import apsw
+
+        cache = self.init_cache()
+        backend = cache.backend
+        with TemporaryDirectory('backup_db') as tdir:
+            self.assertTrue(backend.can_use_sqlite_in(tdir))
+            self.assertFalse(os.listdir(tdir))
+            # Simulate a destination that can never be locked, as on SMB/CIFS shares
+            path = os.path.join(tdir, 'backup.db')
+            with closing(apsw.Connection(path)) as locker:
+                locker.cursor().execute('CREATE TABLE t(x); BEGIN EXCLUSIVE; INSERT INTO t VALUES (1);')
+                self.assertRaises(apsw.BusyError, backend._backup_database, path, 'main', busy_timeout=0.2)
+                locker.cursor().execute('ROLLBACK')
 
     def test_find_books_in_directory(self):
         from calibre.db.adding import compile_rule, find_books_in_directory

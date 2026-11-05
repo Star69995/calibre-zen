@@ -25,6 +25,7 @@ class TBDisplayedFields(DisplayedFields):
         tv = self.gui.tags_view
         model = tv.model()
         assert isinstance(model, TagsModel)
+        model.ensure_tree_built()
         cat_ord = model.get_ordered_categories(use_defaults=use_defaults, pref_data_override=pref_data_override)
         if use_defaults:
             hc = []
@@ -51,6 +52,7 @@ class TbDisplayTab(LazyConfigWidgetBase, Ui_Form):
         r = self.register
         r('tag_browser_old_look', gprefs)
         r('tag_browser_hide_empty_categories', gprefs)
+        r('tag_browser_folders_first', gprefs)
         r('tag_browser_always_autocollapse', gprefs)
         r('tag_browser_restore_tree_expansion', gprefs)
         r('tag_browser_show_tooltips', gprefs)

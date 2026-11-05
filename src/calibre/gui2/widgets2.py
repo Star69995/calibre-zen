@@ -4,6 +4,7 @@
 import weakref
 from collections.abc import Callable
 from functools import lru_cache
+from typing import TYPE_CHECKING
 
 from qt.core import (
     QBrush,
@@ -74,10 +75,13 @@ class HistoryMixin:
 
     _name: str
     history: list[str]
-    text: Callable[[], str]
-    setText: Callable[[str], None]
-    update_items_cache: Callable[[list[str]], None]
-    set_separator: Callable[[str | None], None]
+    if TYPE_CHECKING:
+
+        def text(self) -> str: ...
+        def setText(self, text: str, /) -> None: ...
+        def update_items_cache(self, complete_items: list[str], /) -> None: ...
+        def set_separator(self, sep: str | None, /) -> None: ...
+        def enable_history_item_removal(self, callback: Callable[[str], None], /) -> None: ...
 
     @property
     def store_name(self):
@@ -93,6 +97,7 @@ class HistoryMixin:
             self.editingFinished.connect(self.save_history)  # type: ignore
         except AttributeError:
             self.lineEdit().editingFinished.connect(self.save_history)  # type: ignore
+        self.enable_history_item_removal(self.remove_history_item)
 
     def load_history(self):
         return history.get(self.store_name, [])
@@ -109,6 +114,16 @@ class HistoryMixin:
                 del self.history[self.max_history_items :]
             history.set(self.store_name, self.history)
             self.update_items_cache(self.history)
+
+    def remove_history_item(self, item: str) -> None:
+        # completion entries are possibly stripped versions of the history
+        # entries, so match against both forms
+        remaining = [x for x in self.history if x != item and x.strip() != item]
+        if len(remaining) == len(self.history):
+            return
+        self.history = remaining
+        history.set(self.store_name, self.history)
+        self.update_items_cache(self.history)
 
     def clear_history(self):
         self.history = []

@@ -8,9 +8,9 @@ from lxml.etree import XMLSyntaxError
 from calibre import human_readable, prepare_string_for_xml
 from calibre.ebooks.chardet import find_declared_encoding, replace_encoding_declarations
 from calibre.ebooks.html_entities import html5_entities
-from calibre.ebooks.oeb.base import OEB_DOCS, URL_SAFE, XHTML, XHTML_NS, urlquote
+from calibre.ebooks.oeb.base import OEB_DOCS, URL_SAFE, XHTML, XHTML_NS, iteridrefs, rewrite_idrefs, urlquote
 from calibre.ebooks.oeb.polish.check.base import INFO, WARN, BaseError
-from calibre.ebooks.oeb.polish.pretty import pretty_script_or_style as fix_style_tag
+from calibre.ebooks.oeb.polish.pretty import pretty_script_or_style as fix_style_tag  # ruff: ignore[unused-import]
 from calibre.ebooks.oeb.polish.utils import PositionFinder, guess_type
 from calibre.utils.localization import _
 from calibre.utils.xml_parse import safe_xml_fromstring
@@ -19,13 +19,13 @@ from polyglot.builtins import error_message
 HTML_ENTITTIES = frozenset(html5_entities)
 XML_ENTITIES = {'lt', 'gt', 'amp', 'apos', 'quot'}
 ALL_ENTITIES = HTML_ENTITTIES | XML_ENTITIES
-fix_style_tag
 
 replace_pat = re.compile('&({});'.format('|'.join(re.escape(x) for x in sorted(HTML_ENTITTIES - XML_ENTITIES))))
 mismatch_pat = re.compile(r'tag mismatch:.+?line (\d+).+?line \d+')
 
 
 class EmptyFile(BaseError):
+    RULE_NAME = _('Empty file')
     HELP = _('This file is empty, it contains nothing, you should probably remove it.')
     INDIVIDUAL_FIX = _('Remove this file')
 
@@ -167,6 +167,7 @@ class TooLarge(BaseError):
 
 
 class BadEntity(BaseError):
+    RULE_NAME = _('Invalid entity')
     HELP = _('This is an invalid (unrecognized) entity. Replace it with whatever text it is supposed to have represented.')
 
     def __init__(self, ent, name, lnum, col):
@@ -310,6 +311,7 @@ pos_pats = (re.compile(r'\[(\d+):(\d+)'), re.compile(r'(\d+), (\d+)\)'))
 
 
 class DuplicateId(BaseError):
+    RULE_NAME = _('Duplicate id')
     has_multiple_locations = True
 
     INDIVIDUAL_FIX = _('Remove the duplicate ids from all but the first element')
@@ -330,33 +332,91 @@ class DuplicateId(BaseError):
         return True
 
 
+def make_valid_id(eid: str, taken: set[str]) -> str:
+    # The generated id is also a valid CSS identifier so it can be used in
+    # selectors without escaping
+    base = re.sub(r'[^a-zA-Z0-9_-]', '_', eid)
+    if re.match(r'[a-zA-Z]', base) is None:
+        base = 'id' + base
+    ans, num = base, 1
+    while ans in taken:
+        num += 1
+        ans = f'{base}-{num}'
+    return ans
+
+
 class InvalidId(BaseError):
+    RULE_NAME = _('Invalid id')
     level = WARN
-    INDIVIDUAL_FIX = _('Replace this id with a randomly generated valid id')
+    INDIVIDUAL_FIX = _('Replace this id with a valid id')
 
     def __init__(self, name, line, eid):
         BaseError.__init__(self, _('Invalid id: %s') % eid, name, line)
-        self.HELP = _(
-            'The id {0} is not a valid id. IDs must start with a letter ([A-Za-z]) and may be'
-            ' followed by any number of letters, digits ([0-9]), hyphens ("-"), underscores ("_")'
-            ', colons (":"), and periods ("."). This is to ensure maximum compatibility'
-            ' with a wide range of devices.'
-        ).format(eid)
+        self.HELP = (
+            _(
+                'The id {0} is not a valid id. IDs must start with a letter ([A-Za-z]) and may be'
+                ' followed by any number of letters, digits ([0-9]), hyphens ("-"), underscores ("_")'
+                ', colons (":"), and periods ("."). This is to ensure maximum compatibility'
+                ' with a wide range of devices.'
+            ).format(eid)
+            + ' '
+            + _(
+                'Fixing this will replace the id in all HTML files that use it, along with'
+                ' links, CSS selectors and attributes such as aria-labelledby that refer to it.'
+                ' References in JavaScript are not updated.'
+            )
+        )
         self.invalid_id = eid
 
     def __call__(self, container):
-        from calibre.ebooks.oeb.base import uuid_id
+        from calibre.ebooks.oeb.polish.css import rename_ids_in_css
         from calibre.ebooks.oeb.polish.replace import replace_ids
 
-        newid = uuid_id()
-        changed = False
-        elems = (e for e in container.parsed(self.name).xpath('//*[@id]') if e.get('id') == self.invalid_id)
-        for e in elems:
-            e.set('id', newid)
-            changed = True
-            container.dirty(self.name)
+        # IDs in HTML files can be targeted by stylesheets shared between
+        # files, so rename the id in all HTML files, ensuring the renamed
+        # CSS selectors continue to match everywhere.
+        is_html = container.mime_map.get(self.name) in OEB_DOCS
+        names = [name for name, mt in container.mime_map.items() if mt in OEB_DOCS] if is_html else [self.name]
+        taken = set()
+        elems_map = {}
+        for name in names:
+            for e in container.parsed(name).xpath('//*[@id]'):
+                eid = e.get('id')
+                taken.add(eid)
+                if eid == self.invalid_id:
+                    elems_map.setdefault(name, []).append(e)
+        if not elems_map:
+            return False
+        newid = make_valid_id(self.invalid_id, taken)
+        for name, elems in elems_map.items():
+            for e in elems:
+                e.set('id', newid)
+            container.dirty(name)
+        replace_ids(container, {name: {self.invalid_id: newid} for name in elems_map})
+        if is_html:
+            rename_ids_in_css(container, {self.invalid_id: newid})
+        return True
+
+
+class DanglingIdReference(BaseError):
+    RULE_NAME = _('Reference to non-existent id')
+    has_multiple_locations = True
+    INDIVIDUAL_FIX = _('Remove the references to this id')
+
+    def __init__(self, name, eid, locs):
+        BaseError.__init__(self, _('Reference to non-existent id: %s') % eid, name)
+        self.HELP = _(
+            'The id {0} is referred to by attributes such as aria-labelledby or aria-describedby in {1},'
+            ' but no element in {1} has this id. Such attributes can only refer to elements in the same file.'
+            ' Either add the id to the element that should be referred to or remove the reference.'
+        ).format(eid, name)
+        self.all_locations = [(name, lnum, None) for lnum in sorted(locs)]
+        self.missing_id = eid
+
+    def __call__(self, container):
+        changed = rewrite_idrefs(container.parsed(self.name), lambda eid: None if eid == self.missing_id else eid)
         if changed:
-            replace_ids(container, {self.name: {self.invalid_id: newid}})
+            container.dirty(self.name)
         return changed
 
 
@@ -423,6 +483,13 @@ def check_ids(container):
                 if eid and valid_id.match(eid) is None:
                     errors.append(InvalidId(name, elem.sourceline, eid))
             errors.extend(DuplicateId(name, eid, locs) for eid, locs in dups.items())
+            if mt in OEB_DOCS:
+                dangling = {}
+                for elem, attr, ids in iteridrefs(root):
+                    for eid in ids:
+                        if eid not in seen_ids:
+                            dangling.setdefault(eid, set()).add(elem.sourceline)
+                errors.extend(DanglingIdReference(name, eid, locs) for eid, locs in dangling.items())
     return errors
 
 

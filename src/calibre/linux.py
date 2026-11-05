@@ -203,6 +203,63 @@ frozen_path = {frozen_path!r}
 if not frozen_path or not os.path.exists(os.path.join(frozen_path, 'resources', 'calibre-mimetypes.xml')):
     frozen_path = None
 
+
+def clear_user_caches():
+    # The uninstaller is typically run as root via sudo, but the caches belong
+    # to the user, so run calibre-debug --clear-caches as that user, before
+    # the calibre files are removed.
+    candidates = [os.path.join(os.path.dirname(os.path.abspath(sys.argv[-1])), 'calibre-debug')]
+    if frozen_path:
+        candidates.insert(0, os.path.join(frozen_path, 'calibre-debug'))
+    exe = None
+    for x in candidates:
+        if os.access(x, os.X_OK):
+            exe = x
+            break
+    if exe is None:
+        print('WARNING: Could not find calibre-debug, not clearing the calibre caches')
+        return
+    uid = os.geteuid()
+    if uid == 0:
+        uid = int(os.environ.get('SUDO_UID') or os.environ.get('PKEXEC_UID') or 0)
+    import pwd
+    try:
+        pw = pwd.getpwuid(uid)
+    except KeyError:
+        print('WARNING: Unknown user id:', uid, 'not clearing the calibre caches')
+        return
+    # Ensure the cache locations are computed for the user rather than taken
+    # from the environment of whoever ran sudo
+    env = dict((k, v) for k, v in os.environ.items() if not k.startswith(('XDG_', 'CALIBRE_')))
+    env.update(dict(HOME=pw.pw_dir, USER=pw.pw_name, LOGNAME=pw.pw_name))
+    print('Clearing the calibre caches for the user:', pw.pw_name)
+    sys.stdout.flush(), sys.stderr.flush()
+    pid = os.fork()
+    if pid == 0:
+        try:
+            if uid != os.geteuid():
+                os.initgroups(pw.pw_name, pw.pw_gid)
+                os.setgid(pw.pw_gid)
+                os.setuid(pw.pw_uid)
+            try:
+                os.chdir(pw.pw_dir)
+            except OSError:
+                os.chdir('/')
+            os.execve(exe, [exe, '--clear-caches'], env)
+        except BaseException as e:
+            print('Failed to run', exe, 'as the user', pw.pw_name, 'with error:', e)
+            sys.stdout.flush()
+        os._exit(1)
+    status = os.waitpid(pid, 0)[1]
+    if not os.WIFEXITED(status) or os.WEXITSTATUS(status) != 0:
+        print('WARNING: Failed to clear some or all of the calibre caches')
+
+
+try:
+    clear_user_caches()
+except Exception as e:
+    print('WARNING: Failed to clear the calibre caches with error:', e)
+
 dummy_mime_path = tempfile.mkdtemp(prefix='mime-hack.')
 for f in {mime_resources!r}:
     # dummyfile
@@ -286,7 +343,9 @@ class ZshCompleter:  # {{{
                 self.dest = os.path.join(c, '_calibre')
                 break
 
-    def get_options(self, parser, cover_opts=('--cover',), opf_opts=('--opf',), file_map={}):
+    def get_options(self, parser, cover_opts=('--cover',), opf_opts=('--opf',), file_map=None):
+        if file_map is None:
+            file_map = {}
         if hasattr(parser, 'option_list'):
             options = parser.option_list
             for group in parser.option_groups:
@@ -332,7 +391,9 @@ class ZshCompleter:  # {{{
             help_txt = f'"[{h}]"'
             yield f'{exclude}{ostrings}{help_txt}{arg} '
 
-    def opts_and_exts(self, name, op, exts, cover_opts=('--cover',), opf_opts=('--opf',), file_map={}):
+    def opts_and_exts(self, name, op, exts, cover_opts=('--cover',), opf_opts=('--opf',), file_map=None):
+        if file_map is None:
+            file_map = {}
         if not self.dest:
             return
         exts = sorted({x.lower() for x in exts})
@@ -1123,7 +1184,9 @@ complete -F _'''
 pics = ['bmp', 'gif', 'jpeg', 'jpg', 'png']  # keep sorted alphabetically
 
 
-def opts_and_exts(name, op, exts, cover_opts=('--cover',), opf_opts=(), file_map={}):
+def opts_and_exts(name, op, exts, cover_opts=('--cover',), opf_opts=(), file_map=None):
+    if file_map is None:
+        file_map = {}
     opts = ' '.join(options(op))
     exts.extend([i.upper() for i in exts])
     exts = '|'.join(sorted(exts))
@@ -1253,7 +1316,7 @@ def get_appdata():
             'description': (
                 _('calibre is the one stop solution to all your e-book needs.'),
                 _(
-                    'You can use calibre to catalog your books, fetch metadata for them automatically, convert them from and to all the various e-book formats, send them to your e-book reader devices, read the books on your computer, edit the books in a dedicated e-book editor and even make them available over the network with the built-in Content server. You can also download news and periodicals in e-book format from over a thousand different news and magazine websites.'  # noqa: E501
+                    'You can use calibre to catalog your books, fetch metadata for them automatically, convert them from and to all the various e-book formats, send them to your e-book reader devices, read the books on your computer, edit the books in a dedicated e-book editor and even make them available over the network with the built-in Content server. You can also download news and periodicals in e-book format from over a thousand different news and magazine websites.'  # ruff: ignore[line-too-long]
                 ),
             ),
             'screenshots': (
@@ -1282,7 +1345,7 @@ def get_appdata():
             'description': (
                 _('The calibre E-book editor allows you to edit the text and styles inside the book with a live preview of your changes.'),
                 _(
-                    'It can edit books in both the EPUB and AZW3 (Kindle) formats. It includes various useful tools for checking the book for errors, editing the Table of Contents, performing automated cleanups, etc.'  # noqa: E501
+                    'It can edit books in both the EPUB and AZW3 (Kindle) formats. It includes various useful tools for checking the book for errors, editing the Table of Contents, performing automated cleanups, etc.'  # ruff: ignore[line-too-long]
                 ),
             ),
             'screenshots': (

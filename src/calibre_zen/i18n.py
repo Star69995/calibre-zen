@@ -71,9 +71,8 @@ def compile_po(path: str) -> bytes | None:
 def attach() -> bool:
     "Add our catalog to calibre's current translator. Returns whether one was added."
     global _attached_to
-    from calibre_extensions.translator import Translator
-
     from calibre.utils import localization
+    from calibre_extensions.translator import Translator
 
     global _own
     current = localization.default_translator
@@ -105,7 +104,7 @@ def override(msgid: str) -> str:
         ans = _own.gettext(msgid)
         if ans != msgid:
             return ans
-    return _(msgid)  # noqa: F821  (calibre installs it)
+    return _(msgid)
 
 
 def install() -> bool:

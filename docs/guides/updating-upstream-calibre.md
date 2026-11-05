@@ -6,11 +6,11 @@ This guide covers the source merge, installer pin, checks, and pull request. It 
 
 ## 1. Start from the current fork branch
 
-Use a clean worktree based on the latest `zen`. In these examples, replace `9.14.0` and `9.15.0` with the old and new releases.
+Use a clean worktree based on the latest `zen`. In these examples, replace `9.15.0` and `9.17.0` with the old and new releases. Skipping a release is fine: merge the newest tag directly, and read the changelog of every release in between.
 
 ```sh
-old_version=9.14.0
-new_version=9.15.0
+old_version=9.15.0
+new_version=9.17.0
 git fetch origin zen
 git fetch upstream tag "v$new_version"
 git worktree add -b "wt/upstream-$new_version" "../calibre-upstream-$new_version" origin/zen
@@ -40,6 +40,21 @@ Upstream may change native code or build inputs. The matching release binary alr
 ```sh
 git diff --stat "v$old_version" "v$new_version" -- bypy/sources.json setup/extensions.json 'src/calibre/**/*.c' 'src/calibre/**/*.cpp'
 ```
+
+`packaging/windows/wix-template.xml` and the other files under `packaging/` started as copies of upstream's `bypy/` ones, so a change there does not arrive with the merge. Diff upstream's between the two tags and decide what the fork wants:
+
+```sh
+git diff "v$old_version" "v$new_version" -- bypy/windows bypy/macos bypy/linux
+```
+
+9.17.0 added `calibre-debug --clear-caches` and `--default-programs=unregister` to the `.msi` uninstall, and `clear_user_caches()` to the Linux uninstaller (that one arrives with `linux.py`). They were not ported to the fork's template: `--default-programs=unregister` works on the `Software\calibre\...` registry keys, which a normally installed calibre shares, and an installer change needs a real install and uninstall to check.
+
+## The overlay's audits of upstream
+
+Two tests exist to fail when upstream adds something the overlay has to decide about. Fix them in `src/calibre_zen/`, never in the upstream file.
+
+- `test_srvfix.Install.test_audit_is_complete`: a new `@read_api` method of `Cache` that touches `self.backend`. If its body runs SQL, add it to `SQL_READ_API` in `src/calibre_zen/host/fixes.py`; if it only reads an attribute, the prefs dict or the file system, add it to `NOT_SQL_READ_API`. Update the "Audited against calibre X" comment above them.
+- `test_reader_look.TestReaderLook.test_every_calibre_colour_is_replaced`: a new `--calibre-color-*` in `DEFAULT_COLORS` of `src/pyj/book_list/theme.pyj`. Point it at the zen role it stands for in `src/calibre_zen/reader/look/css/00-variables.css`, deriving from the existing `--zen-*` variables (`color-mix()` works) rather than writing a literal. If the role is missing, add it to both the light and the dark block, and to `theme/tokens/semantic.py` if it comes from the scheme.
 
 ## 3. Pin the five installers
 
@@ -78,12 +93,29 @@ hdiutil detach -quiet "$runtime_dir/mount"
 rm -r "$runtime_dir"
 ```
 
+On Windows there is no mount: download `calibre-64bit-$new_version.msi` from calibre's archive into its own empty folder, check the sha256 against `packaging/upstream.json`, and unpack it without installing it. `./zen-test` then takes the `calibre-debug.exe` inside:
+
+```sh
+msiexec /a calibre-64bit-$new_version.msi /qn TARGETDIR="C:\path\to\bundle"
+CALIBRE_ZEN_CALIBRE_DEBUG="C:/path/to/bundle/PFiles64/Calibre2/calibre-debug.exe" ./zen-test
+```
+
+Some tests fail on Windows before any change (see CLAUDE.md), so judge the run against a baseline: run the same suite on the previous `zen` with the previous release's binary (a second worktree), keep the `FAIL:`/`ERROR:` lines of both logs, and compare them with `comm -13`. What is only in the merge's list is yours to fix. 9.17.0 had two, the audits above, and the 18 Windows failures were identical on both sides.
+
 Run the lint and format checks with the Ruff version pinned in `.github/workflows/zen-ci.yml`. At the time of this guide, it is 0.16.8:
 
 ```sh
 uvx ruff@0.16.8 check .
 uvx ruff@0.16.8 format --check --diff src/calibre_zen packaging
 ```
+
+Upstream rewrites its Ruff configuration in `pyproject.toml` from time to time, and the fork lints under it. 9.17.0 turned on `unused-noqa` and `noqa-comments`, which flagged 50 comments in the fork's own code. Apply the fixes to the fork's paths only, and review the diff, which should be nothing but `noqa` comments and import order:
+
+```sh
+uvx ruff@0.16.8 check --fix src/calibre_zen packaging .calibre-zen scripts
+```
+
+`ruff format --check` on `src/calibre_zen/i18n.py` already failed before 9.17.0 (it wants Python 3.14's unparenthesised `except A, B:`); leave it unless you are changing that file.
 
 If `git diff --check` reports whitespace introduced by the upstream tag, inspect the file before changing it. The 9.15.0 merge had trailing whitespace in upstream's `local-agent.md`; it was left as upstream shipped it.
 
