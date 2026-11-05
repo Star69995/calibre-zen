@@ -14,9 +14,7 @@ import tempfile
 from calibre.ebooks.oeb.polish.container import get_container
 from calibre.ebooks.oeb.polish.split import split
 from calibre.ebooks.oeb.polish.toc import commit_toc, from_xpaths, get_toc
-from calibre_zen.books.cleanup import (
-    BODY, HEADING_RE, HEADINGS, PAGE_BREAK, Options, Stats, clean_document,
-    detect_dash_style, is_latin)
+from calibre_zen.books.cleanup import BODY, HEADING_RE, HEADINGS, PAGE_BREAK, Options, Stats, clean_document, detect_dash_style, is_latin
 
 ORNAMENT_MAX_BYTES = 3000      # a lone image this small is a decorative divider
 HTML_MIMES = ('application/xhtml+xml', 'text/html')

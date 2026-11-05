@@ -11,10 +11,10 @@ them and the shortcuts page lists them.
 
 import traceback
 
-from calibre.gui2 import error_dialog, info_dialog, question_dialog
-from calibre.gui2.actions import InterfaceAction
 from qt.core import QApplication, QIcon, QMenu, QProgressDialog, Qt
 
+from calibre.gui2 import error_dialog, info_dialog, question_dialog
+from calibre.gui2.actions import InterfaceAction
 from calibre_zen.books.epub import clean_book
 from calibre_zen.books.goodreads import MissingColumnError, update_goodreads_linked
 

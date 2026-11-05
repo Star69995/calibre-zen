@@ -58,7 +58,6 @@ class TestRegistration(ZenTestCase):
 
     def test_the_actions_import_and_name_themselves_like_their_plugins(self):
         from calibre.gui2.actions import InterfaceAction
-
         from calibre_zen.books import actions
 
         for base, cls in ((books.GoodreadsUpdaterBase, actions.GoodreadsUpdaterAction), (books.BookCleanupBase, actions.BookCleanupAction)):
@@ -70,8 +69,7 @@ class TestRegistration(ZenTestCase):
         self.assertEqual(books.register(), [])
 
     def test_an_installed_plugin_of_the_same_name_loses_and_its_file_stays(self):
-        from calibre.customize import InterfaceActionBase
-        from calibre.customize import ui
+        from calibre.customize import InterfaceActionBase, ui
         from calibre.customize.builtins import plugins
 
         class Stub(InterfaceActionBase):
