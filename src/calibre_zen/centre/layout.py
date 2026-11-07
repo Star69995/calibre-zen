@@ -248,4 +248,7 @@ class ZenCentre(QWidget):
     def refresh_palette(self) -> None:
         "The palette changed; re-ink what we drew ourselves."
         self.preview.refresh_palette()
+        # The cover on show was rounded, or stood in for, in the old colours:
+        # show the book again so it is drawn in the new ones.
+        self.preview.refresh()
         self.toolbar.switcher.refresh()
