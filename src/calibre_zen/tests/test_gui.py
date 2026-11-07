@@ -265,8 +265,9 @@ class TestMainWindow(ZenTestCase):
 
         view = self.device_view()
         found = {c.key: c for c in columns.columns_for(view)}
-        self.assertIn('format', found)
-        self.assertTrue(found['format'].visible, 'Format is shown from the start')
+        for key in ('format', 'folder', 'lpath'):
+            self.assertIn(key, found)
+            self.assertTrue(found[key].visible, f'{key} is shown from the start')
         self.assertIn('authors', found, 'nothing is folded on a device')
         self.assertNotIn('inlibrary', found)
         self.assertFalse(any(c.locked for c in found.values()))

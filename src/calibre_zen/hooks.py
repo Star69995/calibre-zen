@@ -104,7 +104,7 @@ What is patched, and why it is patched rather than edited:
 
     DeviceBooksModel.{__init__, data, sort}
         Wrapped -- see device_columns.py. The list of books on a device gains
-        a Format column (EPUB, AZW3, PDF), read from each file's extension.
+        Format, Folder and Path columns, read from each book's file name.
         CALIBRE_ZEN_DEVICE_COLUMNS=0.
 
     MainWindow.unhandled_exception / main_window.error_dialog /

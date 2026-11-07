@@ -1587,3 +1587,11 @@ msgstr "אל תשמור ספרייה בכונן רשת או בתיקייה שמ�
 #: device_columns.py
 msgid "Format"
 msgstr "פורמט"
+
+#: device_columns.py
+msgid "Folder"
+msgstr "תיקייה"
+
+#: device_columns.py
+msgid "Path"
+msgstr "נתיב"

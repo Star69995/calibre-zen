@@ -162,7 +162,7 @@ download/             the Download metadata dialog: match cards, a preview panel
 i18n.py               adds locales/<lang>.po to calibre's translator as a fallback -- see "Translations"
 locales/<lang>.po     translations of the strings only this fork has; `he` ships
 toolbars.py           one main toolbar: the device's bar is the main one plus what a device adds -- see "One main toolbar"
-device_columns.py     a Format column (EPUB, AZW3, PDF) in the list of books on a device, from each file's extension
+device_columns.py     Format, Folder and Path columns in the list of books on a device, from each book's file name
 busy.py               Preferences opens while jobs run; only a clashing save waits -- see "Settings while jobs run"
 library_dialog.py     the Choose library dialog as three choices -- see "Choose library"
 placement.py          the picture in the plugin install dialog: where the new button will be -- see "Where a plugin's button goes"
@@ -859,8 +859,8 @@ leaves it.
 
 With the device's books in view the button acts on that list (`gui.current_view()`,
 followed through `location_selected`). Nothing is folded there and no column is
-locked, so every column but `inlibrary` is offered -- including Format, which
-`device_columns.py` adds -- Reset is calibre's own defaults, and Add column says
+locked, so every column but `inlibrary` is offered -- including Format, Folder and
+Path, which `device_columns.py` adds -- Reset is calibre's own defaults, and Add column says
 why it cannot: calibre's device list takes no custom columns.
 
 ### One shape for every tile
@@ -2287,8 +2287,8 @@ settings; the runner refuses to start any other way.
 | `test_icons.py` | every mapped glyph is vendored, every vendored glyph is an SVG Qt accepts, `QIcon.ic` serves the mapped names and falls through for the rest |
 | `test_books.py` | the built-in Goodreads Updater and Book Cleanup: both registered as calibre built-ins, an installed plugin of the same name dropped without deleting its file, the `#goodreads_linked` column on a throwaway library (refused when missing, created and filled after a reopen, a column of another type left alone), each cleanup rule, no double space, a second run a no-op, no word lost, an epub end to end (chapter file split, TOC rebuilt) and `clean_book` keeping `ORIGINAL_EPUB` |
 | `test_toolbars.py` | the device bar's arithmetic, Send to device and Add books to library sharing a place, where a plugin's button goes by default, where an install puts it, and the install dialog's picture (one place per tick, the new button named, "Recommended" only for a place the plugin asked for) and list (a tick that follows the selection, every place in view) |
-| `test_gui.py` (columns) | the picker offers what does something and pins Details, a tick hides and shows through calibre, the arrows move a column but not in front of Details, Reset, the search, the button for the table only; on a device every column is offered with Format among them, hides, moves and resets, and the button follows the list in view |
-| `test_device_columns.py` | the device list's Format column: the extension in capitals, where it goes, its header, sorting on it |
+| `test_gui.py` (columns) | the picker offers what does something and pins Details, a tick hides and shows through calibre, the arrows move a column but not in front of Details, Reset, the search, the button for the table only; on a device every column is offered with Format, Folder and Path among them, hides, moves and resets, and the button follows the list in view |
+| `test_device_columns.py` | the device list's Format, Folder and Path columns: each cell's text, a Hebrew path read root first, where they go, their headers, sorting on each |
 | `test_library_dialog.py` | the Choose library dialog: one choice at a time, the folder and OK worded for it, copying only under Create and the dialog tall enough for it, calibre's `accept()` still calling back with the choice |
 | `test_busy.py` | which Preferences page clashes with a running job and why, the notice's lines, and the one question calibre asks at the door |
 | `test_gui.py` | end to end: the real `Main` window, offscreen, on a three-book library. Filter panel, centre, status bar and metadata editor installed; search narrows the list and the count; selecting a book fills the preview; a clean shutdown. And the Your columns form on a library with one custom column of each shape |
