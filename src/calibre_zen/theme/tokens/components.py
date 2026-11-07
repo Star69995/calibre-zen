@@ -230,6 +230,9 @@ LIBRARY_GLYPH = 28  # the books glyph beside the current library's name
 LIBRARY_EXTRA_GAP = 4  # above what a choice offers under its line (Create's copy box)
 LIBRARY_WARNING_GAP = 8  # the warning's sign to its text; the field to its folder button
 
+# The default send window (send_default.py)
+SEND_DEFAULT_WIDTH = 440  # the least it is given, so each choice's line fits
+
 # The column picker (centre/columns.py): a popup under the Columns button.
 COLUMNS_PANEL_WIDTH = 300
 COLUMNS_PANEL_HEIGHT = 360  # the list's height before it scrolls

@@ -1583,3 +1583,63 @@ msgstr "בחר תיקייה"
 #: library_dialog.py
 msgid "Keep libraries off network drives and cloud-synced folders (Dropbox, OneDrive and the like): calibre can lose data there. <a href=\"{}\">Why?</a>"
 msgstr "אל תשמור ספרייה בכונן רשת או בתיקייה שמסונכרנת לענן, כמו Dropbox או OneDrive. במקומות כאלה calibre עלול לאבד מידע. <a href=\"{}\">למה?</a>"
+
+#: send_default.py
+msgid "Storage card A"
+msgstr "כרטיס הרחבה א (A)"
+
+#: send_default.py
+msgid "Storage card B"
+msgstr "כרטיס הרחבה ב (B)"
+
+#: send_default.py
+msgid "Hide storage cards from the menu, even if the device has them"
+msgstr "הסתרת כרטיסי ההרחבה מהתפריט, גם אם בהתקן יש כאלה"
+
+#: send_default.py
+msgid "What Send to device does"
+msgstr "מה עושה ״שליחה להתקן״"
+
+#: send_default.py
+msgid "This is what happens when you click the Send to device button itself, not its arrow."
+msgstr "זה מה שקורה כשלוחצים על הכפתור ״שליחה להתקן״ עצמו, לא על החץ שלידו."
+
+#: send_default.py
+msgid "Send to"
+msgstr "שליחה אל"
+
+#: send_default.py
+msgid "How"
+msgstr "באיזה אופן"
+
+#: send_default.py
+msgid "&Send the book as it is"
+msgstr "&שליחת הספר כמות שהוא"
+
+#: send_default.py
+msgid "In the device's own format order."
+msgstr "לפי סדר הפורמטים של ההתקן."
+
+#: send_default.py
+msgid "Which formats a book is sent in, and their order, are set for each device: Device button > Configure this device."
+msgstr "הפורמטים שבהם נשלח ספר, והסדר שלהם, נקבעים לכל התקן בנפרד: הכפתור ״התקן״ ← הגדרת ההתקן."
+
+#: send_default.py
+msgid "&Choose the format each time"
+msgstr "&בחירת הפורמט בכל פעם"
+
+#: send_default.py
+msgid "Ask which format to send, for every book."
+msgstr "שואל איזה פורמט לשלוח, לכל ספר."
+
+#: send_default.py
+msgid "Send, then &delete from the library"
+msgstr "שליחה, ואז מ&חיקה מהספרייה"
+
+#: send_default.py
+msgid "Removes the book from your library once it is on the device."
+msgstr "הספר יימחק מהספרייה שלך אחרי שיגיע להתקן."
+
+#: send_default.py
+msgid "What clicking Send to device does…"
+msgstr "מה עושה לחיצה על ״שליחה להתקן״…"

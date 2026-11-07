@@ -58,9 +58,14 @@ def enabled() -> bool:
     return features.enabled('library-dialog')
 
 
+def at_start(text: str) -> str:
+    "Text marked with the window's direction, so a line that opens with English still starts on the window's side."
+    return (RLM if QApplication.isRightToLeft() else LRM) + text
+
+
 def isolated(text: str) -> str:
     "A path as a line of its own: read left to right, aligned at the window's start."
-    return (RLM if QApplication.isRightToLeft() else LRM) + LRI + text + PDI
+    return at_start(LRI + text + PDI)
 
 
 def split_path(path: str) -> tuple[str, str]:
@@ -111,7 +116,7 @@ class Option(QWidget):
         # depend on its width, and a dialog sizes such a form short, squeezing
         # this row when the copy box appears under Create.
         line.setWordWrap(False)
-        line.setText(note)
+        line.setText(at_start(note))
         self.column.addWidget(line)
 
     def add_extra(self, widget) -> None:
