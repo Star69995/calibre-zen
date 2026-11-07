@@ -313,6 +313,10 @@ PAD_MENU = '5px'
 # Asymmetric on purpose: room for a check mark on the left, a shortcut or
 # submenu arrow on the right.
 PAD_MENU_ITEM = '5px 28px 5px 26px'
+# Where a menu item's tick, radio dot or icon sits, in from the item's start
+# edge. The item's own padding holds the room; without the inset the mark
+# starts at the edge itself and a highlighted row's rounded corner cuts it.
+MENU_MARK_INSET = 7
 PAD_MENUBAR_ITEM = '4px 9px'
 # A row in a list that drops down under a field -- a combo box's own, or an
 # autocomplete list: a menu item's height, no room held for a tick.
