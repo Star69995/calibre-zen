@@ -112,11 +112,7 @@ class ActionSearchPopup(QFrame):
     The box and its list, in a popup like a menu's.
 
     The window is transparent and holds one frame that the sheet paints
-    (`#zenActionSearch`). Qt does not paint a style sheet's background on a
-    top-level window that is translucent -- and every popup is, for its round
-    corners (`theme/popups.py`) -- so a popup that carried the rule itself came
-    out see-through, with its rows floating over the window below. A menu
-    paints its own background and never had the problem.
+    (`#zenActionSearch`, from `popovers.painted_body`).
     """
 
     def __init__(self, gui):
@@ -124,15 +120,10 @@ class ActionSearchPopup(QFrame):
         self.gui = gui
         self.entries: list[match.Entry] = []
         self.setObjectName('zenActionSearchWindow')
-        outer = QVBoxLayout(self)
-        outer.setContentsMargins(0, 0, 0, 0)
+        self.body = body = popovers.painted_body(self, 'zenActionSearch')
         # The window follows its contents: fewer matches, a shorter popup.
-        outer.setSizeConstraint(QLayout.SizeConstraint.SetFixedSize)
-        self.body = body = QFrame(self)
+        self.layout().setSizeConstraint(QLayout.SizeConstraint.SetFixedSize)
         body.setFixedWidth(components.FINDER_POPUP_WIDTH)
-        body.setObjectName('zenActionSearch')
-        body.setAttribute(Qt.WidgetAttribute.WA_StyledBackground, True)
-        outer.addWidget(body)
         pad = components.FINDER_PAD
         column = QVBoxLayout(body)
         column.setContentsMargins(pad, pad, pad, pad)

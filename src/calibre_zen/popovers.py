@@ -9,11 +9,14 @@ picker (centre/columns.py) below its button, and both want the same two things:
 the panel's end edge on the button's end edge, so it grows toward the middle of
 the window, and the whole of it kept on the screen. In right-to-left the end edge
 is the left one, so the rule is written once, here.
+
+They also share how they are painted: `painted_body` gives a popup the frame its
+style sheet background goes on, because the popup window itself is see-through.
 """
 
 from __future__ import annotations
 
-from qt.core import QApplication, QPoint, Qt
+from qt.core import QApplication, QFrame, QPoint, Qt, QVBoxLayout
 
 
 def place(popup, anchor, above: bool, gap: int = 0) -> QPoint:
@@ -37,3 +40,23 @@ def place(popup, anchor, above: bool, gap: int = 0) -> QPoint:
     point = QPoint(x, y)
     popup.move(point)
     return point
+
+
+def painted_body(popup, name: str) -> QFrame:
+    """
+    Fill `popup` with one frame named `name` and return it; lay the popup's
+    contents out on that frame.
+
+    Every popup window is translucent, for its round corners (theme/popups.py),
+    and Qt does not paint a style sheet's background on a translucent top-level
+    window, so a rule on the popup itself leaves it see-through, its rows
+    floating over the window below. A child frame is painted as usual.
+    """
+    outer = QVBoxLayout(popup)
+    outer.setContentsMargins(0, 0, 0, 0)
+    outer.setSpacing(0)
+    body = QFrame(popup)
+    body.setObjectName(name)
+    body.setAttribute(Qt.WidgetAttribute.WA_StyledBackground, True)
+    outer.addWidget(body)
+    return body
