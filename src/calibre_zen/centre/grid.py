@@ -338,8 +338,21 @@ def ink(view) -> None:
 
     if getattr(view, '_texture_pixmap', None) is not None:
         return
-    text = qapplication_or_fail().palette().color(QPalette.ColorRole.Text)
+    app_pal = qapplication_or_fail().palette()
+    text = app_pal.color(QPalette.ColorRole.Text)
     pal = view.palette()
     pal.setColor(QPalette.ColorRole.Text, text)
+    # calibre also writes its grid colour into Base and Window. At startup the
+    # sheet's `palette(base)` is applied after that and the grid comes up in the
+    # theme's page colour; on a live theme switch calibre's call comes after the
+    # sheet, and its grey stayed. Setting the page colour here makes a switch
+    # and a fresh start agree.
+    for role in (QPalette.ColorRole.Base, QPalette.ColorRole.Window):
+        pal.setColor(role, app_pal.color(QPalette.ColorRole.Base))
     view.setPalette(pal)  # inside calibre's own setting_color guard: no loop
+    # calibre hands the viewport its own copy of the palette, and the viewport
+    # is what fills the background.
+    vp = view.viewport()
+    if vp is not None:
+        vp.setPalette(pal)
     view.delegate.highlight_color = text

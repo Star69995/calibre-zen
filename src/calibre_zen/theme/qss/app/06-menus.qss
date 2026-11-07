@@ -32,6 +32,14 @@ QMenu::right-arrow {
     height: ${indicator_size}px;
     image: $mark_chevron_right;
 }
+/* Right to left, Qt asks for the submenu arrow by this name instead, and
+   without a rule draws its filled triangle. */
+QMenu::left-arrow {
+    margin-left: 8px;
+    width: ${indicator_size}px;
+    height: ${indicator_size}px;
+    image: $mark_chevron_left;
+}
 
 QMenuBar { background-color: transparent; border: none; padding: 1px 2px; }
 QMenuBar::item { background-color: transparent; border-radius: ${radius_row}px; padding: $pad_menubar_item; }
