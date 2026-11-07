@@ -162,6 +162,7 @@ download/             the Download metadata dialog: match cards, a preview panel
 i18n.py               adds locales/<lang>.po to calibre's translator as a fallback -- see "Translations"
 locales/<lang>.po     translations of the strings only this fork has; `he` ships
 toolbars.py           one main toolbar: the device's bar is the main one plus what a device adds -- see "One main toolbar"
+device_columns.py     a Format column (EPUB, AZW3, PDF) in the list of books on a device, from each file's extension
 busy.py               Preferences opens while jobs run; only a clashing save waits -- see "Settings while jobs run"
 library_dialog.py     the Choose library dialog as three choices -- see "Choose library"
 placement.py          the picture in the plugin install dialog: where the new button will be -- see "Where a plugin's button goes"

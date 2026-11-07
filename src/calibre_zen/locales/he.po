@@ -1583,3 +1583,7 @@ msgstr "בחר תיקייה"
 #: library_dialog.py
 msgid "Keep libraries off network drives and cloud-synced folders (Dropbox, OneDrive and the like): calibre can lose data there. <a href=\"{}\">Why?</a>"
 msgstr "אל תשמור ספרייה בכונן רשת או בתיקייה שמסונכרנת לענן, כמו Dropbox או OneDrive. במקומות כאלה calibre עלול לאבד מידע. <a href=\"{}\">למה?</a>"
+
+#: device_columns.py
+msgid "Format"
+msgstr "פורמט"

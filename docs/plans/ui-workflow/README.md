@@ -43,6 +43,14 @@ the mockup yet.
 | U6 | **Easy column editing (built, see below).** A "Columns" button on the centre toolbar, beside the Grid/Table switcher and shown for the table. It opens a popover: every column with a switch, drag handles to reorder, a search box for libraries with many custom columns, "Add column" and "Reset". | Today the only way is to right-click a column header, then Hide or Show column one at a time from a submenu (`gui2/library/views.py:735-757`). Nothing on screen says it exists, and reordering is dragging headers blind. | medium | `centre/` |
 | U7 | **Open anything while jobs run (first step built, see below), and be told only when a change would clash.** Preferences and the other windows open while a conversion, an add or a device job is running. Only a change that would really interfere with a running job is held back, with the reason and a way forward. | calibre refuses at the door: `PreferencesAction.do_config` shows "Cannot configure while there are running jobs" (`gui2/actions/preferences.py:93-96`) even to look at a page or change a colour, and the dialog is application-modal. | small to start, then a survey | a wrap of `do_config`, a per-page rule |
 
+**Device list: a Format column, built 2026-11-07** (`device_columns.py`). The list of books on a
+device had six fixed columns and none said what kind of file a book is; it now has Format (EPUB,
+AZW3, PDF) after Size, sortable, from each file's extension. `CALIBRE_ZEN_DEVICE_COLUMNS=0` takes it
+away. Left to do: run `./zen-test device_columns`, and Hebrew and English screenshots with a device
+connected (`.calibre-zen\shots\device-columns\`). Asked for next, not started: more device
+columns (series, tags, the library's columns for a matched book), the Columns button on the device
+list, "Add books to library" on the device toolbar, and a visible "Sync annotations" for Kindle/Kobo.
+
 **U6, built 2026-11-05** (`centre/columns.py`, overlay README "Choosing columns"). A Columns
 button beside the Grid/Table switcher opens a popup: a tick per column, search, arrows to move,
 Add column (disabled with the reason when a restart is owed) and Reset, all through calibre's own
