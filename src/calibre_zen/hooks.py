@@ -221,6 +221,8 @@ from calibre_zen import (
     rating,
     reader,
     report,
+    send_default,
+    send_formats,
     status,
     toolbars,
     update,
@@ -581,6 +583,8 @@ def _patch_palette_manager(pm) -> None:
         guard.run_install('dates', dates.install)
         guard.run_install('download', download.install)
         guard.run_install('library-dialog', library_dialog.install)
+        guard.run_install('send-default', send_default.install)
+        guard.run_install('send-formats', send_formats.install)
         # Before appearance: its init_bars adds to the bars this one rebuilds.
         guard.run_install('toolbars', toolbars.install)
         guard.run_install('appearance', appearance.install)

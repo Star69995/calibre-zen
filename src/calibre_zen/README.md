@@ -165,6 +165,8 @@ toolbars.py           one main toolbar: the device's bar is the main one plus wh
 device_columns.py     Format, Folder and Path columns in the list of books on a device, from each book's file name
 busy.py               Preferences opens while jobs run; only a clashing save waits -- see "Settings while jobs run"
 library_dialog.py     the Choose library dialog as three choices -- see "Choose library"
+send_default.py       what the Send to device button does, chosen in a window -- see "Send to device's default"
+send_formats.py       PDF last in a device's format order, as the main window reads it -- see "Send to device's default"
 placement.py          the picture in the plugin install dialog: where the new button will be -- see "Where a plugin's button goes"
 rating.py             calibre's rating widget and rating cells as clickable stars
 dates.py              the calendar a date field opens, in the theme
@@ -1374,6 +1376,40 @@ sets the height from `totalHeightForWidth` whenever the copy box comes or goes.
 
 Sizes are `LIBRARY_*` in `components.py`, colours in `25-library.qss`.
 `CALIBRE_ZEN_LIBRARY_DIALOG=0` gives calibre's dialog back.
+
+### Send to device's default
+
+The Send to device menu used to end with "Set default send to device action",
+a submenu holding a second copy of the whole menu: the same destinations, the
+same two submenus, a tick beside one of nine rows. Nothing marked it as a setting,
+so the ticks read as things to do.
+
+`send_default.py` takes that submenu off the menu and puts a plain entry in its
+place, "What clicking Send to device does...", which opens a small window with the
+two questions the nine rows were answering: **Send to** (main memory, card A,
+card B) and **How** (as it is, in the device's own format order, choose the format each time, send then delete from
+the library), each choice with a line saying what it does. OK stores the answer
+the way calibre does, through `DeviceMenu.change_default_action`, so
+`config['default_send_to_device_action']` and `trigger_default` are unchanged.
+calibre's checkable actions stay alive off the menu: the stored choice is looked up
+in them. The notes go through `library_dialog.at_start`, since a Hebrew line that
+opens with "calibre" would otherwise be aligned to the left.
+
+Storage cards are shown only when there is one: calibre lists card A and B greyed out
+whether or not the device has them, so `enable_device_actions` is wrapped to hide each
+card's rows (menu, submenus and window) unless the connected device reports that card, and
+always with no device. A tick in the window (`gprefs['zen_send_hide_cards']`) hides them
+even when the device has them; a card that is the stored default stays in the window.
+
+Two wraps, `DeviceMenu.__init__` and `enable_device_actions`; `CALIBRE_ZEN_STYLE=0` gives calibre's submenu back.
+
+**PDF is last.** `send_formats.py` makes the main window read a device's format order with
+PDF moved to the end, whatever the order set in Configure this device. That order picks the
+format a book is sent in, and the one it is converted to when it has none the device takes,
+so with it a conversion is never to PDF while another format is listed. It wraps
+`DeviceManager.device`, which adopts the connected device once so that its `settings()`, as the
+main window calls it, answers with `format_map` reordered; the device's own saved list, and
+Configure this device, are untouched. Sending by email has its own order and is not affected.
 
 ### Appearance
 
