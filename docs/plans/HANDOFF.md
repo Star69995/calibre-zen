@@ -35,7 +35,8 @@ a working setup. Delete it, or rewrite it, when it goes stale.
 
 ## Built so far (in `docs/plans/ui-workflow/README.md`)
 
-U5 placement picture and correct button placement, U6 Columns picker, U7 step 1
+U3 Find an action (`Ctrl+K`, a button at the end of the toolbar) and a search box in
+Preferences that takes you to the setting, U5 placement picture and correct button placement, U6 Columns picker, U7 step 1
 (settings open while jobs run, clash notice), U8 jobs panel and Preferences footer. The install dialog's list of places as ticked
 rows instead of solid black ones, all in view (U5 follow-up).
 Hebrew translation sweep done, with the `N_()` marker for strings in tables.
@@ -51,14 +52,18 @@ English incl. right-to-left, screenshots shown, docs ticked.
 - **U10** plugin manager (the next one; uses U5's placement picture), with **U9**
   (offer plugins at first install) and **U12** (plugin contract and template) as its
   last steps. U9 waits for the list of which of the 19 plugins to rewrite.
-- **U1** selection bar. **U3** command palette with **U11** descriptions/tooltips
-  (they share a source). **U4** editing the toolbar in place. **U2** the device as a
+- **U1** selection bar. **U3** follow-ups (selection count, books in the box) with
+  **U11** descriptions/tooltips (they share a source). **U4** editing the toolbar in place. **U2** the device as a
   place.
 - **U0** screenshots with and without a device, Hebrew and English: still missing.
 - U7 follow-ups: a survey of which settings pages clash with a job; "apply when the
   jobs finish" (undecided); the same notice for library switch and export/import;
   full-flow screenshots.
 - U8 follow-ups: a spinner; the same footer in other dialogs.
+- The Columns and jobs panels carry their sheet background on a translucent popup
+  window, which Qt does not paint: under Xvfb the Columns panel comes out see-through.
+  Find an action fixed the same thing with a painted frame inside the window (overlay
+  README, "Finding an action or a setting"); the two panels need the same change.
 - Not checked on a real screen: the jobs panel's border (the offscreen grab cannot
   show it), and the Columns panel in Hebrew itself (seen only inside the full window).
 

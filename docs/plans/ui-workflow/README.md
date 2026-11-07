@@ -31,7 +31,7 @@ its own `CALIBRE_ZEN_*` switch, and none needs the others to ship.
 | --- | --- | --- | --- | --- |
 | U5 | **Plugin placement picture (built, see below).** The install dialog draws each toolbar and puts the plugin's button in it as you tick. Recommended places carry a "Recommended" label. | Ten place names and no idea how any of them looks. | small | `toolbars.py` (dialog wrap) |
 | U1 | **Actions on the selection.** The toolbar keeps only what does not depend on a selection (Add, Library, Store, Preferences). Choosing books opens a bar above the list: how many, and Edit, Convert, Send, Remove. `Esc` clears it. | Ten buttons, most of them disabled, and no sign of what they act on. | medium | `centre/layout.py`, the toolbar layout default |
-| U3 | **Command palette.** `Ctrl+K` opens one box that finds actions (with the selection count and the shortcut), settings and books. Plugin actions appear because they are already registered. | Actions hidden in secondary menus. | medium | a new module; reads `gui.iactions` |
+| U3 | **Command palette (built, see below).** `Ctrl+K` opens one box that finds actions (with the selection count and the shortcut), settings and books. Plugin actions appear because they are already registered. | Actions hidden in secondary menus. | medium | a new module; reads `gui.iactions` |
 | U4 | **Edit the toolbar in place.** "Customize" turns the live toolbar into an editor: drag to move, a cross to remove, a tray of what can be added, and the "added when a device is connected" group shown beside the rest. | Moving one button means Preferences, the right list and the arrow keys. | large | a new module; Preferences stays as the fallback |
 | U2 | **The device as a place.** The sidebar lists the device with a free-space bar, the list gets an "On device" column, selected books offer "Send to Kindle", and books can be dragged onto the device. | After connecting there is no picture of what is on the reader or how much room is left. | large | `status/`, `filters/`, calibre's Location manager |
 
@@ -59,6 +59,15 @@ reads and writes the same dict and adds no preference. Custom columns need
 "Add column", which calibre already offers through `CreateNewCustomColumn`; it can
 require a restart, and the picker has to say so before the click, as calibre's
 menu does by greying the entry.
+
+**U3, built 2026-11-07** (`finder/`, overlay README "Finding an action or a setting"). Two
+boxes. **Find an action**: a built-in button at the far end of the main toolbar and `Ctrl+K`, a
+popup that finds every action and menu item in `gui.iactions` (and Preferences' pages, its menu),
+with its menu, its key and greyed when it cannot run; choosing runs it. **Search settings**: a box
+in Preferences' title bar that finds a setting by the words on its page and opens it, with its tab
+or list panel chosen, scrolled to and marked. Both find a translated label by its English too.
+Left over from the item: the selection count beside an action, and books in the same box; a hint
+of the key on the button's tooltip (U11). Screenshots: `.calibre-zen\shots\finder\`.
 
 **U7, built so far (2026-11-05, `busy.py`).** Preferences opens while jobs run, and
 a changed page that clashes is held back at Save with a notice naming the reason and

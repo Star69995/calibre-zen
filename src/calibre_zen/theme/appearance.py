@@ -33,6 +33,7 @@ guessed -- a held icon stayed (31, 35, 40) against a #24262a window.
 from qt.core import QActionGroup, QMenu, QSizePolicy, Qt, QToolButton, QWidget
 
 from calibre_zen import features
+from calibre_zen.finder import ACTION_NAME
 from calibre_zen.i18n import N_
 from calibre_zen.theme.tokens import schemes
 
@@ -186,7 +187,7 @@ class ThemeButton(QToolButton):
 # it. They belong at the far end of the bar, away from the ones that act on a
 # selection -- which is the difference between a toolbar you read left to right
 # and a row of seventeen icons.
-TRAILING = frozenset({'Preferences', 'Help'})
+TRAILING = frozenset({'Preferences', 'Help', ACTION_NAME})
 
 
 def trailing_start(bar, gui) -> int:

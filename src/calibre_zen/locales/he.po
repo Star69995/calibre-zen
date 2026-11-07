@@ -1489,3 +1489,47 @@ msgstr "עמודות"
 #: centre/columns.py
 msgid "Choose which columns the list shows, and in what order"
 msgstr "בחר אילו עמודות הרשימה מציגה, ובאיזה סדר"
+
+#: features.py
+msgid "Find an action"
+msgstr "חפש פעולה"
+
+#: features.py
+msgid "Ctrl+K finds any action by name. Off: the menus only."
+msgstr "‏Ctrl+K מוצא כל פעולה לפי שם. כבוי: התפריטים בלבד."
+
+#: features.py
+msgid "Search in Preferences"
+msgstr "חיפוש בהעדפות"
+
+#: features.py
+msgid "Preferences finds a setting by name. Off: page icons only."
+msgstr "ההעדפות מוצאות הגדרה לפי שם. כבוי: סמלי העמודים בלבד."
+
+#: finder/actions.py
+msgid "Find any action, menu item or settings page by name"
+msgstr "מצא כל פעולה, פריט תפריט או עמוד הגדרות לפי שם"
+
+#: finder/actions.py
+msgid "Find an action, a menu item or a settings page"
+msgstr "חפש פעולה, פריט תפריט או עמוד הגדרות"
+
+#: finder/actions.py
+msgid "No action matches."
+msgstr "אין פעולה מתאימה."
+
+#: finder/settings.py
+msgid "Search settings"
+msgstr "חיפוש בהגדרות"
+
+#: finder/settings.py
+msgid "Find a setting by the words on its page, in English or in your language"
+msgstr "מצא הגדרה לפי המילים שבעמוד שלה, באנגלית או בעברית"
+
+#: finder/settings.py
+msgid "Reading the settings pages… {0} of {1}"
+msgstr "קורא את עמודי ההגדרות… {0} מתוך {1}"
+
+#: finder/settings.py
+msgid "No setting matches."
+msgstr "אין הגדרה מתאימה."

@@ -228,6 +228,22 @@ COLUMNS_PANEL_WIDTH = 300
 COLUMNS_PANEL_HEIGHT = 360  # the list's height before it scrolls
 COLUMNS_PAD = 10  # inside the panel, and between its parts
 COLUMNS_GAP = 6  # between rows, and between the panel and its button
+
+# The two search boxes (finder/): Find an action, a popup under its toolbar
+# button, and Search settings, a box in Preferences' title bar. One results
+# list for both, painted, so these are its whole geometry.
+FINDER_POPUP_WIDTH = 520
+FINDER_POPUP_HEIGHT = 420  # the list's height before it scrolls
+FINDER_POPUP_TOP = 48  # from the window's top, when there is no button to open under
+FINDER_FIELD_WIDTH = 260  # the box in Preferences' title bar
+FINDER_PAD = 8  # inside the popup, and between the box and the list
+FINDER_ROW_HEIGHT = 44  # a title over its place
+FINDER_PAD_X = 10  # either end of a row
+FINDER_GAP = 10  # icon to text to shortcut; and the popup's gap under its button
+FINDER_ICON = 18
+FINDER_LINE_GAP = 1  # between a row's title and its place
+FINDER_MARK_MS = 2500  # how long a setting a search led to stays marked
+FINDER_HEADLINE = 90  # characters of a paragraph of help shown as a result, cut at a sentence
 # }}}
 
 # Forms -- see calibre_zen/forms/. A grouped form in the shape of macOS System

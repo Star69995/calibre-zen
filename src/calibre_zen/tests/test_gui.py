@@ -260,6 +260,99 @@ class TestMainWindow(ZenTestCase):
             button.refresh()
             self.assertFalse(button.isHidden())
 
+    # ------------------------------------------------ the two search boxes
+
+    def test_find_an_action_is_a_built_in_at_the_end_of_the_main_toolbar(self):
+        "finder/: a button at the far end of the main toolbar, and Ctrl+K."
+        from calibre_zen.finder import ACTION_NAME
+
+        ia = self.gui.iactions.get(ACTION_NAME)
+        self.assertIsNotNone(ia, 'not registered')
+        # calibre puts a button's key on its menuless twin, not on the button.
+        self.assertEqual(ia.menuless_qaction.shortcut().toString(), 'Ctrl+K')
+        bar = self.gui.bars_manager.main_bars[0]
+        names = {a.qaction: n for n, a in self.gui.iactions.items()}
+        named = [names[a] for a in bar.actions() if a in names]
+        self.assertEqual(named[-1], ACTION_NAME, 'the last button on the bar')
+
+    def test_find_an_action_lists_menus_and_runs_the_choice(self):
+        from unittest import mock
+
+        from calibre_zen.finder import ACTION_NAME, actions, match
+
+        entries = actions.collect(self.gui)
+        titles = {(e.title, match.unisolated(e.where)) for e in entries}
+        self.assertIn(('Convert books', ''), titles)
+        prefs = next(e for e in entries if e.target is self.gui.iactions['Preferences'].qaction)
+        self.assertEqual(prefs.shortcut.toString(), 'Ctrl+P', "a button's key is shown")
+        self.assertIn(('Bulk convert', 'Convert books'), titles)
+        self.assertIn(('Look & feel', 'Preferences › Interface'), titles, "Preferences' pages are its menu")
+        self.assertFalse(any(match.unisolated(e.where).startswith('All actions') for e in entries), 'the All actions copies are left out')
+        self.assertFalse(any(e.target is self.gui.iactions[ACTION_NAME].qaction for e in entries), 'not itself')
+        self.assertEqual(len(entries), len({id(e.target) for e in entries}), 'each action once')
+
+        ia = self.gui.iactions[ACTION_NAME]
+        ia.show_popup()
+        popup = ia.popup
+        self.addCleanup(popup.close)
+        popup.field.setText('bulk conv')
+        self.assertEqual(popup.view.current_entry().title, 'Bulk convert')
+        popup.field.setText('zzzz nothing')
+        self.assertTrue(popup.none.isVisibleTo(popup))
+        popup.field.setText('conv')
+        target = popup.view.current_entry().target
+        with mock.patch.object(target, 'trigger') as trigger:
+            self.assertTrue(popup.view.choose_current())
+            process_events(50)
+        trigger.assert_called_once()
+        self.assertFalse(popup.isVisible(), 'the popup closes first')
+        self.assertEqual(match.rank(entries, 'conv')[0].title, 'Convert books')
+
+    def test_preferences_searches_its_pages_and_takes_you_to_the_setting(self):
+        from calibre.gui2.preferences.main import Preferences
+        from calibre_zen.finder import match, settings
+
+        d = Preferences(self.gui)
+        self.addCleanup(d.deleteLater)
+        search = d.zen_settings_search
+        self.assertFalse(search.field.isHidden(), 'the box is on the overview')
+        search.field.setText('hierarchical')
+        self.assertEqual(d.stack.currentIndex(), settings.RESULTS_PAGE)
+        self.assertTrue(wait_until(lambda: search.index.finished, timeout_ms=60000), 'the pages were never all read')
+        found = [e for e in search.view.results.entries if e.title.startswith('Select categories with hierarchical items')]
+        self.assertTrue(found, [e.title for e in search.view.results.entries])
+        self.assertEqual(match.unisolated(found[0].where), 'Look & feel › Tag browser › Hierarchy and searching')
+
+        search.open(found[0])
+        self.assertEqual(d.stack.currentIndex(), 1, 'the page is open')
+        self.assertTrue(search.field.isHidden(), "the box is the overview's")
+        page = d.showing_widget
+        w = settings.find(page, found[0].target[2])
+        self.assertIsNotNone(w)
+        self.assertTrue(w.isVisibleTo(d), 'its tabs were brought forward')
+        process_events(50)
+        self.assertTrue(w.property(settings.FOUND_PROPERTY), 'it is marked')
+
+        d.reject()
+        self.assertEqual(d.stack.currentIndex(), 0)
+        self.assertFalse(search.field.isHidden(), 'back on the overview, the box is back')
+
+    def test_a_setting_in_a_list_and_panels_page_is_reached_through_its_list(self):
+        from calibre.gui2.preferences.main import Preferences
+        from calibre_zen.finder import match, settings
+
+        d = Preferences(self.gui)
+        self.addCleanup(d.deleteLater)
+        search = d.zen_settings_search
+        search.field.setText('monospace font size')
+        self.assertTrue(wait_until(lambda: search.index.finished, timeout_ms=60000))
+        hit = next(e for e in search.view.results.entries if match.unisolated(e.where) == 'Output options › PDF output')
+        search.open(hit)
+        page = d.showing_widget
+        self.assertEqual(page.list.currentIndex().data(), 'PDF output', 'the list was moved, not only the panel')
+        self.assertTrue(settings.find(page, hit.target[2]).isVisibleTo(d))
+        d.reject()
+
     # ------------------------------------------------- jobs in the status bar
 
     def test_the_jobs_segment_opens_a_panel_with_each_job(self):
