@@ -1,0 +1,6 @@
+/* The Choose library dialog -- calibre_zen/library_dialog.py. The groups are
+   18-forms.qss's; this is the current library's name and folder, and the
+   network warning as a muted line rather than a red word. */
+
+#zenLibraryDialog #zenLibraryName { font-weight: $weight_heading; }
+#zenLibraryDialog #zenLibraryFolder, #zenLibraryDialog #zenLibraryWarning { color: $muted; }

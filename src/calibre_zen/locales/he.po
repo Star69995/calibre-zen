@@ -1503,3 +1503,83 @@ msgstr "עמודות"
 #: centre/columns.py
 msgid "Choose which columns the list shows, and in what order"
 msgstr "בחר אילו עמודות הרשימה מציגה, ובאיזה סדר"
+
+#: features.py
+msgid "Library dialog"
+msgstr "חלון הספריות"
+
+#: features.py
+msgid "Switch, create or move a library as three clear choices. Off: calibre's dialog."
+msgstr "מעבר, יצירה או העברה של ספרייה כשלוש בחירות ברורות. כבוי: החלון של calibre."
+
+#: library_dialog.py
+msgid "&Switch to an existing library"
+msgstr "&מעבר לספרייה קיימת"
+
+#: library_dialog.py
+msgid "Open a library that is already in another folder."
+msgstr "פתיחת ספרייה שכבר נמצאת בתיקייה אחרת."
+
+#: library_dialog.py
+msgid "Library to open"
+msgstr "הספרייה לפתיחה"
+
+#: library_dialog.py
+msgid "Switch"
+msgstr "מעבר"
+
+#: library_dialog.py
+msgid "&Create a new library"
+msgstr "י&צירת ספרייה חדשה"
+
+#: library_dialog.py
+msgid "Start an empty library in a new or empty folder."
+msgstr "התחלת ספרייה ריקה בתיקייה חדשה או ריקה."
+
+#: library_dialog.py
+msgid "Where to create it"
+msgstr "היכן ליצור אותה"
+
+#: library_dialog.py
+msgid "Create"
+msgstr "יצירה"
+
+#: library_dialog.py
+msgid "&Move this library"
+msgstr "ה&עברת הספרייה הזו"
+
+#: library_dialog.py
+msgid "Move this library and all its books to an empty folder."
+msgstr "העברת הספרייה הזו, עם כל הספרים שבה, לתיקייה ריקה."
+
+#: library_dialog.py
+msgid "Where to move it"
+msgstr "לאן להעביר אותה"
+
+#: library_dialog.py
+msgid "Move"
+msgstr "העברה"
+
+#: library_dialog.py
+msgid "Current library"
+msgstr "הספרייה הנוכחית"
+
+#: library_dialog.py
+msgid "What do you want to do?"
+msgstr "מה ברצונך לעשות?"
+
+#: library_dialog.py
+msgid "Co&py columns, saved searches and settings from this library"
+msgstr "ה&עתקת העמודות, החיפושים השמורים וההגדרות מהספרייה הזו"
+
+#: library_dialog.py
+msgid "Type a path, or choose a folder"
+msgstr "הקלד נתיב, או בחר תיקייה"
+
+#: library_dialog.py
+msgid "Choose a folder"
+msgstr "בחר תיקייה"
+
+#: library_dialog.py
+msgid "Keep libraries off network drives and cloud-synced folders (Dropbox, OneDrive and the like): calibre can lose data there. <a href=\"{}\">Why?</a>"
+msgstr "אל תשמור ספרייה בכונן רשת או בתיקייה שמסונכרנת לענן, כמו Dropbox או OneDrive. במקומות כאלה calibre עלול לאבד מידע. <a href=\"{}\">למה?</a>"

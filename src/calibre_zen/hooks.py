@@ -200,7 +200,7 @@ from calibre_zen import i18n
 # Before the imports below: onboarding/page.py translates at import time.
 i18n.install()
 
-from calibre_zen import books, busy, centre, dates, devtools, download, editor, filters, lookfeel, onboarding, rating, reader, report, status, toolbars, update
+from calibre_zen import books, busy, centre, dates, devtools, download, editor, filters, library_dialog, lookfeel, onboarding, rating, reader, report, status, toolbars, update
 from calibre_zen.icons import registry as icon_registry
 from calibre_zen.reader import look as reader_look
 from calibre_zen.report import guard
@@ -555,6 +555,7 @@ def _patch_palette_manager(pm) -> None:
         guard.run_install('rating', rating.install)
         guard.run_install('dates', dates.install)
         guard.run_install('download', download.install)
+        guard.run_install('library-dialog', library_dialog.install)
         # Before appearance: its init_bars adds to the bars this one rebuilds.
         guard.run_install('toolbars', toolbars.install)
         guard.run_install('appearance', appearance.install)

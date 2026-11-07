@@ -116,6 +116,7 @@ theme/
     17-richtext.qss   the rich text editor as one field
     18-forms.qss      grouped forms: the rounded groups, hairlines and labels
     19-download.qss   the Download metadata dialog
+    25-library.qss    the Choose library dialog's name, folder and warning
   qss/local/completer.qss   calibre's autocomplete list, which the app sheet never reaches
   qss/local/combo-list.qss  a combo box's list, set on the window it drops into
   qss/local/*.qss     sheets calibre applies to one widget rather than the app
@@ -162,6 +163,7 @@ i18n.py               adds locales/<lang>.po to calibre's translator as a fallba
 locales/<lang>.po     translations of the strings only this fork has; `he` ships
 toolbars.py           one main toolbar: the device's bar is the main one plus what a device adds -- see "One main toolbar"
 busy.py               Preferences opens while jobs run; only a clashing save waits -- see "Settings while jobs run"
+library_dialog.py     the Choose library dialog as three choices -- see "Choose library"
 placement.py          the picture in the plugin install dialog: where the new button will be -- see "Where a plugin's button goes"
 rating.py             calibre's rating widget and rating cells as clickable stars
 dates.py              the calendar a date field opens, in the theme
@@ -1326,6 +1328,38 @@ Sizes are `DOWNLOAD_*` in `components.py`, colours are in `19-download.qss`
 and in the two delegates, which read `Chrome` once per palette.
 `CALIBRE_ZEN_DOWNLOAD=0` gives calibre's dialogs back.
 
+### Choose library
+
+`library_dialog.py` lays out calibre's "Choose your calibre library" dialog
+(`dialogs/choose_library.ChooseLibrary`, from Switch/create library) in the
+order its question is asked. calibre's opened with a sentence holding the
+current path, an empty "New location" field before anything said what it was
+for, a red WARNING, and three radios whose wording only made sense read
+together. Here, in grouped-form cards (`forms.Form`):
+
+- **Current library**: the books glyph, the library's name, and the folder it
+  is in, the path isolated left to right so it keeps its order in Hebrew.
+- **What do you want to do?**: Switch to an existing library, Create a new
+  library, Move this library, each a radio with one line under it; a click
+  anywhere on the row picks it. Copying the structure sits under Create and
+  is shown only while Create is chosen.
+- **The folder**, titled for the choice (Library to open, Where to create it,
+  Where to move it): calibre's field and a folder button on one row.
+- The network warning as a muted line with a sign and a Why? link.
+
+OK is named for the choice: Switch, Create, Move.
+
+The radios, the checkbox, the field and the button box are calibre's own,
+moved, so `accept()`, `check_action()` and `perform_action()` are unchanged.
+Two things had to be put back: the radios, each now in a row of its own, are
+no longer siblings and so no longer auto-exclusive, which a `QButtonGroup`
+restores; and the wrapped warning makes the dialog's height depend on its
+width, which Qt's minimum and `adjustSize()` underestimate, so `Layout.fit`
+sets the height from `totalHeightForWidth` whenever the copy box comes or goes.
+
+Sizes are `LIBRARY_*` in `components.py`, colours in `25-library.qss`.
+`CALIBRE_ZEN_LIBRARY_DIALOG=0` gives calibre's dialog back.
+
 ### Appearance
 
 calibre has had the setting all along -- `gprefs['color_palette']` is
@@ -2239,6 +2273,7 @@ settings; the runner refuses to start any other way.
 | `test_books.py` | the built-in Goodreads Updater and Book Cleanup: both registered as calibre built-ins, an installed plugin of the same name dropped without deleting its file, the `#goodreads_linked` column on a throwaway library (refused when missing, created and filled after a reopen, a column of another type left alone), each cleanup rule, no double space, a second run a no-op, no word lost, an epub end to end (chapter file split, TOC rebuilt) and `clean_book` keeping `ORIGINAL_EPUB` |
 | `test_toolbars.py` | the device bar's arithmetic, where a plugin's button goes by default, where an install puts it, and the install dialog's picture (one place per tick, the new button named, "Recommended" only for a place the plugin asked for) and list (a tick that follows the selection, every place in view) |
 | `test_gui.py` (columns) | the picker offers what does something and pins Details, a tick hides and shows through calibre, the arrows move a column but not in front of Details, Reset, the search, the button for the table only |
+| `test_library_dialog.py` | the Choose library dialog: one choice at a time, the folder and OK worded for it, copying only under Create and the dialog tall enough for it, calibre's `accept()` still calling back with the choice |
 | `test_busy.py` | which Preferences page clashes with a running job and why, the notice's lines, and the one question calibre asks at the door |
 | `test_gui.py` | end to end: the real `Main` window, offscreen, on a three-book library. Filter panel, centre, status bar and metadata editor installed; search narrows the list and the count; selecting a book fills the preview; a clean shutdown. And the Your columns form on a library with one custom column of each shape |
 
