@@ -175,3 +175,22 @@ class TestThePicture(ZenTestCase):
         self.assertEqual((len(shown), shown[at], cut), (9, 19, True))
         shown, at, cut = placement.window(entries[:5], 4, 9)
         self.assertEqual((len(shown), shown[at], cut), (5, 4, False))
+
+
+class TestPartners(ZenTestCase):
+    def test_add_to_library_follows_send_to_device(self):
+        got = toolbars.with_partners(('Add Books', 'Send To Device', None, 'Location Manager'))
+        self.assertEqual(got, ('Add Books', 'Send To Device', 'Add To Library', None, 'Location Manager'))
+
+    def test_a_partner_already_on_the_bar_is_not_added_again(self):
+        bar = ('Add To Library', 'Send To Device')
+        self.assertEqual(toolbars.with_partners(bar), bar)
+        self.assertEqual(toolbars.with_partners(('View',)), ('View',))
+
+    def test_the_lead_shows_in_the_library_and_the_partner_on_a_device(self):
+        for loc in ('main', 'carda', 'cardb'):
+            self.assertFalse(toolbars.shown_at('Send To Device', loc))
+            self.assertTrue(toolbars.shown_at('Add To Library', loc))
+        self.assertTrue(toolbars.shown_at('Send To Device', 'library'))
+        self.assertFalse(toolbars.shown_at('Add To Library', 'library'))
+        self.assertIsNone(toolbars.shown_at('View', 'main'))
