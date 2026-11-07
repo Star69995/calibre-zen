@@ -19,9 +19,12 @@ from qt.core import QApplication, QPoint, Qt
 def place(popup, anchor, above: bool, gap: int = 0) -> QPoint:
     """
     Move `popup` next to `anchor` (a widget), above or below it, and return where
-    it went. The popup's size is its `sizeHint()`, so call this after it is filled.
+    it went. The popup's size is its `sizeHint()`, so call this after it is filled,
+    grown to its minimum size: a popup given a fixed width is that wide whatever
+    its contents hint, and placing it by the hint puts its end edge past the
+    button's.
     """
-    size = popup.sizeHint()
+    size = popup.sizeHint().expandedTo(popup.minimumSize())
     top_left = anchor.mapToGlobal(QPoint(0, 0))
     rtl = anchor.layoutDirection() == Qt.LayoutDirection.RightToLeft
     x = top_left.x() if rtl else top_left.x() + anchor.width() - size.width()

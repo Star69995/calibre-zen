@@ -227,6 +227,9 @@ from calibre_zen import (
     toolbars,
     update,
 )
+from calibre_zen.finder import ACTION_NAME as FIND_ACTION
+from calibre_zen.finder import install_actions as install_action_search
+from calibre_zen.finder import install_settings as install_settings_search
 from calibre_zen.icons import registry as icon_registry
 from calibre_zen.reader import look as reader_look
 from calibre_zen.report import guard
@@ -307,7 +310,7 @@ TOOLBAR_KEYS = ('action-layout-toolbar',)
 # What the overlay adds to calibre's main toolbar, in order. Read by
 # _patch_toolbar_layout for a new install, and by the settings import
 # (onboarding/importer.py) for a toolbar that came across from calibre.
-TOOLBAR_ADDITIONS = ('Preferences',)
+TOOLBAR_ADDITIONS = ('Preferences', FIND_ACTION)
 
 
 def with_toolbar_additions(layout) -> tuple:
@@ -588,6 +591,8 @@ def _patch_palette_manager(pm) -> None:
         # Before appearance: its init_bars adds to the bars this one rebuilds.
         guard.run_install('toolbars', toolbars.install)
         guard.run_install('appearance', appearance.install)
+        guard.run_install('action-search', install_action_search)
+        guard.run_install('settings-search', install_settings_search)
         guard.run_install('update', update.install)
         guard.run_install('reader', reader.install)
         guard.run_install('reader-look', reader_look.install)

@@ -271,15 +271,16 @@ class TestImporter(Fixtures, ZenTestCase):
     def test_a_toolbar_that_came_across_gets_our_additions(self):
         from calibre.gui2 import gprefs
         from calibre_zen import hooks
+        from calibre_zen.finder import ACTION_NAME
 
-        self.assertEqual(hooks.with_toolbar_additions(('Add Books', 'View')), ('Add Books', 'View', None, 'Preferences'))
-        self.assertEqual(hooks.with_toolbar_additions(('Preferences', 'View')), ('Preferences', 'View'), 'nothing moves')
+        self.assertEqual(hooks.with_toolbar_additions(('Add Books', 'View')), ('Add Books', 'View', None, 'Preferences', None, ACTION_NAME))
+        self.assertEqual(hooks.with_toolbar_additions(('Preferences', 'View', ACTION_NAME)), ('Preferences', 'View', ACTION_NAME), 'nothing moves')
         key = hooks.TOOLBAR_KEYS[0]
         before = gprefs.get(key) if key in gprefs else None
         self.addCleanup(lambda: gprefs.set(key, before) if before is not None else gprefs.__delitem__(key))
         gprefs[key] = ['Add Books', None, 'View']
         self.assertIn(key, hooks.merge_toolbar_additions())
-        self.assertEqual(list(gprefs[key]), ['Add Books', None, 'View', None, 'Preferences'])
+        self.assertEqual(list(gprefs[key]), ['Add Books', None, 'View', None, 'Preferences', None, ACTION_NAME])
 
     def test_backup_copies_beside_and_leaves_caches(self):
         from calibre_zen.onboarding import importer

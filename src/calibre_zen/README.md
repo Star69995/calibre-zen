@@ -159,6 +159,13 @@ editor/               the single-book metadata editor -- see "The metadata edito
   files.py            the Cover & files tab: the cover, its actions, the book's files
 forms/                a grouped form, laid out by the FORM_* tokens -- see "Forms"
 download/             the Download metadata dialog: match cards, a preview panel, cover tiles -- see "Download metadata"
+finder/               two search boxes: Find an action and Search settings -- see "Finding an action or a setting"
+  __init__.py         the built-in action's registration, its place on the toolbar, the two installs
+  match.py            Entry, and the one rule both boxes rank by (no Qt)
+  english.py          the catalogs read backwards: a translated label's English
+  results.py          the painted results list both boxes fill, and the field's keys
+  actions.py          Find an action: every action in gui.iactions and their menus, in a popup
+  settings.py         Search settings: Preferences' pages read off screen, the box, the jump
 i18n.py               adds locales/<lang>.po to calibre's translator as a fallback -- see "Translations"
 locales/<lang>.po     translations of the strings only this fork has; `he` ships
 toolbars.py           one main toolbar: the device's bar is the main one plus what a device adds -- see "One main toolbar"
@@ -855,7 +862,9 @@ Not offered: `authors` and `series`, which are folded into Details and hidden (a
 switch for them would do nothing visible), and calibre's `ondevice` and `inlibrary`.
 Details is shown, first and cannot be moved, because the table is drawn around it.
 The panel is a popup, placed by `popovers.place`, the rule the jobs panel shares:
-the end edge on the button's, kept on the screen, mirrored in right-to-left. Arrows
+the end edge on the button's, kept on the screen, mirrored in right-to-left. The size
+it places by is the popup's hint grown to its minimum, since a popup with a fixed
+width is that wide whatever its contents hint. Arrows
 rather than drag handles, because a drag inside a popup is lost the moment the pointer
 leaves it.
 
@@ -864,6 +873,78 @@ followed through `location_selected`). Nothing is folded there and no column is
 locked, so every column but `inlibrary` is offered -- including Format, Folder and
 Path, which `device_columns.py` adds -- Reset is calibre's own defaults, and Add column says
 why it cannot: calibre's device list takes no custom columns.
+
+### Finding an action or a setting
+
+Two search boxes, one module (`finder/`), each with its own switch in the
+features menu (`CALIBRE_ZEN_ACTION_SEARCH`, `CALIBRE_ZEN_SETTINGS_SEARCH`).
+
+**Find an action** is a button at the far end of the main toolbar, after the
+application's own run, and `Ctrl+K`. It opens a popup with a box and a list: every
+action the window has registered -- the toolbar buttons and everything in their
+menus and submenus, calibre's, this fork's and every plugin's, since all of them
+are `gui.iactions` -- with the menu it lives in, its key, and greyed when it
+cannot run now. Preferences' pages are listed too, because they are the
+Preferences button's menu; calibre's All actions menu is not, since it is copies
+of the others. The list is read off the menus each time the box opens, so it is
+never stale, and choosing a row triggers that row's own QAction after the popup
+has closed. A button's key is read from its menuless twin, which is where calibre
+keeps it (`InterfaceAction.create_action`).
+
+It is an `InterfaceAction` registered as a calibre built-in, the way `books/`
+registers its two, so Preferences -> Toolbars & menus moves or removes it and
+the Keyboard page rebinds it. A new install has it in the default layout
+(`hooks.TOOLBAR_ADDITIONS`); a toolbar the person had already arranged gets it
+once (`finder.offer_once`, remembered in `gprefs['zen_find_action_offered']`), so
+taking it off is final. It is in `appearance.TRAILING`, so it stays with
+Preferences and Help at the far end.
+
+The popup is a transparent window holding one frame the sheet paints
+(`#zenActionSearch`, `25-finder.qss`). Qt does not paint a style sheet's
+background on a translucent top-level window, and every popup is translucent for
+its round corners (see "Rounded popups"), so a popup that carried the rule
+itself came out see-through on a real screen. The offscreen grab cannot show the
+difference; a screen capture under Xvfb can.
+
+**Search settings** is a box at the end of Preferences' title bar, on the
+overview only (`Ctrl+F` there too). It searches the words on the pages
+themselves -- every label, tick box, button, group, tab and their tooltips --
+and the pages' names and descriptions. Results take the overview's place, as a
+third page of the dialog's stack; choosing one opens the page, chooses each tab
+and list panel the setting is inside, scrolls it into view, focuses it (or the
+field a label is for) and marks it for `FINDER_MARK_MS`.
+
+calibre builds a page only when it is opened, and much of a page is built in
+code, so the only complete list of what a page says is the page. `PageIndex`
+builds each one the way the dialog does (create, `genesis`, `initialize`), off
+screen and one per turn of the event loop, reads it and throws it away: about two
+seconds for all of them, results growing as pages are read, kept for the run per
+language and set of pages. A result names its widget by class, text and which of
+those it was (`Locator`), and finds it again in the page built afresh. Three
+things are not what they seem:
+
+- A tab that is not current is hidden by its stack, so `isVisibleTo` would drop
+  everything on it; `on_page` skips only what the page itself hid, and anything
+  in a dialog the page made ahead of time (Look & feel's colour editor).
+- calibre's `ScrollingTabWidget` answers `indexOf` for the page inside its scroll
+  area only, so each tab widget is asked which of its pages holds the widget.
+- The conversion pages are a list and a stack of panels, not tabs. A panel is
+  chosen through the list beside it, so the two stay in step.
+
+Text that is on three pages or more (Next, Previous) is furniture and left out.
+
+Both boxes list `match.Entry` rows in one painted list (`results.py`), ranked by
+one rule (`match.rank`): every word must be somewhere; a title that starts with
+it first, then a word of the title that does, then the title containing it, then
+the place, an English name or a tooltip. Typing keeps the focus: Up, Down, Page
+Up, Page Down and Enter in the box move and choose in the list. A row's place is
+built by `match.path`, which wraps each part in a Unicode isolate: a Hebrew
+window is full of English names, and without isolation "מראה ותחושה › Tag
+browser › Display" reads Display before Tag browser.
+
+In a translated window both also find a label by its English (`english.py`):
+the catalogs read backwards, msgstr to msgid, calibre's first and then
+`locales/<lang>.po`, built once per language. So "convert" finds "המר ספרים".
 
 ### One shape for every tile
 
@@ -1443,8 +1524,8 @@ rest -- because the way to judge a change is to run it beside the stock
 behaviour. A reader does not have an environment; they have a toolbar.
 `features.py` puts the switches in a menu under the application's own
 mark, at the head of the app-level run before Preferences: line icons, the
-filter panel, the preview and table, the status bar, the compact editor, star ratings, the calendar, split
-buttons, rounded menus. A tick per part, a tooltip saying what turning it off
+filter panel, the preview and table, the status bar, the compact editor, star ratings, the calendar, the two search
+boxes, split buttons, rounded menus. A tick per part, a tooltip saying what turning it off
 gives back, and a Restart entry once anything has been changed.
 
 The rule for what wins is the one the scheme and the grid density already
@@ -2325,6 +2406,8 @@ settings; the runner refuses to start any other way.
 | `test_toolbars.py` | the device bar's arithmetic, Send to device and Add books to library sharing a place, where a plugin's button goes by default, where an install puts it, and the install dialog's picture (one place per tick, the new button named, "Recommended" only for a place the plugin asked for) and list (a tick that follows the selection, every place in view) |
 | `test_gui.py` (columns) | the picker offers what does something and pins Details, a tick hides and shows through calibre, the arrows move a column but not in front of Details, Reset, the search, the button for the table only; on a device every column is offered with Format, Folder and Path among them, hides, moves and resets, and the button follows the list in view |
 | `test_device_columns.py` | the device list's Format, Folder and Path columns: each cell's text, a Hebrew path read root first, where they go, their headers, sorting on each |
+| `test_gui.py` (finder) | Find an action is a built-in, last on the bar, with `Ctrl+K`; it lists menus and Preferences' pages without All actions' copies, shows a button's key, narrows, says when nothing matches and runs the choice after closing; Search settings reads every page, opens the one a result is on with its tab and its list panel chosen, and marks the setting |
+| `test_finder.py` | the ranking both search boxes share, a path's isolated parts, a Hebrew label's English from both catalogs, Find an action's place at the end of the toolbar and its one-time addition to an arranged one, which page text is indexed |
 | `test_library_dialog.py` | the Choose library dialog: one choice at a time, the folder and OK worded for it, copying only under Create and the dialog tall enough for it, calibre's `accept()` still calling back with the choice |
 | `test_busy.py` | which Preferences page clashes with a running job and why, the notice's lines, and the one question calibre asks at the door |
 | `test_gui.py` | end to end: the real `Main` window, offscreen, on a three-book library. Filter panel, centre, status bar and metadata editor installed; search narrows the list and the count; selecting a book fills the preview; a clean shutdown. And the Your columns form on a library with one custom column of each shape |

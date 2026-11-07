@@ -1,0 +1,20 @@
+/* The two search boxes -- calibre_zen/finder/. Find an action is a popup like a
+   menu, a box and a list; Search settings is a box in Preferences' title bar,
+   whose results take the overview's place, and a mark on the setting it led to. */
+
+#zenActionSearch {
+    background-color: $menu_bg;
+    border: 1px solid $border_strong;
+    border-radius: ${radius_panel}px;
+}
+#zenActionSearch #zenFinderResults, #zenSettingsResults #zenFinderResults {
+    background: transparent;
+    border: none;
+}
+#zenFinderNone { color: $muted; padding: 12px; }
+
+/* The setting a search led to, for FINDER_MARK_MS. */
+*[zenFound="true"] {
+    background-color: $selected_soft;
+    border-radius: ${radius_control}px;
+}
