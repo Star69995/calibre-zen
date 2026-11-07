@@ -223,6 +223,13 @@ PAD_PLACE_ROW = '6px 10px'
 PLACE_LIST_PAD = 4  # inside the list's frame, around its rows
 PLACE_LIST_SPACING = 1  # around each row, so twice this between two
 
+# The Choose library dialog (library_dialog.py): three choices in a grouped form.
+LIBRARY_DIALOG_WIDTH = 560  # the least the dialog is given, so each choice's line fits on one or two lines
+LIBRARY_FIELD_CHARS = 30  # the folder field's starting width, in characters
+LIBRARY_GLYPH = 28  # the books glyph beside the current library's name
+LIBRARY_EXTRA_GAP = 4  # above what a choice offers under its line (Create's copy box)
+LIBRARY_WARNING_GAP = 8  # the warning's sign to its text; the field to its folder button
+
 # The column picker (centre/columns.py): a popup under the Columns button.
 COLUMNS_PANEL_WIDTH = 300
 COLUMNS_PANEL_HEIGHT = 360  # the list's height before it scrolls

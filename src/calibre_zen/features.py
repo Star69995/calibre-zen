@@ -51,6 +51,7 @@ FEATURES = (
     Feature('rating', 'CALIBRE_ZEN_RATING', N_('Star ratings'), N_("Ratings as five stars you click. Off: calibre's drop-down of stars.")),
     Feature('dates', 'CALIBRE_ZEN_DATES', N_('Calendar'), N_("Date fields open a calendar drawn in the theme. Off: Qt's own calendar.")),
     Feature('download', 'CALIBRE_ZEN_DOWNLOAD', N_('Download metadata'), N_("Matches as cards and covers as tiles. Off: calibre's table and grid.")),
+    Feature('library-dialog', 'CALIBRE_ZEN_LIBRARY_DIALOG', N_('Library dialog'), N_("Switch, create or move a library as three clear choices. Off: calibre's dialog.")),
     Feature('busy', 'CALIBRE_ZEN_BUSY', N_('Settings while jobs run'), N_("Preferences opens during a job; only a clashing change waits. Off: calibre's refusal.")),
     Feature('reader', 'CALIBRE_ZEN_READER', N_('Ready reader'), N_('A reader waits in the background, so books open at once. Off: each book starts a new reader.')),
     Feature('reader-look', 'CALIBRE_ZEN_READER_LOOK', N_('Reader look'), N_("The reader's menus, settings and panels in the same look. Off: calibre's own.")),

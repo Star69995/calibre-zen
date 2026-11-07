@@ -102,6 +102,7 @@ CALIBRE_ZEN_EDITOR=0     # calibre's Edit metadata layouts back
 CALIBRE_ZEN_RATING=0     # calibre's rating list back
 CALIBRE_ZEN_DATES=0      # Qt's calendar back
 CALIBRE_ZEN_DOWNLOAD=0   # calibre's Download metadata dialog back
+CALIBRE_ZEN_LIBRARY_DIALOG=0  # calibre's Choose library dialog back
 ```
 
 ## Building
