@@ -16,7 +16,7 @@ QMenu::item {
 QMenu::item:selected { background-color: $accent; color: $accent_text; }
 QMenu::item:disabled { color: $muted; }
 QMenu::separator { height: 1px; background: $border; margin: 4px 10px; }
-QMenu::icon { left: 7px; }
+QMenu::icon, QMenu::indicator { left: ${menu_mark_inset}px; }
 /* A checkable entry that carries an icon has no room for a tick, so the icon
    itself says on: the filled outline the status bar's layout toggles wear
    while their panel is showing. The Layout menu is the one that needs it. */
@@ -31,6 +31,14 @@ QMenu::right-arrow {
     width: ${indicator_size}px;
     height: ${indicator_size}px;
     image: $mark_chevron_right;
+}
+/* Right to left, Qt asks for the submenu arrow by this name instead, and
+   without a rule draws its filled triangle. */
+QMenu::left-arrow {
+    margin-left: 8px;
+    width: ${indicator_size}px;
+    height: ${indicator_size}px;
+    image: $mark_chevron_left;
 }
 
 QMenuBar { background-color: transparent; border: none; padding: 1px 2px; }

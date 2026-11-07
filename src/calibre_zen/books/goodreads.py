@@ -10,11 +10,27 @@ library without a window.
 """
 
 LINKED_COLUMN = '#goodreads_linked'
+LINKED_COLUMN_HEADING = 'Goodreads linked'
 IDENTIFIER_TYPE = 'goodreads'
 
 
 class MissingColumnError(Exception):
-    pass
+    """The library has no `#goodreads_linked` column; `create_linked_column` can make it."""
+
+
+class WrongColumnTypeError(Exception):
+    """`#goodreads_linked` exists but is not yes/no; it cannot be replaced from here."""
+
+
+def create_linked_column(db) -> None:
+    """
+    Add the yes/no column `#goodreads_linked` to the library. `db` is calibre's
+    new_api Cache.
+
+    Calibre reads its columns when a library is opened, so the column cannot be
+    filled until calibre is restarted.
+    """
+    db.create_custom_column(LINKED_COLUMN.removeprefix('#'), LINKED_COLUMN_HEADING, 'bool', False)
 
 
 def update_goodreads_linked(db) -> tuple[set[int], int]:
@@ -26,9 +42,11 @@ def update_goodreads_linked(db) -> tuple[set[int], int]:
     Returns (changed_ids, total_books).
     """
     meta = db.field_metadata.get(LINKED_COLUMN)
-    if meta is None or meta['datatype'] != 'bool':
-        raise MissingColumnError(
-            _("The library has no yes/no custom column with the lookup name '{0}'.\nCreate it under Preferences → Add your own columns.").format(LINKED_COLUMN)
+    if meta is None:
+        raise MissingColumnError(_("The library has no column with the lookup name '{0}'.").format(LINKED_COLUMN))
+    if meta['datatype'] != 'bool':
+        raise WrongColumnTypeError(
+            _("The library's column '{0}' is not a yes/no column.\nRename it under Preferences → Add your own columns, then run this again.").format(LINKED_COLUMN)
         )
 
     all_ids = db.all_book_ids()

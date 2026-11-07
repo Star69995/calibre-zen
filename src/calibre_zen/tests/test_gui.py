@@ -101,10 +101,25 @@ class TestMainWindow(ZenTestCase):
         def books(bar):
             return [names[ac] for ac in bar.added_actions if ac in names]
 
+        added = ('Send To Device', 'Add To Library')
         self.assertNotIn('Send To Device', books(plain))
-        self.assertEqual([n for n in books(device) if n != 'Send To Device'], books(plain), 'the same buttons, in the same order')
-        self.assertIn('Send To Device', books(device))
+        self.assertEqual([n for n in books(device) if n not in added], books(plain), 'the same buttons, in the same order')
+        on_device = books(device)
+        self.assertEqual(on_device[on_device.index('Send To Device') + 1], 'Add To Library', 'the two share a place')
         self.assertTrue(any(ac in device.added_actions for ac in self.gui.location_manager.all_actions), 'the Location manager')
+
+    def test_send_to_device_turns_into_add_to_library_on_the_device(self):
+        send = self.gui.iactions['Send To Device']
+        add = self.gui.iactions['Add To Library']
+        self.addCleanup(lambda: [ac.location_selected('library') for ac in (send, add)])
+        for ac in (send, add):
+            ac.location_selected('main')
+        self.assertFalse(send.qaction.isVisible())
+        self.assertTrue(add.qaction.isVisible() and add.qaction.isEnabled())
+        for ac in (send, add):
+            ac.location_selected('library')
+        self.assertTrue(send.qaction.isVisible() and send.qaction.isEnabled())
+        self.assertFalse(add.qaction.isVisible())
 
     def test_preferences_calls_the_device_toolbar_what_it_is(self):
         from calibre.gui2.preferences.toolbar import ConfigWidget
@@ -230,6 +245,58 @@ class TestMainWindow(ZenTestCase):
         after = [c.key for c in columns.columns_for(view) if c.visible]
         self.assertIn(before[1], after, 'the column that was hidden is back')
         self.assertEqual(after[0], 'title')
+
+    def device_view(self):
+        "The device list, holding three books, as if a reader were connected."
+        from calibre.devices.usbms.books import Book, BookList
+
+        books = BookList(None, None, None)
+        for title, path in (('Alpha', 'a.pdf'), ('Beta', 'b.azw3'), ('Gamma', 'c.epub')):
+            books.append(Book('/dev/', path, other=None))
+            # in_library and its date are set by calibre when it matches the device to the library.
+            books[-1].title, books[-1].authors, books[-1].in_library, books[-1].datetime = title, ['Ann Author'], None, (2026, 1, 1, 0, 0, 0, 0, 0, 0)
+        view = self.gui.memory_view
+        view.set_database(books)
+        self.addCleanup(lambda: view.apply_state(view.get_default_state()))
+        return view
+
+    def test_on_a_device_every_column_is_offered_and_format_is_one(self):
+        from calibre_zen.centre import columns
+
+        view = self.device_view()
+        found = {c.key: c for c in columns.columns_for(view)}
+        for key in ('format', 'folder', 'lpath'):
+            self.assertIn(key, found)
+            self.assertTrue(found[key].visible, f'{key} is shown from the start')
+        self.assertIn('authors', found, 'nothing is folded on a device')
+        self.assertNotIn('inlibrary', found)
+        self.assertFalse(any(c.locked for c in found.values()))
+        self.assertEqual(found['title'].title, 'Title')
+
+    def test_on_a_device_a_column_hides_moves_and_resets(self):
+        from calibre_zen.centre import columns
+
+        view = self.device_view()
+        columns.set_visible(view, 'format', False)
+        self.assertFalse(next(c for c in columns.columns_for(view) if c.key == 'format').visible)
+        shown = [c.key for c in columns.columns_for(view) if c.visible]
+        self.assertTrue(columns.move(view, shown[1], -1))
+        self.assertEqual([c.key for c in columns.columns_for(view) if c.visible][:2], [shown[1], shown[0]])
+        columns.reset(view)
+        self.assertTrue(next(c for c in columns.columns_for(view) if c.key == 'format').visible)
+        self.assertFalse(columns.can_add(view)[0], 'a device list takes no custom columns')
+
+    def test_the_button_acts_on_the_list_in_view(self):
+        button = self.gui.zen_centre.toolbar.columns
+        view = self.device_view()
+        self.addCleanup(lambda: self.gui.location_manager.location_selected.emit('library'))
+        self.gui.stack.setCurrentIndex(1)
+        self.gui.location_manager.location_selected.emit('main')
+        self.assertIs(button.view(), view)
+        self.assertTrue(button.isVisibleTo(self.gui.zen_centre))
+        button.toggle_panel()
+        self.addCleanup(button.panel.close)
+        self.assertIs(button.panel.view, view)
 
     def test_the_panel_searches_and_follows_a_tick(self):
         from calibre_zen.centre import columns
@@ -405,6 +472,20 @@ class TestMainWindow(ZenTestCase):
         strip.refresh()
         self.assertFalse(strip.isHidden())
         self.assertIn('40%', strip.text())
+
+    def test_the_preferences_overview_needs_no_scrolling(self):
+        from calibre.gui2 import gprefs
+        from calibre.gui2.preferences.main import Preferences
+
+        # A size saved by an earlier, smaller dialog must not leave the grid cut off.
+        gprefs.pop('preferences dialog geometry', None)
+        d = Preferences(self.gui)
+        self.addCleanup(d.deleteLater)
+        d.resize(930, 560)
+        d.show()
+        self.addCleanup(d.close)
+        process_events(200)
+        self.assertEqual(d.browser.verticalScrollBar().maximum(), 0)
 
     def test_preferences_opens_while_a_job_runs(self):
         from unittest import mock

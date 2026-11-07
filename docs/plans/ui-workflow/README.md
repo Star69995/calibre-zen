@@ -43,6 +43,17 @@ the mockup yet.
 | U6 | **Easy column editing (built, see below).** A "Columns" button on the centre toolbar, beside the Grid/Table switcher and shown for the table. It opens a popover: every column with a switch, drag handles to reorder, a search box for libraries with many custom columns, "Add column" and "Reset". | Today the only way is to right-click a column header, then Hide or Show column one at a time from a submenu (`gui2/library/views.py:735-757`). Nothing on screen says it exists, and reordering is dragging headers blind. | medium | `centre/` |
 | U7 | **Open anything while jobs run (first step built, see below), and be told only when a change would clash.** Preferences and the other windows open while a conversion, an add or a device job is running. Only a change that would really interfere with a running job is held back, with the reason and a way forward. | calibre refuses at the door: `PreferencesAction.do_config` shows "Cannot configure while there are running jobs" (`gui2/actions/preferences.py:93-96`) even to look at a page or change a colour, and the dialog is application-modal. | small to start, then a survey | a wrap of `do_config`, a per-page rule |
 
+**Device list: Format, Folder and Path columns and the Columns button, built 2026-11-07**
+(`device_columns.py`, `centre/columns.py`, `toolbars.py`). The list of books on a device had six
+fixed columns and none said what a book is as a file; it now has Format (EPUB, AZW3, PDF), Folder
+(the one directly holding the book) and Path (from the device's root, read root first in Hebrew
+too) after Size, each sortable (`CALIBRE_ZEN_DEVICE_COLUMNS=0` takes it away). The Columns button works on
+the device's list too. On the device bar, Send to device turns into Add books to library while the
+device's books are in view. Tests pass; offscreen screenshots in `.calibre-zen/shots/device-columns/`.
+Left to do: a look at the Hebrew window on a real machine (the offscreen run does not mirror the
+window). Asked for, not started: more device columns (series, tags, the library's columns for a
+matched book) and a visible "Sync annotations" for Kindle/Kobo.
+
 **U6, built 2026-11-05** (`centre/columns.py`, overlay README "Choosing columns"). A Columns
 button beside the Grid/Table switcher opens a popup: a tick per column, search, arrows to move,
 Add column (disabled with the reason when a restart is owed) and Reset, all through calibre's own

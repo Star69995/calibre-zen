@@ -29,8 +29,10 @@ upstream calibre does not.
   no JavaScript; `scripts/dev.mjs` picks the launcher for the OS). Extra arguments
   go after `--`. `npm start`, `start:he`, `start:fresh` (the app; `--lang <code>`
   and `--fresh` mean the same on every OS), `npm test [-- theme -k hover]`,
-  `test:list`, `npm run tool -- calibredb list`, `npm run seed`, `npm run gutenberg`
-  (the dev libraries). On Windows `npm test` finds Git Bash next to `git.exe` (a
+  `test:list`, `npm run tool -- calibredb list`. The dev libraries: `npm run seed` and
+  `npm run gutenberg` (with `gutenberg:fetch` before it) build them, `start:seed` and
+  `start:gutenberg` open them (`start --library seed|gutenberg|<dir>`; the default
+  library is used whenever the flag is absent). On Windows `npm test` finds Git Bash next to `git.exe` (a
   bare `bash` there is WSL's) and defaults `CALIBRE_ZEN_CALIBRE_DEBUG` to the
   installed Calibre Zen. Keep these in step when a launcher gains an option.
 

@@ -22,6 +22,14 @@ under it by calibre still works: everything in it that the main toolbar already
 has is dropped as a duplicate, which for calibre's own default leaves Send to
 device and the Location manager, the two buttons that only mean something with
 a device.
+
+One button stands for two. Send to device acts on the library's books and Add
+books to library on the device's, and calibre greys out whichever does not
+apply where you are -- so the bar showed a dead button either way. Here they
+share a place: wherever the device bar has Send to device, Add books to library
+is put right after it (`with_partners`), and only the one for the list in view
+is shown (`PARTNERS`, applied from each action's `location_selected`). Moving to
+the device's books turns Send to device into Add to library, and back.
 """
 
 from __future__ import annotations
@@ -32,6 +40,10 @@ from calibre_zen.i18n import N_
 
 # What a device adds, until the reader chooses otherwise in Preferences -> Toolbars & menus.
 DEVICE_ADDITIONS = ('Send To Device', 'Location Manager')
+
+# A button for the library's books, and the one that takes its place on the bar
+# while a device's books are in view.
+PARTNERS = {'Send To Device': 'Add To Library'}
 
 # Strings of calibre's own, shown in the dialogs this file changes, that calibre's
 # Hebrew catalog does not have. Listed so locales/<lang>.po can answer them: the
@@ -108,6 +120,32 @@ def device_layout(main, extras, iactions=None) -> tuple:
     return tuple(main[:at] + ([None] if at else []) + added + main[at:])
 
 
+def with_partners(layout) -> tuple:
+    "`layout` with each button of PARTNERS followed by its partner, unless the partner is already there."
+    layout = tuple(layout or ())
+    out = []
+    for name in layout:
+        out.append(name)
+        partner = PARTNERS.get(name)
+        if partner is not None and partner not in layout:
+            out.append(partner)
+    return tuple(out)
+
+
+def shown_at(name: str, location: str) -> bool | None:
+    """
+    Whether a button of PARTNERS shows at `location` ('library', 'main',
+    'carda', 'cardb'): the lead in the library, its partner on a device. None
+    for any other button, which is left as it is.
+    """
+    in_library = location == 'library'
+    if name in PARTNERS:
+        return in_library
+    if name in PARTNERS.values():
+        return not in_library
+    return None
+
+
 # The places whose layout keeps the application's own buttons at the far end
 # (`appearance.TRAILING`), so a button added to them goes in before that run.
 KEEPS_TRAILING = frozenset({'toolbar'})
@@ -165,6 +203,7 @@ def install() -> bool:
     global _installed
     if _installed:
         return True
+    from calibre.gui2.actions import InterfaceAction
     from calibre.gui2.bars import BarsManager
     from calibre.gui2.dialogs.choose_plugin_toolbars import ChoosePluginToolbarsDialog
     from calibre.gui2.preferences.plugins import ConfigWidget as PluginsConfigWidget
@@ -172,6 +211,7 @@ def install() -> bool:
 
     orig_check = PluginsConfigWidget.check_for_add_to_toolbars
     orig_init_bars = BarsManager.init_bars
+    orig_location_selected = InterfaceAction.location_selected
     orig_genesis = ConfigWidget.genesis
     orig_dialog = ChoosePluginToolbarsDialog.__init__
 
@@ -179,7 +219,7 @@ def install() -> bool:
         ans = orig_init_bars(self)
         try:
             main, extras = self.bar_actions[0], self.bar_actions[1]
-            layout = device_layout(main, extras, self.gui.iactions)
+            layout = with_partners(device_layout(main, extras, self.gui.iactions))
             self.bar_actions = (main, layout) + tuple(self.bar_actions[2:])
             self.main_bars[1].init_bar(layout)
         except Exception:
@@ -230,6 +270,24 @@ def install() -> bool:
             traceback.print_exc()
         return ans
 
+    def follow_location(cls):
+        "Wrap one partner action's location_selected so its button shows only where it applies."
+        orig = cls.__dict__.get('location_selected', orig_location_selected)
+
+        def location_selected(self, loc):
+            ans = orig(self, loc)
+            show = shown_at(self.name, loc)
+            if show is not None:
+                self.qaction.setVisible(show)
+            return ans
+
+        cls.location_selected = location_selected
+
+    from calibre.gui2.actions.add_to_library import AddToLibraryAction
+    from calibre.gui2.actions.device import SendToDeviceAction
+
+    for cls in (SendToDeviceAction, AddToLibraryAction):
+        follow_location(cls)
     BarsManager.init_bars = init_bars
     ConfigWidget.genesis = genesis
     ChoosePluginToolbarsDialog.__init__ = dialog_init

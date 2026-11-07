@@ -1136,8 +1136,22 @@ msgstr "מתווסף לסרגל הכלים הראשי כשהתקן מחובר"
 
 #: books/goodreads.py
 #, python-brace-format
-msgid "The library has no yes/no custom column with the lookup name '{0}'.\nCreate it under Preferences → Add your own columns."
-msgstr "בספרייה אין עמודה מותאמת מסוג כן/לא עם שם החיפוש '{0}'.\nאפשר ליצור אותה ב-העדפות ← הוספת עמודות משלך."
+msgid "The library has no column with the lookup name '{0}'."
+msgstr "בספרייה אין עמודה עם שם החיפוש '{0}'."
+
+#: books/goodreads.py
+#, python-brace-format
+msgid "The library's column '{0}' is not a yes/no column.\nRename it under Preferences → Add your own columns, then run this again."
+msgstr "העמודה '{0}' בספרייה אינה עמודת כן/לא.\nאפשר לשנות את שמה ב-העדפות ← הוספת עמודות משלך, ואז להפעיל שוב."
+
+#: books/actions.py
+#, python-brace-format
+msgid "The library has no yes/no column '{0}' to keep in step with the goodreads identifiers.\n\nAdd it now?"
+msgstr "בספרייה אין עמודת כן/לא '{0}' שתעודכן לפי מזהי Goodreads.\n\nלהוסיף אותה עכשיו?"
+
+#: books/actions.py
+msgid "The column is added, but calibre only sees a new column after it restarts. Restart calibre now, then click Goodreads Updater again?"
+msgstr "העמודה נוספה, אבל calibre רואה עמודה חדשה רק אחרי הפעלה מחדש. להפעיל מחדש את calibre עכשיו, ואז ללחוץ שוב על עדכון Goodreads?"
 
 #: books/actions.py
 msgid "Goodreads Updater"
@@ -1533,3 +1547,154 @@ msgstr "קורא את עמודי ההגדרות… {0} מתוך {1}"
 #: finder/settings.py
 msgid "No setting matches."
 msgstr "אין הגדרה מתאימה."
+
+msgid "Library dialog"
+msgstr "חלון הספריות"
+
+#: features.py
+msgid "Switch, create or move a library as three clear choices. Off: calibre's dialog."
+msgstr "מעבר, יצירה או העברה של ספרייה כשלוש בחירות ברורות. כבוי: החלון של calibre."
+
+#: library_dialog.py
+msgid "&Switch to an existing library"
+msgstr "&מעבר לספרייה קיימת"
+
+#: library_dialog.py
+msgid "Open a library that is already in another folder."
+msgstr "פתיחת ספרייה שכבר נמצאת בתיקייה אחרת."
+
+#: library_dialog.py
+msgid "Library to open"
+msgstr "הספרייה לפתיחה"
+
+#: library_dialog.py
+msgid "Switch"
+msgstr "מעבר"
+
+#: library_dialog.py
+msgid "&Create a new library"
+msgstr "י&צירת ספרייה חדשה"
+
+#: library_dialog.py
+msgid "Start an empty library in a new or empty folder."
+msgstr "התחלת ספרייה ריקה בתיקייה חדשה או ריקה."
+
+#: library_dialog.py
+msgid "Where to create it"
+msgstr "היכן ליצור אותה"
+
+#: library_dialog.py
+msgid "Create"
+msgstr "יצירה"
+
+#: library_dialog.py
+msgid "&Move this library"
+msgstr "ה&עברת הספרייה הזו"
+
+#: library_dialog.py
+msgid "Move this library and all its books to an empty folder."
+msgstr "העברת הספרייה הזו, עם כל הספרים שבה, לתיקייה ריקה."
+
+#: library_dialog.py
+msgid "Where to move it"
+msgstr "לאן להעביר אותה"
+
+#: library_dialog.py
+msgid "Move"
+msgstr "העברה"
+
+#: library_dialog.py
+msgid "Current library"
+msgstr "הספרייה הנוכחית"
+
+#: library_dialog.py
+msgid "What do you want to do?"
+msgstr "מה ברצונך לעשות?"
+
+#: library_dialog.py
+msgid "Co&py columns, saved searches and settings from this library"
+msgstr "ה&עתקת העמודות, החיפושים השמורים וההגדרות מהספרייה הזו"
+
+#: library_dialog.py
+msgid "Type a path, or choose a folder"
+msgstr "הקלד נתיב, או בחר תיקייה"
+
+#: library_dialog.py
+msgid "Choose a folder"
+msgstr "בחר תיקייה"
+
+#: library_dialog.py
+msgid "Keep libraries off network drives and cloud-synced folders (Dropbox, OneDrive and the like): calibre can lose data there. <a href=\"{}\">Why?</a>"
+msgstr "אל תשמור ספרייה בכונן רשת או בתיקייה שמסונכרנת לענן, כמו Dropbox או OneDrive. במקומות כאלה calibre עלול לאבד מידע. <a href=\"{}\">למה?</a>"
+
+#: device_columns.py
+msgid "Format"
+msgstr "פורמט"
+
+#: device_columns.py
+msgid "Folder"
+msgstr "תיקייה"
+
+#: device_columns.py
+msgid "Path"
+msgstr "נתיב"
+
+#: send_default.py
+msgid "Storage card A"
+msgstr "כרטיס הרחבה א (A)"
+
+#: send_default.py
+msgid "Storage card B"
+msgstr "כרטיס הרחבה ב (B)"
+
+#: send_default.py
+msgid "Hide storage cards from the menu, even if the device has them"
+msgstr "הסתרת כרטיסי ההרחבה מהתפריט, גם אם בהתקן יש כאלה"
+
+#: send_default.py
+msgid "What Send to device does"
+msgstr "מה עושה ״שליחה להתקן״"
+
+#: send_default.py
+msgid "This is what happens when you click the Send to device button itself, not its arrow."
+msgstr "זה מה שקורה כשלוחצים על הכפתור ״שליחה להתקן״ עצמו, לא על החץ שלידו."
+
+#: send_default.py
+msgid "Send to"
+msgstr "שליחה אל"
+
+#: send_default.py
+msgid "How"
+msgstr "באיזה אופן"
+
+#: send_default.py
+msgid "&Send the book as it is"
+msgstr "&שליחת הספר כמות שהוא"
+
+#: send_default.py
+msgid "In the device's own format order."
+msgstr "לפי סדר הפורמטים של ההתקן."
+
+#: send_default.py
+msgid "Which formats a book is sent in, and their order, are set for each device: Device button > Configure this device."
+msgstr "הפורמטים שבהם נשלח ספר, והסדר שלהם, נקבעים לכל התקן בנפרד: הכפתור ״התקן״ ← הגדרת ההתקן."
+
+#: send_default.py
+msgid "&Choose the format each time"
+msgstr "&בחירת הפורמט בכל פעם"
+
+#: send_default.py
+msgid "Ask which format to send, for every book."
+msgstr "שואל איזה פורמט לשלוח, לכל ספר."
+
+#: send_default.py
+msgid "Send, then &delete from the library"
+msgstr "שליחה, ואז מ&חיקה מהספרייה"
+
+#: send_default.py
+msgid "Removes the book from your library once it is on the device."
+msgstr "הספר יימחק מהספרייה שלך אחרי שיגיע להתקן."
+
+#: send_default.py
+msgid "What clicking Send to device does…"
+msgstr "מה עושה לחיצה על ״שליחה להתקן״…"

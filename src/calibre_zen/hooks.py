@@ -102,6 +102,11 @@ What is patched, and why it is patched rather than edited:
         as a modern table with a composite Details column.
         CALIBRE_ZEN_CENTRE=0.
 
+    DeviceBooksModel.{__init__, data, sort}
+        Wrapped -- see device_columns.py. The list of books on a device gains
+        Format, Folder and Path columns, read from each book's file name.
+        CALIBRE_ZEN_DEVICE_COLUMNS=0.
+
     MainWindow.unhandled_exception / main_window.error_dialog /
     threading.excepthook / Main.initialize
         Wrapped -- see report/. An unhandled exception with one of our frames
@@ -200,7 +205,28 @@ from calibre_zen import i18n
 # Before the imports below: onboarding/page.py translates at import time.
 i18n.install()
 
-from calibre_zen import books, busy, centre, dates, devtools, download, editor, filters, lookfeel, onboarding, rating, reader, report, status, toolbars, update
+from calibre_zen import (
+    books,
+    busy,
+    centre,
+    dates,
+    device_columns,
+    devtools,
+    download,
+    editor,
+    filters,
+    library_dialog,
+    lookfeel,
+    onboarding,
+    rating,
+    reader,
+    report,
+    send_default,
+    send_formats,
+    status,
+    toolbars,
+    update,
+)
 from calibre_zen.finder import ACTION_NAME as FIND_ACTION
 from calibre_zen.finder import install_actions as install_action_search
 from calibre_zen.finder import install_settings as install_settings_search
@@ -553,11 +579,15 @@ def _patch_palette_manager(pm) -> None:
         guard.run_install('splits', splits.install)
         guard.run_install('filters', filters.install)
         guard.run_install('centre', centre.install)
+        guard.run_install('device-columns', device_columns.install)
         guard.run_install('status', status.install)
         guard.run_install('editor', editor.install)
         guard.run_install('rating', rating.install)
         guard.run_install('dates', dates.install)
         guard.run_install('download', download.install)
+        guard.run_install('library-dialog', library_dialog.install)
+        guard.run_install('send-default', send_default.install)
+        guard.run_install('send-formats', send_formats.install)
         # Before appearance: its init_bars adds to the bars this one rebuilds.
         guard.run_install('toolbars', toolbars.install)
         guard.run_install('appearance', appearance.install)

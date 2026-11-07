@@ -102,6 +102,7 @@ CALIBRE_ZEN_EDITOR=0     # calibre's Edit metadata layouts back
 CALIBRE_ZEN_RATING=0     # calibre's rating list back
 CALIBRE_ZEN_DATES=0      # Qt's calendar back
 CALIBRE_ZEN_DOWNLOAD=0   # calibre's Download metadata dialog back
+CALIBRE_ZEN_LIBRARY_DIALOG=0  # calibre's Choose library dialog back
 ```
 
 ## Building
@@ -119,9 +120,15 @@ npm test                           # every test, headless
 npm test -- theme icons -k hover   # some modules, filtered by name
 npm run test:list                  # what would run
 npm run tool -- calibredb list     # a bundled tool
-npm run seed                       # a large generated dev library
-npm run gutenberg                  # a dev library of real Project Gutenberg books
+npm run seed                       # build a large generated dev library
+npm run start:seed                 # open it (build it first)
+npm run gutenberg:fetch            # download real Project Gutenberg books
+npm run gutenberg                  # build a dev library from them
+npm run start:gutenberg            # open it
+npm start -- --library D:\books    # open any other library
 ```
+
+The default `npm start` always opens the empty library in `.calibre-zen\library`; the dev libraries open only through `start:seed`, `start:gutenberg` or `--library`.
 
 ## Contributing
 

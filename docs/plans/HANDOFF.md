@@ -38,7 +38,9 @@ a working setup. Delete it, or rewrite it, when it goes stale.
 U3 Find an action (`Ctrl+K`, a button at the end of the toolbar) and a search box in
 Preferences that takes you to the setting, U5 placement picture and correct button placement, U6 Columns picker, U7 step 1
 (settings open while jobs run, clash notice), U8 jobs panel and Preferences footer. The install dialog's list of places as ticked
-rows instead of solid black ones, all in view (U5 follow-up).
+rows instead of solid black ones, all in view (U5 follow-up). The Choose library dialog as three
+plain choices (Switch, Create, Move) with the folder and OK worded for each
+(`library_dialog.py`).
 Hebrew translation sweep done, with the `N_()` marker for strings in tables.
 
 ## What is left

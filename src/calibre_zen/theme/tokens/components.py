@@ -223,6 +223,16 @@ PAD_PLACE_ROW = '6px 10px'
 PLACE_LIST_PAD = 4  # inside the list's frame, around its rows
 PLACE_LIST_SPACING = 1  # around each row, so twice this between two
 
+# The Choose library dialog (library_dialog.py): three choices in a grouped form.
+LIBRARY_DIALOG_WIDTH = 560  # the least the dialog is given, so each choice's line fits on one or two lines
+LIBRARY_FIELD_CHARS = 30  # the folder field's starting width, in characters
+LIBRARY_GLYPH = 28  # the books glyph beside the current library's name
+LIBRARY_EXTRA_GAP = 4  # above what a choice offers under its line (Create's copy box)
+LIBRARY_WARNING_GAP = 8  # the warning's sign to its text; the field to its folder button
+
+# The default send window (send_default.py)
+SEND_DEFAULT_WIDTH = 440  # the least it is given, so each choice's line fits
+
 # The column picker (centre/columns.py): a popup under the Columns button.
 COLUMNS_PANEL_WIDTH = 300
 COLUMNS_PANEL_HEIGHT = 360  # the list's height before it scrolls
@@ -319,6 +329,10 @@ PAD_MENU = '5px'
 # Asymmetric on purpose: room for a check mark on the left, a shortcut or
 # submenu arrow on the right.
 PAD_MENU_ITEM = '5px 28px 5px 26px'
+# Where a menu item's tick, radio dot or icon sits, in from the item's start
+# edge. The item's own padding holds the room; without the inset the mark
+# starts at the edge itself and a highlighted row's rounded corner cuts it.
+MENU_MARK_INSET = 7
 PAD_MENUBAR_ITEM = '4px 9px'
 # A row in a list that drops down under a field -- a combo box's own, or an
 # autocomplete list: a menu item's height, no room held for a tick.

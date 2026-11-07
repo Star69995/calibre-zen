@@ -16,7 +16,13 @@ from qt.core import QApplication, QIcon, QMenu, QProgressDialog, Qt
 from calibre.gui2 import error_dialog, info_dialog, question_dialog
 from calibre.gui2.actions import InterfaceAction
 from calibre_zen.books.epub import clean_book
-from calibre_zen.books.goodreads import MissingColumnError, update_goodreads_linked
+from calibre_zen.books.goodreads import (
+    LINKED_COLUMN,
+    MissingColumnError,
+    WrongColumnTypeError,
+    create_linked_column,
+    update_goodreads_linked,
+)
 
 
 class GoodreadsUpdaterAction(InterfaceAction):
@@ -24,23 +30,47 @@ class GoodreadsUpdaterAction(InterfaceAction):
 
     action_spec = (_('Goodreads Updater'), None, _('Update the goodreads_linked column from the goodreads identifiers'), None)
 
+    @property
+    def title(self) -> str:
+        return _('Goodreads Updater')
+
     def genesis(self) -> None:
         self.qaction.setIcon(QIcon.ic('identifiers.png'))
         self.qaction.triggered.connect(self.update_library)
+        self.column_added_in: str | None = None  # the library a column was added to; it needs a restart
 
     def update_library(self) -> None:
-        title = _('Goodreads Updater')
-        db = self.gui.current_db.new_api
+        library = self.gui.current_db.library_path
+        if self.column_added_in == library:
+            self.offer_restart()
+            return
         try:
-            changed, total = update_goodreads_linked(db)
-        except MissingColumnError as e:
-            error_dialog(self.gui, title, str(e), show=True)
+            changed, total = update_goodreads_linked(self.gui.current_db.new_api)
+        except MissingColumnError:
+            self.offer_column(library)
+            return
+        except WrongColumnTypeError as e:
+            error_dialog(self.gui, self.title, str(e), show=True)
             return
 
         if changed:
             self.gui.library_view.model().refresh_ids(list(changed))
             self.gui.tags_view.recount()
-        info_dialog(self.gui, title, _('Checked {0} book(s), updated {1}.').format(total, len(changed)), show=True)
+        info_dialog(self.gui, self.title, _('Checked {0} book(s), updated {1}.').format(total, len(changed)), show=True)
+
+    def offer_column(self, library: str) -> None:
+        asked = _("The library has no yes/no column '{0}' to keep in step with the goodreads identifiers.\n\nAdd it now?").format(LINKED_COLUMN)
+        if not question_dialog(self.gui, self.title, asked):
+            return
+        create_linked_column(self.gui.current_db.new_api)
+        self.column_added_in = library
+        self.gui.must_restart_before_config = True  # as when Preferences adds a column
+        self.offer_restart()
+
+    def offer_restart(self) -> None:
+        asked = _('The column is added, but calibre only sees a new column after it restarts. Restart calibre now, then click Goodreads Updater again?')
+        if question_dialog(self.gui, self.title, asked):
+            self.gui.quit(restart=True)
 
 
 class BookCleanupAction(InterfaceAction):

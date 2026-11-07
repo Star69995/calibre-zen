@@ -116,6 +116,7 @@ theme/
     17-richtext.qss   the rich text editor as one field
     18-forms.qss      grouped forms: the rounded groups, hairlines and labels
     19-download.qss   the Download metadata dialog
+    25-library.qss    the Choose library dialog's name, folder and warning
   qss/local/completer.qss   calibre's autocomplete list, which the app sheet never reaches
   qss/local/combo-list.qss  a combo box's list, set on the window it drops into
   qss/local/*.qss     sheets calibre applies to one widget rather than the app
@@ -168,7 +169,11 @@ finder/               two search boxes: Find an action and Search settings -- se
 i18n.py               adds locales/<lang>.po to calibre's translator as a fallback -- see "Translations"
 locales/<lang>.po     translations of the strings only this fork has; `he` ships
 toolbars.py           one main toolbar: the device's bar is the main one plus what a device adds -- see "One main toolbar"
+device_columns.py     Format, Folder and Path columns in the list of books on a device, from each book's file name
 busy.py               Preferences opens while jobs run; only a clashing save waits -- see "Settings while jobs run"
+library_dialog.py     the Choose library dialog as three choices -- see "Choose library"
+send_default.py       what the Send to device button does, chosen in a window -- see "Send to device's default"
+send_formats.py       PDF last in a device's format order, as the main window reads it -- see "Send to device's default"
 placement.py          the picture in the plugin install dialog: where the new button will be -- see "Where a plugin's button goes"
 rating.py             calibre's rating widget and rating cells as clickable stars
 dates.py              the calendar a date field opens, in the theme
@@ -567,6 +572,14 @@ still works: whatever the main toolbar already has is dropped as a duplicate.
 Preferences -> Toolbars & menus words the entry "Added to the main toolbar when
 a device is connected". The menubar's device variant is unchanged.
 
+Send to device and Add books to library share one place on the device bar
+(`PARTNERS`). Each acts on one list -- the library's books or the device's --
+and calibre greys out whichever does not apply, so the bar always showed a dead
+button. `with_partners` puts Add books to library right after Send to device,
+and a wrap of each action's `location_selected` shows only the one for the
+list in view (`shown_at`): click the device and Send to device turns into Add
+to library, click the library and it turns back.
+
 **Where a plugin's button goes.** After installing a plugin, calibre asks which
 toolbars and menus to add it to and ticked both main toolbars for everyone.
 A plugin can now say, with a class attribute on its `InterfaceAction`, in the
@@ -854,6 +867,12 @@ it places by is the popup's hint grown to its minimum, since a popup with a fixe
 width is that wide whatever its contents hint. Arrows
 rather than drag handles, because a drag inside a popup is lost the moment the pointer
 leaves it.
+
+With the device's books in view the button acts on that list (`gui.current_view()`,
+followed through `location_selected`). Nothing is folded there and no column is
+locked, so every column but `inlibrary` is offered -- including Format, Folder and
+Path, which `device_columns.py` adds -- Reset is calibre's own defaults, and Add column says
+why it cannot: calibre's device list takes no custom columns.
 
 ### Finding an action or a setting
 
@@ -1406,6 +1425,72 @@ them, and wraps methods on calibre's classes to change how they look:
 Sizes are `DOWNLOAD_*` in `components.py`, colours are in `19-download.qss`
 and in the two delegates, which read `Chrome` once per palette.
 `CALIBRE_ZEN_DOWNLOAD=0` gives calibre's dialogs back.
+
+### Choose library
+
+`library_dialog.py` lays out calibre's "Choose your calibre library" dialog
+(`dialogs/choose_library.ChooseLibrary`, from Switch/create library) in the
+order its question is asked. calibre's opened with a sentence holding the
+current path, an empty "New location" field before anything said what it was
+for, a red WARNING, and three radios whose wording only made sense read
+together. Here, in grouped-form cards (`forms.Form`):
+
+- **Current library**: the books glyph, the library's name, and the folder it
+  is in, the path isolated left to right so it keeps its order in Hebrew.
+- **What do you want to do?**: Switch to an existing library, Create a new
+  library, Move this library, each a radio with one line under it; a click
+  anywhere on the row picks it. Copying the structure sits under Create and
+  is shown only while Create is chosen.
+- **The folder**, titled for the choice (Library to open, Where to create it,
+  Where to move it): calibre's field and a folder button on one row.
+- The network warning as a muted line with a sign and a Why? link.
+
+OK is named for the choice: Switch, Create, Move.
+
+The radios, the checkbox, the field and the button box are calibre's own,
+moved, so `accept()`, `check_action()` and `perform_action()` are unchanged.
+Two things had to be put back: the radios, each now in a row of its own, are
+no longer siblings and so no longer auto-exclusive, which a `QButtonGroup`
+restores; and the wrapped warning makes the dialog's height depend on its
+width, which Qt's minimum and `adjustSize()` underestimate, so `Layout.fit`
+sets the height from `totalHeightForWidth` whenever the copy box comes or goes.
+
+Sizes are `LIBRARY_*` in `components.py`, colours in `25-library.qss`.
+`CALIBRE_ZEN_LIBRARY_DIALOG=0` gives calibre's dialog back.
+
+### Send to device's default
+
+The Send to device menu used to end with "Set default send to device action",
+a submenu holding a second copy of the whole menu: the same destinations, the
+same two submenus, a tick beside one of nine rows. Nothing marked it as a setting,
+so the ticks read as things to do.
+
+`send_default.py` takes that submenu off the menu and puts a plain entry in its
+place, "What clicking Send to device does...", which opens a small window with the
+two questions the nine rows were answering: **Send to** (main memory, card A,
+card B) and **How** (as it is, in the device's own format order, choose the format each time, send then delete from
+the library), each choice with a line saying what it does. OK stores the answer
+the way calibre does, through `DeviceMenu.change_default_action`, so
+`config['default_send_to_device_action']` and `trigger_default` are unchanged.
+calibre's checkable actions stay alive off the menu: the stored choice is looked up
+in them. The notes go through `library_dialog.at_start`, since a Hebrew line that
+opens with "calibre" would otherwise be aligned to the left.
+
+Storage cards are shown only when there is one: calibre lists card A and B greyed out
+whether or not the device has them, so `enable_device_actions` is wrapped to hide each
+card's rows (menu, submenus and window) unless the connected device reports that card, and
+always with no device. A tick in the window (`gprefs['zen_send_hide_cards']`) hides them
+even when the device has them; a card that is the stored default stays in the window.
+
+Two wraps, `DeviceMenu.__init__` and `enable_device_actions`; `CALIBRE_ZEN_STYLE=0` gives calibre's submenu back.
+
+**PDF is last.** `send_formats.py` makes the main window read a device's format order with
+PDF moved to the end, whatever the order set in Configure this device. That order picks the
+format a book is sent in, and the one it is converted to when it has none the device takes,
+so with it a conversion is never to PDF while another format is listed. It wraps
+`DeviceManager.device`, which adopts the connected device once so that its `settings()`, as the
+main window calls it, answers with `format_map` reordered; the device's own saved list, and
+Configure this device, are untouched. Sending by email has its own order and is not affected.
 
 ### Appearance
 
@@ -2006,7 +2091,9 @@ the overlay applies nothing at all.
 
 Two tools that began as calibre plugins are carried in `books/` so every window
 has them without installing anything: **Goodreads Updater** (sets the yes/no
-column `#goodreads_linked` from the `goodreads` identifier) and **Book Cleanup**
+column `#goodreads_linked` from the `goodreads` identifier; a library without the
+column is offered it, then a restart, because calibre reads its columns when a
+library opens) and **Book Cleanup**
 (repairs PDF-converted EPUBs: chapter headings, blank pages, paragraphs broken
 mid-sentence, spacing around punctuation and dashes; the original is kept as
 `ORIGINAL_EPUB`, and its menu has a *Preview changes* that modifies nothing).
@@ -2315,11 +2402,13 @@ settings; the runner refuses to start any other way.
 | `test_widgets.py` | widgets painted offscreen and judged by their pixels; the star rating driven through its own mouse, key and wheel events; the calendar's footer and size; both dropdown lists' delegate, sheet and row layout; spin box height; the rich text editor's toolbar and single border |
 | `test_i18n.py` | the translation files compile, keep their placeholders and name only strings that still exist; they sit behind calibre's catalog, not in front of it, and are attached again after a language switch |
 | `test_icons.py` | every mapped glyph is vendored, every vendored glyph is an SVG Qt accepts, `QIcon.ic` serves the mapped names and falls through for the rest |
-| `test_books.py` | the built-in Goodreads Updater and Book Cleanup: both registered as calibre built-ins, an installed plugin of the same name dropped without deleting its file, the `#goodreads_linked` column on a throwaway library, each cleanup rule, no double space, a second run a no-op, no word lost, an epub end to end (chapter file split, TOC rebuilt) and `clean_book` keeping `ORIGINAL_EPUB` |
-| `test_toolbars.py` | the device bar's arithmetic, where a plugin's button goes by default, where an install puts it, and the install dialog's picture (one place per tick, the new button named, "Recommended" only for a place the plugin asked for) and list (a tick that follows the selection, every place in view) |
-| `test_gui.py` (columns) | the picker offers what does something and pins Details, a tick hides and shows through calibre, the arrows move a column but not in front of Details, Reset, the search, the button for the table only |
+| `test_books.py` | the built-in Goodreads Updater and Book Cleanup: both registered as calibre built-ins, an installed plugin of the same name dropped without deleting its file, the `#goodreads_linked` column on a throwaway library (refused when missing, created and filled after a reopen, a column of another type left alone), each cleanup rule, no double space, a second run a no-op, no word lost, an epub end to end (chapter file split, TOC rebuilt) and `clean_book` keeping `ORIGINAL_EPUB` |
+| `test_toolbars.py` | the device bar's arithmetic, Send to device and Add books to library sharing a place, where a plugin's button goes by default, where an install puts it, and the install dialog's picture (one place per tick, the new button named, "Recommended" only for a place the plugin asked for) and list (a tick that follows the selection, every place in view) |
+| `test_gui.py` (columns) | the picker offers what does something and pins Details, a tick hides and shows through calibre, the arrows move a column but not in front of Details, Reset, the search, the button for the table only; on a device every column is offered with Format, Folder and Path among them, hides, moves and resets, and the button follows the list in view |
+| `test_device_columns.py` | the device list's Format, Folder and Path columns: each cell's text, a Hebrew path read root first, where they go, their headers, sorting on each |
 | `test_gui.py` (finder) | Find an action is a built-in, last on the bar, with `Ctrl+K`; it lists menus and Preferences' pages without All actions' copies, shows a button's key, narrows, says when nothing matches and runs the choice after closing; Search settings reads every page, opens the one a result is on with its tab and its list panel chosen, and marks the setting |
 | `test_finder.py` | the ranking both search boxes share, a path's isolated parts, a Hebrew label's English from both catalogs, Find an action's place at the end of the toolbar and its one-time addition to an arranged one, which page text is indexed |
+| `test_library_dialog.py` | the Choose library dialog: one choice at a time, the folder and OK worded for it, copying only under Create and the dialog tall enough for it, calibre's `accept()` still calling back with the choice |
 | `test_busy.py` | which Preferences page clashes with a running job and why, the notice's lines, and the one question calibre asks at the door |
 | `test_gui.py` | end to end: the real `Main` window, offscreen, on a three-book library. Filter panel, centre, status bar and metadata editor installed; search narrows the list and the count; selecting a book fills the preview; a clean shutdown. And the Your columns form on a library with one custom column of each shape |
 

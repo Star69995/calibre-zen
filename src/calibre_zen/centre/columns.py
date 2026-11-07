@@ -24,6 +24,13 @@ Two columns are not offered. `authors` and `series` are folded into the Details
 column and hidden (`table.FOLDED_COLUMNS`); a switch for them would do nothing
 the reader can see. Details itself stays on and first, which is what the table is
 drawn around. `ondevice` and `inlibrary` are calibre's own, and cannot be hidden.
+
+With a device connected and its books in view, the button acts on that list
+instead (`gui.current_view()`). The device list is calibre's plain table, with
+no Details column folding anything, so there every column but `inlibrary` is
+offered, none is locked, Reset is calibre's own defaults, and Add column says
+why it cannot (calibre's device list takes no custom columns). Its state is kept
+under calibre's own key for that list, as before.
 """
 
 from __future__ import annotations
@@ -39,7 +46,8 @@ from calibre_zen.icons import registry
 from calibre_zen.theme.tokens import components
 
 # calibre's own columns the reader is not given a choice about.
-NOT_OFFERED = frozenset(table.FOLDED_COLUMNS) | {'ondevice', 'inlibrary'}
+ALWAYS_THERE = frozenset({'ondevice', 'inlibrary'})
+NOT_OFFERED = frozenset(table.FOLDED_COLUMNS) | ALWAYS_THERE
 
 
 class Column(NamedTuple):
@@ -49,9 +57,24 @@ class Column(NamedTuple):
     locked: bool  # shown and in place, whatever is asked
 
 
+def is_library(view) -> bool:
+    "Whether `view` is the library's table, drawn around Details, rather than a device's list."
+    return getattr(view, 'is_library_view', True)
+
+
+def not_offered(view) -> frozenset:
+    "The columns `view` gives no switch for."
+    return NOT_OFFERED if is_library(view) else ALWAYS_THERE
+
+
+def locked(view, key: str) -> bool:
+    "Whether `key` stays shown and first in `view`: Details, in the library only."
+    return is_library(view) and key == table.DETAILS_COLUMN
+
+
 def column_title(view, index: int, key: str) -> str:
     "The header's own words for a column; Details for the one the table is drawn around."
-    if key == table.DETAILS_COLUMN:
+    if locked(view, key):
         return _('Details')
     model = view.model()
     text = model.headerData(index, Qt.Orientation.Horizontal, Qt.ItemDataRole.DisplayRole) if model is not None else None
@@ -65,9 +88,10 @@ def columns_for(view) -> list[Column]:
     carry their lookup name, as calibre's own menu does.
     """
     header = view.column_header
+    skip = not_offered(view)
     found = []
     for index, key in enumerate(view.column_map):
-        if key in NOT_OFFERED:
+        if key in skip:
             continue
         found.append((key, column_title(view, index, key), not header.isSectionHidden(index), header.visualIndex(index)))
     counts: dict[str, int] = {}
@@ -75,7 +99,7 @@ def columns_for(view) -> list[Column]:
         counts[title] = counts.get(title, 0) + 1
     shown = sorted((c for c in found if c[2]), key=lambda c: c[3])
     hidden = sorted((c for c in found if not c[2]), key=lambda c: primary_sort_key(c[1]))
-    return [Column(key, f'{title} [{key}]' if counts[title] > 1 else title, visible, key == table.DETAILS_COLUMN) for key, title, visible, _pos in shown + hidden]
+    return [Column(key, f'{title} [{key}]' if counts[title] > 1 else title, visible, locked(view, key)) for key, title, visible, _pos in shown + hidden]
 
 
 def set_visible(view, key: str, on: bool) -> None:
@@ -104,8 +128,9 @@ def move(view, key: str, step: int) -> bool:
 
 
 def reset(view) -> None:
-    "Back to calibre's default columns, arranged as the table needs them."
-    view.apply_state(table.arrange(view.get_default_state(), view.column_map))
+    "Back to calibre's default columns, arranged as the table needs them (a device list needs nothing)."
+    state = view.get_default_state()
+    view.apply_state(table.arrange(state, view.column_map) if is_library(view) else state)
 
 
 def can_add(view) -> tuple[bool, str]:
@@ -279,19 +304,34 @@ class ColumnsButton(QToolButton):
         self.clicked.connect(self.toggle_panel)
 
     def attach(self) -> None:
-        "Follow the view switch: the grid has no columns to choose."
+        "Follow the view switch, since the grid has no columns to choose, and the move to and from a device."
         grid = getattr(self.gui, 'grid_view_button', None)
         if grid is not None:
             grid.toggled.connect(self.refresh)
+        locations = getattr(self.gui, 'location_manager', None)
+        if locations is not None:
+            locations.location_selected.connect(self.refresh)
         self.refresh()
 
+    def view(self):
+        "The list the button acts on: the device's when its books are in view, else the library's."
+        current = getattr(self.gui, 'current_view', None)
+        view = current() if callable(current) else None
+        return view if view is not None else self.gui.library_view
+
     def refresh(self, *args) -> None:
+        if self.panel is not None and self.panel.isVisible():
+            self.panel.close()
         grid = getattr(self.gui, 'grid_view_button', None)
-        self.setVisible(not (grid is not None and grid.isChecked()))
+        on_grid = is_library(self.view()) and grid is not None and grid.isChecked()
+        self.setVisible(not on_grid)
 
     def toggle_panel(self) -> None:
-        if self.panel is None:
-            self.panel = ColumnsPanel(self, self.gui.library_view)
+        view = self.view()
+        if self.panel is None or self.panel.view is not view:
+            if self.panel is not None:
+                self.panel.deleteLater()
+            self.panel = ColumnsPanel(self, view)
         if self.panel.isVisible():
             self.panel.close()
         else:

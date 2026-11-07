@@ -382,6 +382,23 @@ class Preferences(QDialog):
     def sizeHint(self):
         return QSize(930, 720)
 
+    def showEvent(self, a0):
+        QDialog.showEvent(self, a0)
+        self.grow_to_fit_overview()
+
+    def grow_to_fit_overview(self):
+        # The overview is a grid that should be seen whole. Whatever the font, language or saved
+        # size, grow the window by exactly what the scroll bar says is missing (never shrink it,
+        # never past the screen).
+        if self.stack.currentWidget() is not self.browser:
+            return
+        missing = self.browser.verticalScrollBar().maximum()
+        screen = self.screen()
+        if missing <= 0 or screen is None:
+            return
+        room = screen.availableGeometry().height() - self.frameGeometry().height()
+        self.resize(self.width(), self.height() + min(missing, max(0, room)))
+
     def event(self, a0):
         if isinstance(a0, QStatusTipEvent):
             msg = re.sub(r'</?[a-z1-6]+>', ' ', a0.tip())
