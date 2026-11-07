@@ -24,7 +24,14 @@ from lxml import etree
 from calibre_zen import books
 from calibre_zen.books.cleanup import Options, clean_document
 from calibre_zen.books.epub import clean_book, clean_epub
-from calibre_zen.books.goodreads import LINKED_COLUMN, MissingColumnError, update_goodreads_linked
+from calibre_zen.books.goodreads import (
+    LINKED_COLUMN,
+    LINKED_COLUMN_HEADING,
+    MissingColumnError,
+    WrongColumnTypeError,
+    create_linked_column,
+    update_goodreads_linked,
+)
 from calibre_zen.tests.base import ZenTestCase, make_library, work_dir
 
 XHTML = 'http://www.w3.org/1999/xhtml'
@@ -124,6 +131,32 @@ class TestGoodreads(ZenTestCase):
         with self.assertRaises(MissingColumnError) as cm:
             update_goodreads_linked(db)
         self.assertIn(LINKED_COLUMN, str(cm.exception))
+
+    def test_the_missing_column_can_be_created(self):
+        from calibre.db.legacy import LibraryDatabase
+
+        path = short_library(self, 'books-create')
+        db = LibraryDatabase(path)
+        create_linked_column(db.new_api)
+        db.close()
+
+        db = LibraryDatabase(path)  # calibre sees a new column when the library is opened
+        self.addCleanup(db.close)
+        meta = db.new_api.field_metadata[LINKED_COLUMN]
+        self.assertEqual((meta['datatype'], meta['name']), ('bool', LINKED_COLUMN_HEADING))
+        update_goodreads_linked(db.new_api)
+
+    def test_a_column_of_another_type_is_not_replaced(self):
+        from calibre.db.legacy import LibraryDatabase
+
+        path = short_library(self, 'books-text')
+        db = LibraryDatabase(path)
+        db.create_custom_column('goodreads_linked', 'Goodreads linked', 'text', False)
+        db.close()
+        db = LibraryDatabase(path)
+        self.addCleanup(db.close)
+        with self.assertRaises(WrongColumnTypeError):
+            update_goodreads_linked(db.new_api)
 
     def test_the_column_follows_the_identifier(self):
         db = self.library(with_column=True)

@@ -1136,8 +1136,22 @@ msgstr "מתווסף לסרגל הכלים הראשי כשהתקן מחובר"
 
 #: books/goodreads.py
 #, python-brace-format
-msgid "The library has no yes/no custom column with the lookup name '{0}'.\nCreate it under Preferences → Add your own columns."
-msgstr "בספרייה אין עמודה מותאמת מסוג כן/לא עם שם החיפוש '{0}'.\nאפשר ליצור אותה ב-העדפות ← הוספת עמודות משלך."
+msgid "The library has no column with the lookup name '{0}'."
+msgstr "בספרייה אין עמודה עם שם החיפוש '{0}'."
+
+#: books/goodreads.py
+#, python-brace-format
+msgid "The library's column '{0}' is not a yes/no column.\nRename it under Preferences → Add your own columns, then run this again."
+msgstr "העמודה '{0}' בספרייה אינה עמודת כן/לא.\nאפשר לשנות את שמה ב-העדפות ← הוספת עמודות משלך, ואז להפעיל שוב."
+
+#: books/actions.py
+#, python-brace-format
+msgid "The library has no yes/no column '{0}' to keep in step with the goodreads identifiers.\n\nAdd it now?"
+msgstr "בספרייה אין עמודת כן/לא '{0}' שתעודכן לפי מזהי Goodreads.\n\nלהוסיף אותה עכשיו?"
+
+#: books/actions.py
+msgid "The column is added, but calibre only sees a new column after it restarts. Restart calibre now, then click Goodreads Updater again?"
+msgstr "העמודה נוספה, אבל calibre רואה עמודה חדשה רק אחרי הפעלה מחדש. להפעיל מחדש את calibre עכשיו, ואז ללחוץ שוב על עדכון Goodreads?"
 
 #: books/actions.py
 msgid "Goodreads Updater"

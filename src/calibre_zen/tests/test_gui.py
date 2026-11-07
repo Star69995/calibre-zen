@@ -313,6 +313,20 @@ class TestMainWindow(ZenTestCase):
         self.assertFalse(strip.isHidden())
         self.assertIn('40%', strip.text())
 
+    def test_the_preferences_overview_needs_no_scrolling(self):
+        from calibre.gui2 import gprefs
+        from calibre.gui2.preferences.main import Preferences
+
+        # A size saved by an earlier, smaller dialog must not leave the grid cut off.
+        gprefs.pop('preferences dialog geometry', None)
+        d = Preferences(self.gui)
+        self.addCleanup(d.deleteLater)
+        d.resize(930, 560)
+        d.show()
+        self.addCleanup(d.close)
+        process_events(200)
+        self.assertEqual(d.browser.verticalScrollBar().maximum(), 0)
+
     def test_preferences_opens_while_a_job_runs(self):
         from unittest import mock
 

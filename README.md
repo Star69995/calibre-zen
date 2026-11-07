@@ -119,9 +119,15 @@ npm test                           # every test, headless
 npm test -- theme icons -k hover   # some modules, filtered by name
 npm run test:list                  # what would run
 npm run tool -- calibredb list     # a bundled tool
-npm run seed                       # a large generated dev library
-npm run gutenberg                  # a dev library of real Project Gutenberg books
+npm run seed                       # build a large generated dev library
+npm run start:seed                 # open it (build it first)
+npm run gutenberg:fetch            # download real Project Gutenberg books
+npm run gutenberg                  # build a dev library from them
+npm run start:gutenberg            # open it
+npm start -- --library D:\books    # open any other library
 ```
+
+The default `npm start` always opens the empty library in `.calibre-zen\library`; the dev libraries open only through `start:seed`, `start:gutenberg` or `--library`.
 
 ## Contributing
 

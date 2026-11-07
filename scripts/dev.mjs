@@ -10,6 +10,9 @@
 //   node scripts/dev.mjs test    [modules]    the tests, headless
 //   node scripts/dev.mjs seed    [options]    build the generated dev library
 //   node scripts/dev.mjs gutenberg [options]  build the Project Gutenberg dev library
+//   node scripts/dev.mjs fetch   [options]    download the books that library is built from
+//
+// `start` also takes --lang <code>, --fresh and --library <seed|gutenberg|dir>.
 import { spawnSync } from 'node:child_process'
 import { existsSync, rmSync } from 'node:fs'
 import { dirname, join, resolve } from 'node:path'
@@ -52,6 +55,19 @@ function tool(name, toolArgs) {
   )
 }
 
+// The libraries `seed` and `gutenberg` build, by the name `--library` takes.
+// Opening one that was never built would make the launcher create an empty
+// folder there, so say what to run instead.
+const devLibraries = { seed: 'perf-library', gutenberg: 'gutenberg-library' }
+
+function devLibrary(name) {
+  const folder = devLibraries[name]
+  if (!folder) return resolve(repo, name)
+  const path = join(repo, '.calibre-zen', folder)
+  if (!existsSync(join(path, 'metadata.db'))) die(`there is no ${name} library yet. Build it first: npm run ${name}`)
+  return path
+}
+
 // ./zen-test is a POSIX shell script. On Windows that means Git Bash: a bare
 // `bash` on PATH is often WSL's launcher, which cannot see the Windows paths.
 function posixShell() {
@@ -85,17 +101,22 @@ switch (command) {
     // --lang <code> and --fresh mean the same everywhere. calibre-zen.ps1 has
     // them as -Lang / -Fresh; ./calibre-zen has neither, so there the language
     // goes through calibre's own override and fresh means deleting the settings.
+    // --library <seed|gutenberg|dir> opens another library: -Library on Windows,
+    // CALIBRE_ZEN_LIBRARY elsewhere. Every launch names its library (the default
+    // one when this is absent), so the choice does not stick to the next start.
     const rest = []
     let lang = ''
     let fresh = false
+    let library = ''
     for (let i = 0; i < args.length; i++) {
       if (args[i] === '--lang') lang = args[++i] ?? die('--lang needs a language code')
       else if (args[i] === '--fresh') fresh = true
+      else if (args[i] === '--library') library = devLibrary(args[++i] ?? die('--library needs seed, gutenberg or a folder'))
       else rest.push(args[i])
     }
-    if (win) launcher([...(lang ? ['-Lang', lang] : []), ...(fresh ? ['-Fresh'] : []), ...rest])
+    if (win) launcher([...(lang ? ['-Lang', lang] : []), ...(fresh ? ['-Fresh'] : []), ...(library ? ['-Library', library] : []), ...rest])
     if (fresh) rmSync(join(repo, '.calibre-zen', 'config'), { recursive: true, force: true })
-    launcher(rest, lang ? { CALIBRE_OVERRIDE_LANG: lang } : {})
+    launcher(rest, { ...(lang && { CALIBRE_OVERRIDE_LANG: lang }), ...(library && { CALIBRE_ZEN_LIBRARY: library }) })
     break
   }
   case 'tool':
@@ -111,6 +132,11 @@ switch (command) {
     tool('calibre-debug', ['-e', script, ...(args.length ? ['--', ...args] : [])])
     break
   }
+  case 'fetch': {
+    // Downloads the EPUBs `gutenberg` builds from; stdlib only, so the bundle's Python runs it.
+    tool('calibre-debug', ['-e', join('.calibre-zen', 'gutenberg-fetch.py'), ...(args.length ? ['--', ...args] : [])])
+    break
+  }
   default:
-    die(`unknown command '${command ?? ''}'. Use one of: start, tool, test, seed, gutenberg`)
+    die(`unknown command '${command ?? ''}'. Use one of: start, tool, test, seed, gutenberg, fetch`)
 }

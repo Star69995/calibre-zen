@@ -1925,7 +1925,9 @@ the overlay applies nothing at all.
 
 Two tools that began as calibre plugins are carried in `books/` so every window
 has them without installing anything: **Goodreads Updater** (sets the yes/no
-column `#goodreads_linked` from the `goodreads` identifier) and **Book Cleanup**
+column `#goodreads_linked` from the `goodreads` identifier; a library without the
+column is offered it, then a restart, because calibre reads its columns when a
+library opens) and **Book Cleanup**
 (repairs PDF-converted EPUBs: chapter headings, blank pages, paragraphs broken
 mid-sentence, spacing around punctuation and dashes; the original is kept as
 `ORIGINAL_EPUB`, and its menu has a *Preview changes* that modifies nothing).
@@ -2234,7 +2236,7 @@ settings; the runner refuses to start any other way.
 | `test_widgets.py` | widgets painted offscreen and judged by their pixels; the star rating driven through its own mouse, key and wheel events; the calendar's footer and size; both dropdown lists' delegate, sheet and row layout; spin box height; the rich text editor's toolbar and single border |
 | `test_i18n.py` | the translation files compile, keep their placeholders and name only strings that still exist; they sit behind calibre's catalog, not in front of it, and are attached again after a language switch |
 | `test_icons.py` | every mapped glyph is vendored, every vendored glyph is an SVG Qt accepts, `QIcon.ic` serves the mapped names and falls through for the rest |
-| `test_books.py` | the built-in Goodreads Updater and Book Cleanup: both registered as calibre built-ins, an installed plugin of the same name dropped without deleting its file, the `#goodreads_linked` column on a throwaway library, each cleanup rule, no double space, a second run a no-op, no word lost, an epub end to end (chapter file split, TOC rebuilt) and `clean_book` keeping `ORIGINAL_EPUB` |
+| `test_books.py` | the built-in Goodreads Updater and Book Cleanup: both registered as calibre built-ins, an installed plugin of the same name dropped without deleting its file, the `#goodreads_linked` column on a throwaway library (refused when missing, created and filled after a reopen, a column of another type left alone), each cleanup rule, no double space, a second run a no-op, no word lost, an epub end to end (chapter file split, TOC rebuilt) and `clean_book` keeping `ORIGINAL_EPUB` |
 | `test_toolbars.py` | the device bar's arithmetic, where a plugin's button goes by default, where an install puts it, and the install dialog's picture (one place per tick, the new button named, "Recommended" only for a place the plugin asked for) and list (a tick that follows the selection, every place in view) |
 | `test_gui.py` (columns) | the picker offers what does something and pins Details, a tick hides and shows through calibre, the arrows move a column but not in front of Details, Reset, the search, the button for the table only |
 | `test_busy.py` | which Preferences page clashes with a running job and why, the notice's lines, and the one question calibre asks at the door |

@@ -10,10 +10,13 @@
     "start": "node scripts/dev.mjs start",
     "start:fresh": "node scripts/dev.mjs start --fresh",
     "start:he": "node scripts/dev.mjs start --lang he",
+    "start:seed": "node scripts/dev.mjs start --library seed",
+    "start:gutenberg": "node scripts/dev.mjs start --library gutenberg",
     "tool": "node scripts/dev.mjs tool",
     "test": "node scripts/dev.mjs test",
     "test:list": "node scripts/dev.mjs test --list",
     "seed": "node scripts/dev.mjs seed",
-    "gutenberg": "node scripts/dev.mjs gutenberg"
+    "gutenberg": "node scripts/dev.mjs gutenberg",
+    "gutenberg:fetch": "node scripts/dev.mjs fetch"
   }
 }
