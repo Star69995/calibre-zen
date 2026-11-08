@@ -775,6 +775,12 @@ Two things worth knowing before changing it:
   (`rows.size`). The height is the reader's choice (below), one for the library's
   table and every device's list.
 
+**A long cell wraps** onto further lines instead of ending in "...". calibre turns
+word wrap off for the table and its pinned columns (`views.py:415`);
+`table.setup_view` turns it back on, for the library and for a device's list, and
+Qt still elides the last line that fits. The Details cell is painted by hand and
+keeps one line each for series, title and author.
+
 **Row height** is chosen from the view switcher's menu -- Roomy, Default, Compact or
 Tight, `components.TABLE_ROW_HEIGHTS` -- and kept in `gprefs['zen_row_height']`
 (`centre/rows.py`). The cover in a row is the row less `TABLE_COVER_MARGIN`, 2:3, so

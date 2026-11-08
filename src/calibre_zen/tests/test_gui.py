@@ -602,6 +602,13 @@ class TestMainWindow(ZenTestCase):
         rows.set_level('no such level', self.gui)
         self.assertEqual(rows.level(), rows.levels()[-1], 'an unknown name changes nothing')
 
+    def test_a_long_cell_wraps_onto_more_lines_in_the_library_and_a_device(self):
+        # calibre sets word wrap off for its table (`views.py:415`); the rows are tall enough for it.
+        device = self.device_view()
+        library = self.gui.library_view
+        for view in (library, library.pin_view, device):
+            self.assertTrue(view.wordWrap(), f'{view.objectName()} wraps a long cell')
+
     def linked_device_view(self, linked: bool):
         """
         The device list with 'Alpha' either matched to the library's 'Alpha' --

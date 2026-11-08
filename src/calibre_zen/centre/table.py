@@ -101,7 +101,7 @@ def arrange(state: dict, column_map) -> dict:
 
 def setup_view(view) -> None:
     """
-    The three things about the view itself that the card look needs.
+    The things about the view itself that the card look needs.
 
     Alternating stripes and grid lines are two more ideas about where a row
     ends, and the card is already one -- both off. The last section stretches
@@ -119,6 +119,12 @@ def setup_view(view) -> None:
     view.setAlternatingRowColors(False)
     view.setShowGrid(False)
     view.horizontalHeader().setStretchLastSection(True)
+    # calibre turns wrapping off for the table and its pinned columns
+    # (`views.py:415`), so a long cell is cut to "Baldwin; J...". The row is tall
+    # enough for several lines, and Qt still elides the last line that fits.
+    for table_view in (view, getattr(view, 'pin_view', None)):
+        if table_view is not None:
+            table_view.setWordWrap(True)
 
 
 def wrap_delegates(view) -> None:
