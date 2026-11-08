@@ -1567,6 +1567,14 @@ msgstr "חלון הספריות"
 msgid "Switch, create or move a library as three clear choices. Off: calibre's dialog."
 msgstr "מעבר, יצירה או העברה של ספרייה כשלוש בחירות ברורות. כבוי: החלון של calibre."
 
+#: features.py
+msgid "Template editor"
+msgstr "עורך התבניות"
+
+#: features.py
+msgid "The template editor in the same look, and right to left in Hebrew. Off: calibre's editor."
+msgstr "עורך התבניות באותו מראה, ומימין לשמאל בעברית. כבוי: העורך של calibre."
+
 #: library_dialog.py
 msgid "&Switch to an existing library"
 msgstr "&מעבר לספרייה קיימת"

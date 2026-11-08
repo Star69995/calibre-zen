@@ -54,6 +54,7 @@ FEATURES = (
     Feature('action-search', 'CALIBRE_ZEN_ACTION_SEARCH', N_('Find an action'), N_('Ctrl+K finds any action by name. Off: the menus only.')),
     Feature('settings-search', 'CALIBRE_ZEN_SETTINGS_SEARCH', N_('Search in Preferences'), N_('Preferences finds a setting by name. Off: page icons only.')),
     Feature('library-dialog', 'CALIBRE_ZEN_LIBRARY_DIALOG', N_('Library dialog'), N_("Switch, create or move a library as three clear choices. Off: calibre's dialog.")),
+    Feature('template-editor', 'CALIBRE_ZEN_TEMPLATE', N_('Template editor'), N_("The template editor in the same look, and right to left in Hebrew. Off: calibre's editor.")),
     Feature('busy', 'CALIBRE_ZEN_BUSY', N_('Settings while jobs run'), N_("Preferences opens during a job; only a clashing change waits. Off: calibre's refusal.")),
     Feature('reader', 'CALIBRE_ZEN_READER', N_('Ready reader'), N_('A reader waits in the background, so books open at once. Off: each book starts a new reader.')),
     Feature('reader-look', 'CALIBRE_ZEN_READER_LOOK', N_('Reader look'), N_("The reader's menus, settings and panels in the same look. Off: calibre's own.")),
