@@ -246,6 +246,72 @@ class TestMainWindow(ZenTestCase):
         self.assertIn(before[1], after, 'the column that was hidden is back')
         self.assertEqual(after[0], 'title')
 
+    # ------------------------------------------------- sorting by Details
+
+    def sorted_view(self):
+        "The library's table, sorted back on title, ascending, when the test ends."
+        view = self.gui.library_view
+        self.addCleanup(lambda: view.sort_by_named_field('title', True))
+        return view
+
+    def header_text(self, view):
+        from qt.core import Qt
+
+        return view.model().headerData(view.column_map.index('title'), Qt.Orientation.Horizontal, Qt.ItemDataRole.DisplayRole)
+
+    def test_a_sort_on_a_folded_part_shows_on_details(self):
+        from qt.core import Qt
+
+        view = self.sorted_view()
+        header = view.horizontalHeader()
+        view.sort_by_named_field('authors', False)
+        self.assertEqual(header.sortIndicatorSection(), view.column_map.index('title'), 'the arrow is on Details, not the hidden authors')
+        self.assertEqual(header.sortIndicatorOrder(), Qt.SortOrder.DescendingOrder)
+        self.assertEqual(self.header_text(view), 'Details · Authors')
+        view.sort_by_named_field('title', True)
+        self.assertEqual(self.header_text(view), 'Details · Title')
+        view.sort_by_named_field('timestamp', True)
+        self.assertEqual(self.header_text(view), 'Details', 'a sort outside Details names no part')
+        self.assertEqual(header.sortIndicatorSection(), view.column_map.index('timestamp'))
+
+    def test_a_click_on_the_details_header_asks_instead_of_sorting(self):
+        from unittest import mock
+
+        from calibre_zen.centre import sorting
+
+        view = self.sorted_view()
+        view.sort_by_named_field('authors', True)
+        with mock.patch.object(sorting, 'choose') as choose:
+            view.user_sort_requested(view.column_map.index('title'))
+        choose.assert_called_once_with(view)
+        self.assertEqual(view.model().sorted_on, ('authors', True), 'nothing was sorted by the click')
+        with mock.patch.object(sorting, 'choose') as choose:
+            view.user_sort_requested(view.column_map.index('timestamp'))
+        choose.assert_not_called()
+        self.assertEqual(view.model().sorted_on[0], 'timestamp', 'any other header still sorts')
+
+    def test_the_menu_offers_the_parts_and_sorts_on_the_choice(self):
+        from calibre_zen.centre import sorting
+
+        view = self.sorted_view()
+        view.sort_by_named_field('authors', False)
+        menu = sorting.build_menu(view)
+        self.addCleanup(menu.deleteLater)
+        actions = {a.text(): a for a in menu.actions() if a.text()}
+        self.assertEqual([a.text() for a in menu.actions() if a.isCheckable()], ['Title', 'Authors', 'Series', 'Ascending', 'Descending'])
+        self.assertTrue(actions['Authors'].isChecked() and actions['Descending'].isChecked())
+        actions['Series'].trigger()
+        self.assertEqual(view.model().sorted_on, ('series', True), 'a new part sorts A to Z')
+        menu = sorting.build_menu(view)
+        self.addCleanup(menu.deleteLater)
+        next(a for a in menu.actions() if a.text() == 'Descending').trigger()
+        self.assertEqual(view.model().sorted_on, ('series', False), 'a direction turns the sort that is on')
+        view.sort_by_named_field('timestamp', True)
+        menu = sorting.build_menu(view)
+        self.addCleanup(menu.deleteLater)
+        self.assertFalse(any(a.isChecked() for a in menu.actions()), 'a sort outside Details ticks nothing')
+        self.assertFalse(next(a for a in menu.actions() if a.text() == 'Ascending').isEnabled())
+
     def device_view(self):
         "The device list, holding three books, as if a reader were connected."
         from calibre.devices.usbms.books import Book, BookList

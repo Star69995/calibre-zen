@@ -48,7 +48,13 @@ The wraps below, all from outside, no upstream file edited:
     `sizeHint` are ours.
 
 `BooksModel.headerData`
-    One string: the title column's header reads "Details".
+    The title column's header reads "Details", with the part of it the list is
+    sorted on -- see sorting.py.
+
+`BooksView.user_sort_requested` / `set_sort_indicator` / `sort_by_column_and_order`
+    A click on the Details header opens a menu of what to sort it by -- title,
+    authors, series -- and the arrow stays on Details while the sort is on a
+    part folded into it. See sorting.py.
 
 `CoverDelegate.set_dimensions`, and the grid's cover cache
     Wrapped -- see grid.py. Three tile densities on top of whatever size
@@ -102,7 +108,7 @@ def install() -> bool:
     from calibre.gui2.library.models import BooksModel, DeviceBooksModel
     from calibre.gui2.library.views import BooksView, DeviceBooksView
     from calibre.gui2.pin_columns import TableView
-    from calibre_zen.centre import clicks, device, grid, rows, table, tiles
+    from calibre_zen.centre import clicks, device, grid, rows, sorting, table, tiles
     from calibre_zen.centre.layout import ZenCentre
 
     orig_initialize = CentralContainer.initialize_with_gui
@@ -111,6 +117,9 @@ def install() -> bool:
     orig_database_changed = BooksView.database_changed
     orig_do_row_sizing = BooksView.do_row_sizing
     orig_set_delegates = TableView.set_delegates
+    orig_user_sort_requested = BooksView.user_sort_requested
+    orig_set_sort_indicator = BooksView.set_sort_indicator
+    orig_sort_by_column_and_order = BooksView.sort_by_column_and_order
     orig_header_data = BooksModel.headerData
     orig_device_header_data = DeviceBooksModel.headerData
     orig_device_display_info = DeviceBooksModel.get_book_display_info
@@ -235,18 +244,39 @@ def install() -> bool:
         return info
 
     def details_header(orig):
-        "`orig` with the Details column's header, for the library's model and a device's both."
+        "`orig` with the Details column's header and its tooltip, for the library's model and a device's both."
 
         def headerData(self, section, orientation, role=Qt.ItemDataRole.DisplayRole):
-            if orientation == Qt.Orientation.Horizontal and role == Qt.ItemDataRole.DisplayRole:
+            if orientation == Qt.Orientation.Horizontal and role in (Qt.ItemDataRole.DisplayRole, Qt.ItemDataRole.ToolTipRole):
                 try:
                     if self.column_map[section] == table.DETAILS_COLUMN:
-                        return _('Details')
+                        return sorting.header_text(self) if role == Qt.ItemDataRole.DisplayRole else sorting.header_tooltip()
                 except IndexError, AttributeError:
                     pass
             return orig(self, section, orientation, role)
 
         return headerData
+
+    def user_sort_requested(self, col, order=Qt.SortOrder.AscendingOrder):
+        if not sorting.is_details(self, col):
+            return orig_user_sort_requested(self, col, order)
+        try:
+            sorting.choose(self)
+        except Exception:
+            import traceback
+
+            traceback.print_exc()
+
+    def keep_indicator(orig):
+        "`orig`, then the header's arrow moved onto Details when the sort is on a part folded into it."
+
+        def wrapper(self, *args, **kwargs):
+            ans = orig(self, *args, **kwargs)
+            if sorting.parts(self):
+                sorting.point_indicator(self)
+            return ans
+
+        return wrapper
 
     grid.install()
     tiles.install()
@@ -278,6 +308,9 @@ def install() -> bool:
         BooksView.database_changed = database_changed
         BooksView.do_row_sizing = do_row_sizing
         TableView.set_delegates = set_delegates
+        BooksView.user_sort_requested = user_sort_requested
+        BooksView.set_sort_indicator = keep_indicator(orig_set_sort_indicator)
+        BooksView.sort_by_column_and_order = keep_indicator(orig_sort_by_column_and_order)
         BooksModel.headerData = details_header(orig_header_data)
         DeviceBooksModel.headerData = details_header(orig_device_header_data)
         DeviceBooksModel.get_book_display_info = device_book_display_info

@@ -142,6 +142,7 @@ centre/               the centre pane -- see "The centre pane" below
   columns.py          the Columns button and its panel -- see "Choosing columns"
   preview.py          PreviewPane: the metadata header above the list
   table.py            the Details column: arrangement, delegate, covers
+  sorting.py          sorting by what Details holds: the header's menu and arrow
   rows.py             how tall a row is: roomy/default/compact/tight
   device.py           a device's list drawn like the library's, from the linked book
   grid.py             how big a cover-grid tile is: default/compact/tiny
@@ -742,6 +743,17 @@ live inside it. The strings come out of those hidden cells --
 hiding a section does not remove it from the model, so they are already there
 and already formatted the way the reader asked for. No metadata lookup per
 paint.
+
+**Sorting by what Details holds** (`centre/sorting.py`). A click on the Details
+header sorted by title only, and a sort on authors or series put calibre's arrow
+on a hidden section, so the header showed no sort at all. Now a click on the
+header opens a menu -- Sort by Title, Authors or Series, then Ascending or
+Descending, the sort that is on ticked -- and the choice is calibre's own
+`sort_by_named_field`, as the Sort by menu calls it. While the list is sorted on
+any part of Details the arrow sits on Details and the header names the part
+("Details · Authors"), wherever the sort came from. Three wraps do it:
+`user_sort_requested` (the click), `set_sort_indicator` and
+`sort_by_column_and_order` (the arrow). Every other header still sorts on a click.
 
 **A double-click edits the cell.** calibre opens the viewer on a double-click
 and edits on a slow second click, which in a table people correct is the wrong
@@ -2443,6 +2455,7 @@ settings; the runner refuses to start any other way.
 | `test_icons.py` | every mapped glyph is vendored, every vendored glyph is an SVG Qt accepts, `QIcon.ic` serves the mapped names and falls through for the rest |
 | `test_books.py` | the built-in Goodreads Updater and Book Cleanup: both registered as calibre built-ins, an installed plugin of the same name dropped without deleting its file, the `#goodreads_linked` column on a throwaway library (refused when missing, created and filled after a reopen, a column of another type left alone), each cleanup rule, no double space, a second run a no-op, no word lost, an epub end to end (chapter file split, TOC rebuilt) and `clean_book` keeping `ORIGINAL_EPUB` |
 | `test_toolbars.py` | the device bar's arithmetic, Send to device and Add books to library sharing a place, where a plugin's button goes by default, where an install puts it, and the install dialog's picture (one place per tick, the new button named, "Recommended" only for a place the plugin asked for) and list (a tick that follows the selection, every place in view) |
+| `test_gui.py` (sorting) | a sort on authors or series puts the arrow on Details and names the part in its header, a click on Details asks rather than sorts while other headers still sort, the menu ticks the sort that is on, a part sorts A to Z, a direction turns the sort that is on |
 | `test_gui.py` (columns) | the picker offers what does something and pins Details, a tick hides and shows through calibre, the arrows move a column but not in front of Details, Reset, the search, the button for the table only; a device's list is drawn around Details like the library's, with Format, Folder and Path among its columns and the metadata ones hidden, hides, moves and resets, and the button follows the list in view; one row height for the library and a device; a linked device book borrows the library's series and cover, an unlinked one has only the device's, a dangling link is none; the preview follows the device list when it is on screen |
 | `test_device_columns.py` | the device list's added columns: each cell's text (a Hebrew path read root first, a series with its number, stars, language names), where they go, their headers, sorting on each by value, the metadata ones hidden in a new layout and in a saved one once, Collections keeping its editor |
 | `test_gui.py` (finder) | Find an action is a built-in, last on the bar, with `Ctrl+K`; it lists menus and Preferences' pages without All actions' copies, shows a button's key, narrows, says when nothing matches and runs the choice after closing; Search settings reads every page, opens the one a result is on with its tab and its list panel chosen, and marks the setting |
