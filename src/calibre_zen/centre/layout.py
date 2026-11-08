@@ -29,7 +29,7 @@ row -- the day upstream changes what switching a view means, this follows.
 from qt.core import QHBoxLayout, QMenu, QSplitter, Qt, QToolButton, QVBoxLayout, QWidget
 
 from calibre.gui2 import gprefs
-from calibre_zen.centre import grid
+from calibre_zen.centre import grid, rows
 from calibre_zen.centre.columns import ColumnsButton
 from calibre_zen.centre.preview import PreviewPane
 from calibre_zen.icons import registry
@@ -103,6 +103,18 @@ class ViewSwitcher(QToolButton):
             if wants_grid == showing_grid:
                 action.setIcon(check)
             action.triggered.connect(lambda _checked=False, g=wants_grid: self.choose(g))
+
+        # How tall a row is belongs here too, for the same reason. It governs
+        # the library's table and a device's list, and is never off: the device
+        # list stays a table while the library is showing its grid.
+        self.menu_.addSeparator()
+        row_menu = self.menu_.addMenu(_('Row height'))
+        current_row = rows.level()
+        for name in rows.levels():
+            action = row_menu.addAction(rows.label_for(name))
+            if name == current_row:
+                action.setIcon(check)
+            action.triggered.connect(lambda _checked=False, n=name: rows.set_level(n, self.gui))
 
         # How big a grid tile is belongs with the control that chooses the
         # grid, not three screens away in Preferences. Shown in both modes so

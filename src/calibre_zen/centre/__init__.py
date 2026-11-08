@@ -9,7 +9,7 @@ The second piece of the overlay that is not styling, and it follows the shape
 `filters/` established: calibre's widget keeps its model, its signals and its
 behaviour, and the overlay changes only what is drawn and where things sit.
 
-Seven wraps, all from outside, no upstream file edited:
+The wraps below, all from outside, no upstream file edited:
 
 `CentralContainer.initialize_with_gui`
     The centre is handed to the container exactly once, as one opaque widget
@@ -33,7 +33,14 @@ Seven wraps, all from outside, no upstream file edited:
 
 `BooksView.do_row_sizing`
     Row height is the vertical header's, not the delegate's `sizeHint`
-    (`views.py:1196-1210`), and the model caches it.
+    (`views.py:1196-1210`), and the model caches it. The height is the reader's
+    choice -- see rows.py.
+
+`DeviceBooksView.set_database` / `get_old_state` / `write_state`, and
+`DeviceBooksModel.headerData` / `get_book_display_info`
+    A device's list is drawn around Details too -- see device.py. The same
+    delegates, the same arrangement under a key of our own, the same header, and
+    the Book details panel given the linked library book's cover and metadata.
 
 `TableView.set_delegates`
     Let calibre assign its delegates, then wrap each one. Editing, sorting,
@@ -90,14 +97,13 @@ def install() -> bool:
         return _installed
     from qt.core import Qt
 
-    from calibre.gui2 import qapplication_or_fail
+    from calibre.gui2 import gprefs, qapplication_or_fail
     from calibre.gui2.central import CentralContainer
-    from calibre.gui2.library.models import BooksModel
-    from calibre.gui2.library.views import BooksView
+    from calibre.gui2.library.models import BooksModel, DeviceBooksModel
+    from calibre.gui2.library.views import BooksView, DeviceBooksView
     from calibre.gui2.pin_columns import TableView
-    from calibre_zen.centre import clicks, grid, table, tiles
+    from calibre_zen.centre import clicks, device, grid, rows, table, tiles
     from calibre_zen.centre.layout import ZenCentre
-    from calibre_zen.theme.tokens import components
 
     orig_initialize = CentralContainer.initialize_with_gui
     orig_get_old_state = BooksView.get_old_state
@@ -106,6 +112,11 @@ def install() -> bool:
     orig_do_row_sizing = BooksView.do_row_sizing
     orig_set_delegates = TableView.set_delegates
     orig_header_data = BooksModel.headerData
+    orig_device_header_data = DeviceBooksModel.headerData
+    orig_device_display_info = DeviceBooksModel.get_book_display_info
+    orig_device_set_database = DeviceBooksView.set_database
+    orig_device_get_old_state = DeviceBooksView.get_old_state
+    orig_device_write_state = DeviceBooksView.write_state
 
     def state_key(view) -> str:
         name = str(view.objectName())
@@ -161,6 +172,7 @@ def install() -> bool:
 
             table.cover_cache().set_database(self._model.db)
             table.setup_view(self)
+            table.repaint_on_render(self)
             gui = get_gui()
             centre = None if gui is None else getattr(gui, 'zen_centre', None)
             if centre is not None:
@@ -173,39 +185,68 @@ def install() -> bool:
 
     def do_row_sizing(self):
         ans = orig_do_row_sizing(self)
-        views = [self, self.pin_view] if self.is_library_view else [self]
-        for view in views:
-            header = view.verticalHeader()
-            header.setDefaultSectionSize(max(header.minimumSectionSize(), components.TABLE_ROW_HEIGHT))
-        self._model.set_row_height(self.rowHeight(0))
+        for view in (self, self.pin_view) if self.is_library_view else (self,):
+            rows.size(view)
         return ans
 
     def set_delegates(self):
         ans = orig_set_delegates(self)
-        column_map = getattr(self, 'column_map', None)
-        if not column_map:
-            return ans
-        # Held on the view because setItemDelegateForColumn does not take
-        # ownership -- without a Python reference they are collected and every
-        # cell falls back to the plain delegate.
-        kept = self._zen_delegates = []
-        for column, name in enumerate(column_map):
-            inner = self.itemDelegateForColumn(column) or self.itemDelegate()
-            if isinstance(inner, table.ZenCellDelegate):
-                continue
-            wrapper = table.ZenCellDelegate(inner, self, name == table.DETAILS_COLUMN)
-            kept.append((inner, wrapper))
-            self.setItemDelegateForColumn(column, wrapper)
+        table.wrap_delegates(self)
         return ans
 
-    def headerData(self, section, orientation, role=Qt.ItemDataRole.DisplayRole):
-        if orientation == Qt.Orientation.Horizontal and role == Qt.ItemDataRole.DisplayRole:
-            try:
-                if self.column_map[section] == table.DETAILS_COLUMN:
-                    return _('Details')
-            except IndexError, AttributeError:
-                pass
-        return orig_header_data(self, section, orientation, role)
+    def device_set_database(self, db):
+        ans = orig_device_set_database(self, db)
+        try:
+            table.setup_view(self)
+            table.wrap_delegates(self)
+            table.repaint_on_render(self)
+            rows.size(self)
+        except Exception:
+            import traceback
+
+            traceback.print_exc()
+        return ans
+
+    def device_get_old_state(self):
+        key = state_key(self)
+        ans = gprefs.get(key) if key else None
+        if ans is not None:
+            return ans
+        # As for the library: start from the layout the reader had, with the
+        # Details arrangement folded in, under a key of our own.
+        return table.arrange(orig_device_get_old_state(self) or self.get_default_state(), self.column_map)
+
+    def device_write_state(self, state):
+        key = state_key(self)
+        if not key:
+            return orig_device_write_state(self, state)
+        gprefs.set(key, state)
+
+    def device_book_display_info(self, idx):
+        info = orig_device_display_info(self, idx)
+        try:
+            link = device.linked(self.db[self.map[idx]])
+            if link is not None:
+                device.fill_from_library(info, link)
+        except Exception:
+            import traceback
+
+            traceback.print_exc()
+        return info
+
+    def details_header(orig):
+        "`orig` with the Details column's header, for the library's model and a device's both."
+
+        def headerData(self, section, orientation, role=Qt.ItemDataRole.DisplayRole):
+            if orientation == Qt.Orientation.Horizontal and role == Qt.ItemDataRole.DisplayRole:
+                try:
+                    if self.column_map[section] == table.DETAILS_COLUMN:
+                        return _('Details')
+                except IndexError, AttributeError:
+                    pass
+            return orig(self, section, orientation, role)
+
+        return headerData
 
     grid.install()
     tiles.install()
@@ -237,7 +278,12 @@ def install() -> bool:
         BooksView.database_changed = database_changed
         BooksView.do_row_sizing = do_row_sizing
         TableView.set_delegates = set_delegates
-        BooksModel.headerData = headerData
+        BooksModel.headerData = details_header(orig_header_data)
+        DeviceBooksModel.headerData = details_header(orig_device_header_data)
+        DeviceBooksModel.get_book_display_info = device_book_display_info
+        DeviceBooksView.set_database = device_set_database
+        DeviceBooksView.get_old_state = device_get_old_state
+        DeviceBooksView.write_state = device_write_state
     except AttributeError, TypeError:
         return False
     _installed = True

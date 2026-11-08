@@ -35,6 +35,7 @@ from qt.core import QActionGroup, QMenu, QSizePolicy, Qt, QToolButton, QWidget
 from calibre_zen import features
 from calibre_zen.finder import ACTION_NAME
 from calibre_zen.i18n import N_
+from calibre_zen.theme import overflow
 from calibre_zen.theme.tokens import schemes
 
 _installed = False
@@ -265,6 +266,7 @@ def install() -> bool:
                 else:
                     bar.insertWidget(anchor, switches)
                 bar.addWidget(ThemeButton(bar))
+                overflow.track(bar)
         except Exception:
             import traceback
 

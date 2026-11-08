@@ -127,6 +127,7 @@ theme/
   popups.py           gives a rounded popup a rounded window, see below
   splits.py           which half of a split tool button the pointer is on,
                       see "A split button says so" below
+  overflow.py         marks a toolbar while its overflow tray is open, see "What does not fit" below
   rewrite.py          wraps setStyleSheet and setFont so a widget's own wins
   variants.py         tags a QPushButton primary/destructive when Qt gives a
                       signal for it, see "Buttons" below
@@ -136,11 +137,13 @@ filters/              the tag browser, replaced -- see "The filter panel" below
   levels.py           what one screenful holds, and what a row does
   view.py             the list, its model and the delegate that paints a row
 centre/               the centre pane -- see "The centre pane" below
-  __init__.py         install(): the seven wraps
+  __init__.py         install(): the wraps, for the library's list and a device's
   layout.py           ZenCentre, the toolbar strip and the Grid/Table switcher
   columns.py          the Columns button and its panel -- see "Choosing columns"
   preview.py          PreviewPane: the metadata header above the list
   table.py            the Details column: arrangement, delegate, covers
+  rows.py             how tall a row is: roomy/default/compact/tight
+  device.py           a device's list drawn like the library's, from the linked book
   grid.py             how big a cover-grid tile is: default/compact/tiny
   placeholder.py      the stand-in cover for a book that has none
   tiles.py            what a tile does under the pointer: a ring, a card,
@@ -627,6 +630,14 @@ disk" becomes "שמירה לדיסק". A plugin's button is calibre's to place -
 installing one it offers to add it to the toolbars -- and takes the same size
 and caption.
 
+**What does not fit.** A bar too narrow for its buttons keeps the rest behind
+Qt's own button at its end (`QToolBarExtension`), which is left as Qt draws it.
+Qt opens it by growing the bar to more rows, and the bar is transparent, so the
+page showed through the buttons. `theme/overflow.py` sets `zenOverflowOpen` on
+the bar while the button is checked, and the sheet gives a marked bar the menu
+surface and a border under it. A redrawn button was tried and dropped: Qt lays
+it out at 12px whatever the sheet says, so the dots came out tiny.
+
 ### The filter panel
 
 The category list on the left -- Authors, Series, Tags and the rest -- is a
@@ -760,7 +771,27 @@ Two things worth knowing before changing it:
   row. `qss/app/12-centre.qss` takes the item's own background away or Qt paints
   over the card on every cell but the first.
 - **Row height is the vertical header's**, not the delegate's `sizeHint`
-  (`views.py:1196-1210`), and `BooksModel` caches it -- both have to be set.
+  (`views.py:1196-1210`), and `BooksModel` caches it -- both have to be set
+  (`rows.size`). The height is the reader's choice (below), one for the library's
+  table and every device's list.
+
+**Row height** is chosen from the view switcher's menu -- Roomy, Default, Compact or
+Tight, `components.TABLE_ROW_HEIGHTS` -- and kept in `gprefs['zen_row_height']`
+(`centre/rows.py`). The cover in a row is the row less `TABLE_COVER_MARGIN`, 2:3, so
+a tighter row has a smaller cover. It applies at once to the library's table, its
+pinned columns and each device's list.
+
+**A device's list is drawn the same way** (`centre/device.py`). `DeviceBooksView`
+gets the same Details card, the same row cards, the same row heights, and its column
+state under a key of our own (`zen centre memory_view books view state`), so
+`CALIBRE_ZEN_CENTRE=0` still gives back calibre's plain list. What a device's own
+listing lacks -- cover, series, tags, description -- comes from the library book it
+is **linked** to: `set_books_in_library` (`gui2/device.py:1857`) sets a device
+book's `application_id` to the library id and `in_library` to how it matched, and
+`device.linked` follows that (and says no for an id that is no longer in the
+library). A linked row borrows the library's cover, from the same thumbnail cache the
+library's table uses, and its series; an unlinked one shows the device's thumbnail if
+it has one, else a plain stand-in. Nothing is written to either side.
 
 Editing, sorting, resizing and the column-header context menu are untouched:
 `ZenCellDelegate` wraps whatever delegate calibre assigned and forwards every
@@ -774,6 +805,12 @@ which reads each field only when asked, and is rendered with
 as "4.5" out of five rather than the 0-10 integer stored, a date as "Mar 2015"
 in the reader's locale and a series as "Name [2]". Formatting them here would
 mean disagreeing with every other place in calibre that shows the same value.
+
+It follows the list on screen: the library's selection, or the selected device book's.
+A device book linked to a library book shows that book's record and cover, with the
+device's own file format in the facts line; an unlinked one shows what the device
+knows (title, authors, series, size, format, and tags or a description if the file
+carried them).
 
 Only what is known is shown: no series line on a standalone, no star on an
 unrated book, no empty gap between two separators. Ratings counts, reader
@@ -869,9 +906,10 @@ rather than drag handles, because a drag inside a popup is lost the moment the p
 leaves it.
 
 With the device's books in view the button acts on that list (`gui.current_view()`,
-followed through `location_selected`). Nothing is folded there and no column is
-locked, so every column but `inlibrary` is offered -- including Format, Folder and
-Path, which `device_columns.py` adds -- Reset is calibre's own defaults, and Add column says
+followed through `location_selected`). The device's list is drawn around Details
+too, so it is arranged the same way -- `authors` folded in, Details locked -- and
+every other column but `inlibrary` is offered, including Format, Folder and Path,
+which `device_columns.py` adds. Reset is the same arrangement, and Add column says
 why it cannot: calibre's device list takes no custom columns.
 
 ### Finding an action or a setting
@@ -2404,7 +2442,7 @@ settings; the runner refuses to start any other way.
 | `test_icons.py` | every mapped glyph is vendored, every vendored glyph is an SVG Qt accepts, `QIcon.ic` serves the mapped names and falls through for the rest |
 | `test_books.py` | the built-in Goodreads Updater and Book Cleanup: both registered as calibre built-ins, an installed plugin of the same name dropped without deleting its file, the `#goodreads_linked` column on a throwaway library (refused when missing, created and filled after a reopen, a column of another type left alone), each cleanup rule, no double space, a second run a no-op, no word lost, an epub end to end (chapter file split, TOC rebuilt) and `clean_book` keeping `ORIGINAL_EPUB` |
 | `test_toolbars.py` | the device bar's arithmetic, Send to device and Add books to library sharing a place, where a plugin's button goes by default, where an install puts it, and the install dialog's picture (one place per tick, the new button named, "Recommended" only for a place the plugin asked for) and list (a tick that follows the selection, every place in view) |
-| `test_gui.py` (columns) | the picker offers what does something and pins Details, a tick hides and shows through calibre, the arrows move a column but not in front of Details, Reset, the search, the button for the table only; on a device every column is offered with Format, Folder and Path among them, hides, moves and resets, and the button follows the list in view |
+| `test_gui.py` (columns) | the picker offers what does something and pins Details, a tick hides and shows through calibre, the arrows move a column but not in front of Details, Reset, the search, the button for the table only; a device's list is drawn around Details like the library's, with Format, Folder and Path among its columns, hides, moves and resets, and the button follows the list in view; one row height for the library and a device; a linked device book borrows the library's series and cover, an unlinked one has only the device's, a dangling link is none; the preview follows the device list when it is on screen |
 | `test_device_columns.py` | the device list's Format, Folder and Path columns: each cell's text, a Hebrew path read root first, where they go, their headers, sorting on each |
 | `test_gui.py` (finder) | Find an action is a built-in, last on the bar, with `Ctrl+K`; it lists menus and Preferences' pages without All actions' copies, shows a button's key, narrows, says when nothing matches and runs the choice after closing; Search settings reads every page, opens the one a result is on with its tab and its list panel chosen, and marks the setting |
 | `test_finder.py` | the ranking both search boxes share, a path's isolated parts, a Hebrew label's English from both catalogs, Find an action's place at the end of the toolbar and its one-time addition to an arranged one, which page text is indexed |

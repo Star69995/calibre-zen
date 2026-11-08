@@ -26,11 +26,11 @@ the reader can see. Details itself stays on and first, which is what the table i
 drawn around. `ondevice` and `inlibrary` are calibre's own, and cannot be hidden.
 
 With a device connected and its books in view, the button acts on that list
-instead (`gui.current_view()`). The device list is calibre's plain table, with
-no Details column folding anything, so there every column but `inlibrary` is
-offered, none is locked, Reset is calibre's own defaults, and Add column says
-why it cannot (calibre's device list takes no custom columns). Its state is kept
-under calibre's own key for that list, as before.
+instead (`gui.current_view()`). The device's list is drawn around Details too
+(`device.py`), so it is arranged the same way: `authors` is folded in, Details is
+locked, and Reset is the same arrangement. Add column says why it cannot
+(calibre's device list takes no custom columns). Its state is kept under a key
+of our own, as the library's is.
 """
 
 from __future__ import annotations
@@ -62,14 +62,19 @@ def is_library(view) -> bool:
     return getattr(view, 'is_library_view', True)
 
 
+def has_details(view) -> bool:
+    "Whether `view` is drawn around the Details column: the library's table and a device's list both are."
+    return table.DETAILS_COLUMN in getattr(view, 'column_map', ())
+
+
 def not_offered(view) -> frozenset:
     "The columns `view` gives no switch for."
-    return NOT_OFFERED if is_library(view) else ALWAYS_THERE
+    return NOT_OFFERED if has_details(view) else ALWAYS_THERE
 
 
 def locked(view, key: str) -> bool:
-    "Whether `key` stays shown and first in `view`: Details, in the library only."
-    return is_library(view) and key == table.DETAILS_COLUMN
+    "Whether `key` stays shown and first in `view`: Details."
+    return has_details(view) and key == table.DETAILS_COLUMN
 
 
 def column_title(view, index: int, key: str) -> str:
@@ -128,9 +133,9 @@ def move(view, key: str, step: int) -> bool:
 
 
 def reset(view) -> None:
-    "Back to calibre's default columns, arranged as the table needs them (a device list needs nothing)."
+    "Back to calibre's default columns, arranged as the table needs them."
     state = view.get_default_state()
-    view.apply_state(table.arrange(state, view.column_map) if is_library(view) else state)
+    view.apply_state(table.arrange(state, view.column_map))
 
 
 def can_add(view) -> tuple[bool, str]:

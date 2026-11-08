@@ -132,11 +132,14 @@ FILTER_INDENT = 14  # how far a nested row is pushed in per level
 # The centre pane -- the preview over the book table, see calibre_zen/centre/.
 # Read from the delegate rather than from a template, the same as the filter
 # panel above: a table row is painted, not laid out. {{{
-TABLE_ROW_HEIGHT = 84  # cover height plus the air above and below it
+# The row heights the reader can choose between, from the View menu: the library's
+# table and a device's list both. The cover is the row less TABLE_COVER_MARGIN,
+# 2:3 -- nearly every cover already is -- so it shrinks with the row.
+TABLE_ROW_HEIGHTS = {'roomy': 104, 'default': 84, 'compact': 64, 'tight': 48}
+TABLE_ROW_HEIGHT_DEFAULT = 'default'
+TABLE_COVER_MARGIN = 18  # the air above and below the cover, both together
 TABLE_ROW_GAP = 6  # the horizontal band left unpainted, which is what makes a row a card
 TABLE_PAD_X = 12  # inside a cell, left and right
-TABLE_COVER_W = 44
-TABLE_COVER_H = 66  # 2:3, the shape nearly every cover already is
 TABLE_DETAILS_WIDTH = 320  # the composite column's starting width
 TABLE_LINE_GAP = 2  # between the series line, the title and the author
 
@@ -415,7 +418,7 @@ DOWNLOAD_MATCH_HEIGHT = 108  # one card and the gap under it
 DOWNLOAD_MATCH_GAP = 8  # between one card and the next
 DOWNLOAD_MATCH_PAD = 12  # inside a card
 DOWNLOAD_MATCH_COVER_W = 56
-DOWNLOAD_MATCH_COVER_H = 84  # 2:3, as TABLE_COVER_W/H
+DOWNLOAD_MATCH_COVER_H = 84  # 2:3, as the table's cover
 DOWNLOAD_MATCH_TITLE_SIZE = 14
 DOWNLOAD_MATCH_SOURCE_MAX = 150  # the card's right column: source and what it has
 DOWNLOAD_MATCH_MIN_WIDTH = 360

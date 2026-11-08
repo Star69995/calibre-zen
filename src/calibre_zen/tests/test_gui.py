@@ -260,18 +260,19 @@ class TestMainWindow(ZenTestCase):
         self.addCleanup(lambda: view.apply_state(view.get_default_state()))
         return view
 
-    def test_on_a_device_every_column_is_offered_and_format_is_one(self):
-        from calibre_zen.centre import columns
+    def test_a_device_is_drawn_around_details_like_the_library(self):
+        from calibre_zen.centre import columns, table
 
         view = self.device_view()
         found = {c.key: c for c in columns.columns_for(view)}
         for key in ('format', 'folder', 'lpath'):
             self.assertIn(key, found)
             self.assertTrue(found[key].visible, f'{key} is shown from the start')
-        self.assertIn('authors', found, 'nothing is folded on a device')
+        self.assertNotIn('authors', found, 'folded into Details, as in the library')
         self.assertNotIn('inlibrary', found)
-        self.assertFalse(any(c.locked for c in found.values()))
-        self.assertEqual(found['title'].title, 'Title')
+        self.assertEqual([c.key for c in found.values() if c.locked], ['title'])
+        self.assertEqual(found['title'].title, 'Details')
+        self.assertIsInstance(view.itemDelegateForColumn(view.column_map.index('title')), table.ZenCellDelegate)
 
     def test_on_a_device_a_column_hides_moves_and_resets(self):
         from calibre_zen.centre import columns
@@ -280,8 +281,10 @@ class TestMainWindow(ZenTestCase):
         columns.set_visible(view, 'format', False)
         self.assertFalse(next(c for c in columns.columns_for(view) if c.key == 'format').visible)
         shown = [c.key for c in columns.columns_for(view) if c.visible]
-        self.assertTrue(columns.move(view, shown[1], -1))
-        self.assertEqual([c.key for c in columns.columns_for(view) if c.visible][:2], [shown[1], shown[0]])
+        self.assertEqual(shown[0], 'title')
+        self.assertTrue(columns.move(view, shown[2], -1))
+        self.assertEqual([c.key for c in columns.columns_for(view) if c.visible][1:3], [shown[2], shown[1]])
+        self.assertFalse(columns.move(view, 'title', 1), 'Details does not move')
         columns.reset(view)
         self.assertTrue(next(c for c in columns.columns_for(view) if c.key == 'format').visible)
         self.assertFalse(columns.can_add(view)[0], 'a device list takes no custom columns')
@@ -576,6 +579,105 @@ class TestMainWindow(ZenTestCase):
         view.set_current_row(1)
         expected = self.model().db.title(1)
         self.assertTrue(wait_until(lambda: preview.title.text() == expected), f'preview did not follow the selection: {preview.title.text()!r}')
+
+    def test_row_height_is_one_choice_for_the_library_and_a_device(self):
+        from calibre.gui2 import gprefs
+        from calibre_zen.centre import rows
+
+        device = self.device_view()
+        original = gprefs.get(rows.PREF_KEY)
+        self.addCleanup(lambda: rows.set_level(original or 'default', self.gui))
+        self.assertEqual(device.rowHeight(0), rows.height('default'))
+        for name in rows.levels():
+            rows.set_level(name, self.gui)
+            process_events(50)
+            for view in (self.gui.library_view, device):
+                self.assertEqual(view.rowHeight(0), rows.height(name), f'{view.objectName()} at {name}')
+            width, height = rows.cover_size(name)
+            self.assertEqual((width, height), ((rows.height(name) - 18) * 2 // 3, rows.height(name) - 18))
+        rows.set_level('no such level', self.gui)
+        self.assertEqual(rows.level(), rows.levels()[-1], 'an unknown name changes nothing')
+
+    def linked_device_view(self, linked: bool):
+        """
+        The device list with 'Alpha' either matched to the library's 'Alpha' --
+        which is given a series -- or not matched at all, and the window showing it.
+        """
+        view = self.device_view()
+        db = self.model().db.new_api
+        alpha = next(i for i in db.all_book_ids() if db.field_for('title', i) == 'Alpha')
+        db.set_field('series', {alpha: 'The Saga'})
+        db.set_field('series_index', {alpha: 2})
+        book = view.model().db[0]
+        book.title = 'Alpha'
+        if linked:
+            book.in_library, book.application_id = 'UUID', alpha
+        self.addCleanup(lambda: db.set_field('series', {alpha: ''}))
+        self.addCleanup(lambda: self.gui.location_manager.location_selected.emit('library'))
+        self.gui.stack.setCurrentIndex(1)
+        self.gui.location_manager.location_selected.emit('main')
+        return view, alpha
+
+    def test_a_linked_device_book_borrows_its_series_and_cover_from_the_library(self):
+        from calibre_zen.centre import device, table
+
+        view, alpha = self.linked_device_view(linked=True)
+        book = view.model().db[0]
+        link = device.linked(book)
+        self.assertEqual((link.book_id,), (alpha,))
+        self.assertEqual(device.series_text(book, link), 'The Saga [2]')
+        from qt.core import QColor, QImage, QPixmap
+
+        from calibre.utils.img import image_to_data
+
+        cover = QImage(60, 90, QImage.Format.Format_RGB32)
+        cover.fill(QColor('red'))
+        db = self.model().db.new_api
+        db.set_cover({alpha: image_to_data(cover, fmt='jpeg')})
+        self.addCleanup(lambda: db.set_cover({alpha: None}))
+        index = view.model().index(0, view.column_map.index('title'))
+        cache = table.cover_cache()
+
+        def rendered():
+            pixmap = device.cover_pixmap(index, cache)
+            return pixmap is not None and not pixmap.isNull()
+
+        self.assertTrue(wait_until(rendered), "the library's cover never reached the device's row")
+        info = view.model().get_book_display_info(0)
+        # The panel passes this to QPixmap.fromImage, which rejects the file's bytes.
+        self.assertIsInstance(info.cover_data[1], QImage, "the Book details panel gets the library's cover as an image")
+        self.assertFalse(QPixmap.fromImage(info.cover_data[1]).isNull())
+        self.assertEqual((info.title, info.series), ('Alpha', 'The Saga'))
+        self.assertTrue(info.book_display_info_is_from_device)
+
+    def test_a_device_book_with_no_match_has_only_what_the_device_knows(self):
+        from calibre_zen.centre import device
+
+        view, _alpha = self.linked_device_view(linked=False)
+        book = view.model().db[0]
+        self.assertIsNone(device.linked(book))
+        self.assertEqual(device.series_text(book, None), '')
+        index = view.model().index(0, view.column_map.index('title'))
+        self.assertIsNone(device.cover_pixmap(index, None), 'no thumbnail on the device, so none to show')
+
+    def test_a_dangling_link_is_no_link(self):
+        from calibre_zen.centre import device
+
+        view, _alpha = self.linked_device_view(linked=False)
+        book = view.model().db[0]
+        book.in_library, book.application_id = 'UUID', 99999
+        self.assertIsNone(device.linked(book), 'the library book is gone')
+
+    def test_the_preview_follows_the_device_list_when_it_is_on_screen(self):
+        view, _alpha = self.linked_device_view(linked=True)
+        preview = self.gui.zen_centre.preview
+        view.set_current_row(0)
+        self.assertTrue(wait_until(lambda: preview.series.text() == 'THE SAGA [2]'), f'preview shows {preview.series.text()!r}')
+        self.assertEqual(preview.title.text(), 'Alpha')
+        view.set_current_row(1)
+        self.assertTrue(wait_until(lambda: preview.title.text() == 'Beta'), f'preview shows {preview.title.text()!r}')
+        self.assertFalse(preview.series.text(), 'Beta is not in the library, and the device has no series for it')
+        self.assertIn('AZW3', preview.facts.text())
 
     def double_click(self, name: str, x: int | None = None):
         """

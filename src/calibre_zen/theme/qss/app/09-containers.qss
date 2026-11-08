@@ -20,6 +20,15 @@ QToolBar::separator { background: $border; margin: $pad_toolbar_separator; }
 QToolBar::separator:horizontal { width: 1px; }
 QToolBar::separator:vertical { height: 1px; }
 
+/* What does not fit on a toolbar opens as a tray under the bar. Qt's tray is
+   the toolbar itself grown to more rows, so it is as see-through as the bar and
+   the page shows through the buttons; theme/overflow.py marks the bar while it
+   is open, and then it is a surface. */
+QToolBar[zenOverflowOpen="true"] {
+    background-color: $menu_bg;
+    border-bottom: 1px solid $border_strong;
+}
+
 QDockWidget { titlebar-close-icon: none; titlebar-normal-icon: none; }
 QDockWidget::title { background: transparent; padding: 6px; text-align: left; }
 

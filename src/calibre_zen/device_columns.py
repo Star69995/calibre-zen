@@ -17,8 +17,8 @@ holds, so nothing new is read from the device:
   blank for a book at the device's root.
 - **Path**: where the book is, from the device's root (`lpath`, which every
   USB driver keeps, with `/` between folders), read root first even when the
-  folder names are Hebrew (`display_path`); the full path on the computer is
-  its tooltip.
+  folder names are Hebrew (`display_path`); its tooltip says the same, for a
+  path too long for the column. Where the device is mounted is never shown.
 
 `COLUMNS` is the one list of them; each is a key, a header and a function from
 a book's paths to the cell's text. Three wraps, from outside:
@@ -144,9 +144,9 @@ def install() -> bool:
                 book = self.db[self.map[index.row()]]
             except IndexError:
                 return None  # the device went away under the view
-            if role == Qt.ItemDataRole.ToolTipRole:
-                return getattr(book, 'path', None) or None
             text = column.text(device_path(book))
+            if role == Qt.ItemDataRole.ToolTipRole:
+                return column.shown(text) or None
             return column.shown(text) if role == Qt.ItemDataRole.DisplayRole else text
         return orig_data(self, index, role)
 
