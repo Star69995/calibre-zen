@@ -1,0 +1,15 @@
+/* The template editor -- calibre_zen/template_editor.py. */
+
+/* The result table's cells are read-only line edits, set into the rows so the
+   title is not elided. The field rule would give each one a border, a radius
+   and a minimum height inside a row that cannot hold it; here they are the
+   cell's text, and the table's grid is their frame. */
+TemplateDialog QTableWidget QLineEdit,
+TemplateDialog QTableWidget QLineEdit:read-only,
+TemplateDialog QTableWidget QLineEdit:focus {
+    background-color: transparent;
+    border: none;
+    border-radius: 0;
+    min-height: 0;
+    padding: 0 6px;
+}

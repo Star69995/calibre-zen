@@ -117,6 +117,7 @@ theme/
     18-forms.qss      grouped forms: the rounded groups, hairlines and labels
     19-download.qss   the Download metadata dialog
     25-library.qss    the Choose library dialog's name, folder and warning
+    26-template.qss   the template editor's result cells, without a field's frame
   qss/local/completer.qss   calibre's autocomplete list, which the app sheet never reaches
   qss/local/combo-list.qss  a combo box's list, set on the window it drops into
   qss/local/*.qss     sheets calibre applies to one widget rather than the app
@@ -180,6 +181,7 @@ send_formats.py       PDF last in a device's format order, as the main window re
 placement.py          the picture in the plugin install dialog: where the new button will be -- see "Where a plugin's button goes"
 rating.py             calibre's rating widget and rating cells as clickable stars
 dates.py              the calendar a date field opens, in the theme
+template_editor.py    calibre's template editor in the theme, and right to left -- see "The template editor"
 reader/               a reader started ahead of time -- see "A reader already running"
   __init__.py         install(): the two wraps
   spare.py            the main window's side: when to start one, when it is
@@ -1503,6 +1505,38 @@ sets the height from `totalHeightForWidth` whenever the copy box comes or goes.
 Sizes are `LIBRARY_*` in `components.py`, colours in `25-library.qss`.
 `CALIBRE_ZEN_LIBRARY_DIALOG=0` gives calibre's dialog back.
 
+### The template editor
+
+`template_editor.py` fixes calibre's template editor
+(`dialogs/template_dialog.TemplateDialog`, behind template columns, column
+tooltips, colouring and icon rules, Save to disk and the template tester).
+Under the sheet it came out worse than stock, and in Hebrew stock was already
+wrong:
+
+- The upright separators between its buttons (`widgets2.Separator`) were laid
+  out at 1x1, before the .ui file named the button whose height they take, so
+  each was a speck in the text colour. They are now hairlines in the border
+  colour, as tall as the buttons, laid out again once the button is named.
+- The line-number gutter took the book editor's syntax theme, a slate band
+  with yellow numbers. It is now the field's own base, with muted numbers and
+  the current line's in the text colour.
+- The result table's cells are line edits, which the field rule framed and
+  made taller than a row. `26-template.qss` takes the frame off, and the title
+  is shown from its start.
+- With no saved size the dialog opened at a scroll area's size hint, so most of
+  it was behind a scroll bar. It now asks for what its content wants, up to
+  `SCREEN_SHARE` of the screen. A size the dialog saved earlier still wins.
+- `widgets2.FlowLayout` placed its row left to right in every language. In a
+  right-to-left window it now mirrors each item, which fixes the editor's
+  button row and the other dialogs that use it (bulk metadata, colouring
+  rules).
+- The template is code, so the editor stays left to right in Hebrew, with
+  its gutter on the left. Qt aligns a plain text edit's placeholder by the
+  application's direction rather than the widget's, so the editor paints the
+  notes calibre puts there itself.
+
+`CALIBRE_ZEN_TEMPLATE=0` gives calibre's editor back.
+
 ### Send to device's default
 
 The Send to device menu used to end with "Set default send to device action",
@@ -2453,6 +2487,7 @@ settings; the runner refuses to start any other way.
 | `test_device_columns.py` | the device list's added columns: each cell's text (a Hebrew path read root first, a series with its number, stars, language names), where they go, their headers, sorting on each by value, the metadata ones hidden in a new layout and in a saved one once, Collections keeping its editor |
 | `test_gui.py` (finder) | Find an action is a built-in, last on the bar, with `Ctrl+K`; it lists menus and Preferences' pages without All actions' copies, shows a button's key, narrows, says when nothing matches and runs the choice after closing; Search settings reads every page, opens the one a result is on with its tab and its list panel chosen, and marks the setting |
 | `test_finder.py` | the ranking both search boxes share, a path's isolated parts, a Hebrew label's English from both catalogs, Find an action's place at the end of the toolbar and its one-time addition to an arranged one, which page text is indexed |
+| `test_template_editor.py` | the template editor: separators as tall as the buttons, the button row mirrored right to left, code and its notes left to right, line numbers on the field's colour, result cells that fit their row and show the title's start, a first size that fits the content |
 | `test_library_dialog.py` | the Choose library dialog: one choice at a time, the folder and OK worded for it, copying only under Create and the dialog tall enough for it, calibre's `accept()` still calling back with the choice |
 | `test_busy.py` | which Preferences page clashes with a running job and why, the notice's lines, and the one question calibre asks at the door |
 | `test_gui.py` | end to end: the real `Main` window, offscreen, on a three-book library. Filter panel, centre, status bar and metadata editor installed; search narrows the list and the count; selecting a book fills the preview; a clean shutdown. And the Your columns form on a library with one custom column of each shape |

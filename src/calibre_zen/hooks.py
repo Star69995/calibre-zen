@@ -135,6 +135,15 @@ What is patched, and why it is patched rather than edited:
         drawn in the theme, with Today and Clear under it.
         CALIBRE_ZEN_DATES=0.
 
+    widgets2.Separator.{setBuddy, sizeHint, paintEvent} /
+    widgets2.FlowLayout.setGeometry / CodeEditor.__init__ /
+    TemplateDialog.{sizeHint, setup_result_display_table}
+        Wrapped -- see template_editor.py. The template editor's separators
+        drawn as hairlines at the buttons' height, its row of buttons mirrored
+        in a right-to-left window, its code left to right with the line
+        numbers on the field's own colour, and the dialog opened at the size
+        its content wants. CALIBRE_ZEN_TEMPLATE=0.
+
     FullFetch / CoverFetch / IdentifyWidget / ResultsView / CoversWidget /
     CoversView / CoverDelegate, in gui2.metadata.single_download
         Wrapped -- see download/. Download metadata as a list of match cards
@@ -227,6 +236,7 @@ from calibre_zen import (
     send_default,
     send_formats,
     status,
+    template_editor,
     toolbars,
     update,
 )
@@ -587,6 +597,7 @@ def _patch_palette_manager(pm) -> None:
         guard.run_install('editor', editor.install)
         guard.run_install('rating', rating.install)
         guard.run_install('dates', dates.install)
+        guard.run_install('template-editor', template_editor.install)
         guard.run_install('download', download.install)
         guard.run_install('library-dialog', library_dialog.install)
         guard.run_install('send-default', send_default.install)
