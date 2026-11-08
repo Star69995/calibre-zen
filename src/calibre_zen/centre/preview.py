@@ -19,10 +19,12 @@ arrives as "4.5" out of five rather than the 0-10 integer stored, a date as
 here would mean disagreeing with every other place in calibre that shows the
 same value.
 
-It follows `library_view`'s selection rather than whichever view is on
-screen: `AlternateViews` keeps the main view's selection in step with the grid
-and the bookshelf in both directions (`alternate_views.py:582-597`), so one
-connection covers all three. The *selection*, not the current row: calibre's
+It follows the selection of the list that is on screen: the library's -- and
+`AlternateViews` keeps that selection in step with the grid and the bookshelf in
+both directions (`alternate_views.py:582-597`), so one connection covers all
+three -- or the device's. A device book that is linked to one in the library
+(`device.py`) shows the library book's record and cover; one that is not shows
+what the device itself knows. The *selection*, not the current row: calibre's
 actions -- Read, Edit metadata and the rest -- act on selected books, and the
 list can have a current row with nothing selected (it does, right after
 startup). A pane that showed that row put a book on screen whose Read button
@@ -35,6 +37,10 @@ calibre's own Book details panel is untouched and stays wherever the reader
 docked it. This is the glance; that is still the full record, and the two are
 not meant to converge.
 """
+
+import numbers
+import os
+from typing import NamedTuple
 
 from qt.core import (
     QColor,
@@ -58,7 +64,10 @@ from qt.core import (
     QWidget,
 )
 
+from calibre.ebooks.metadata import authors_to_string
 from calibre.gui2.library.caches import CoverThumbnailCache
+from calibre import human_readable
+from calibre_zen.centre import device
 from calibre_zen.theme import generate, rewrite
 from calibre_zen.theme.tokens import components
 
@@ -271,13 +280,28 @@ class Pill(QLabel):
         self.setProperty('zenPill', True)
 
 
+class Shown(NamedTuple):
+    "Everything the pane says about one book, wherever it was read from."
+
+    book_id: int | None  # the library book whose cover is shown; None to use `cover`
+    series: str
+    title: str
+    authors: str
+    rating: str
+    facts: list
+    tags: list
+    description: str
+    cover: object = None  # a QPixmap from the device, for a book with no library match
+
+
 class PreviewPane(QWidget):
     def __init__(self, gui, parent=None):
         super().__init__(parent)
         self.setObjectName('zenPreview')
         self.gui = gui
         self.book_id = None
-        self._model = None
+        self._models = []
+        self._follows_locations = False
         self.setMinimumHeight(components.PREVIEW_COVER_H // 3)
 
         # Two faces: the book, and the line shown when nothing is selected.
@@ -356,27 +380,36 @@ class PreviewPane(QWidget):
 
     # Wiring {{{
 
+    def views(self) -> list:
+        "Every list the pane follows: the library's, and each device's."
+        return [getattr(self.gui, name) for name in ('library_view', 'memory_view', 'card_a_view', 'card_b_view') if hasattr(self.gui, name)]
+
+    def current_view(self):
+        "The list on screen."
+        current = getattr(self.gui, 'current_view', None)
+        view = current() if callable(current) else None
+        return view if view is not None else self.gui.library_view
+
     def attach(self) -> None:
-        "Follow the library view's current row and its metadata. Safe to call again."
-        view = self.gui.library_view
-        model = view._model
-        self.covers.set_database(model.db)
-        selection = view.selectionModel()
-        if selection is not None:
-            for signal in (selection.currentChanged, selection.selectionChanged):
-                try:
-                    signal.disconnect(self.current_changed)
-                except TypeError:
-                    pass
-                signal.connect(self.current_changed)
-        if model is not self._model:
-            if self._model is not None:
-                try:
-                    self._model.dataChanged.disconnect(self.data_changed)
-                except TypeError:
-                    pass
-            model.dataChanged.connect(self.data_changed)
-            self._model = model
+        "Follow the selection and the metadata of the library and of each device. Safe to call again."
+        self.covers.set_database(self.gui.library_view._model.db)
+        for view in self.views():
+            selection = view.selectionModel()
+            if selection is not None:
+                for signal in (selection.currentChanged, selection.selectionChanged):
+                    try:
+                        signal.disconnect(self.current_changed)
+                    except TypeError:
+                        pass
+                    signal.connect(self.current_changed)
+            model = view.model()
+            if model not in self._models:
+                model.dataChanged.connect(self.data_changed)
+                self._models.append(model)
+        locations = getattr(self.gui, 'location_manager', None)
+        if locations is not None and not self._follows_locations:
+            self._follows_locations = True
+            locations.location_selected.connect(self.current_changed)
         self.refresh()
 
     def index_to_show(self):
@@ -388,7 +421,7 @@ class PreviewPane(QWidget):
         row with no selection is exactly the state in which Read says there
         is no book.
         """
-        view = self.gui.library_view
+        view = self.current_view()
         selection = view.selectionModel()
         if selection is None:
             return None
@@ -471,54 +504,97 @@ class PreviewPane(QWidget):
         # is the next moment that is guaranteed to be later, and build() is a
         # no-op once it has succeeded.
         self.actions.build()
-        if index is None or not index.isValid() or self._model is None:
-            return self.show_nothing()
-        self.book_id = index.data(Qt.ItemDataRole.UserRole)
-        if self.book_id is None:
+        if index is None or not index.isValid():
             return self.show_nothing()
         try:
-            api = self._model.db.new_api
-            mi = api.get_proxy_metadata(self.book_id)
+            on_device = not getattr(self.current_view(), 'is_library_view', True)
+            shown = self.read_device(index) if on_device else self.read_library(index)
         except Exception:
             return self.show_nothing()
+        if shown is None:
+            return self.show_nothing()
 
-        self.series.setText((mi.format_field('series')[1] or '').upper())
-        self.series.setVisible(bool(self.series.text()))
-        self.title.setText(mi.title or '')
-        self.authors.setText(mi.format_field('authors')[1] or '')
-
-        rating = mi.format_field('rating')[1]
-        self.star.setVisible(bool(rating))
-        self.rating.setVisible(bool(rating))
-        self.rating.setText(rating or '')
-        facts = SEPARATOR.join(self.fact_parts(mi, api))
+        self.book_id = shown.book_id
+        self.series.setText(shown.series.upper())
+        self.series.setVisible(bool(shown.series))
+        self.title.setText(shown.title)
+        self.authors.setText(shown.authors)
+        self.star.setVisible(bool(shown.rating))
+        self.rating.setVisible(bool(shown.rating))
+        self.rating.setText(shown.rating)
+        facts = SEPARATOR.join(shown.facts)
         # The rating is its own label so the star can sit against it, which
         # leaves it to this to put the dot back between the two halves.
-        self.facts.setText(SEPARATOR.lstrip() + facts if rating and facts else facts)
-
-        self.set_tags(list(mi.tags or ()))
-        self.description.setText(plain_text(mi.comments))
+        self.facts.setText(SEPARATOR.lstrip() + facts if shown.rating and facts else facts)
+        self.set_tags(shown.tags)
+        self.description.setText(shown.description)
         self.actions.setVisible(True)
-        self.set_cover(self.covers.thumbnail_as_pixmap(self.book_id))
+        self.set_cover(self.covers.thumbnail_as_pixmap(shown.book_id) if shown.book_id is not None else shown.cover)
         self.stack.setCurrentWidget(self.body)
 
-    def fact_parts(self, mi, api) -> list:
+    def read_library(self, index) -> Shown | None:
+        book_id = index.data(Qt.ItemDataRole.UserRole)
+        if book_id is None:
+            return None
+        return self.read_record(self.gui.library_view._model.db.new_api, book_id)
+
+    def read_record(self, api, book_id: int, formats=None) -> Shown:
+        "A library book, from its record."
+        mi = api.get_proxy_metadata(book_id)
+        return Shown(
+            book_id=book_id,
+            series=mi.format_field('series')[1] or '',
+            title=mi.title or '',
+            authors=mi.format_field('authors')[1] or '',
+            rating=mi.format_field('rating')[1] or '',
+            facts=self.fact_parts(mi, api, book_id, formats),
+            tags=list(mi.tags or ()),
+            description=plain_text(mi.comments),
+        )
+
+    def read_device(self, index) -> Shown | None:
+        """
+        A device book: the library's record of it when it is linked to one, which has
+        the cover, the series, the tags and the description a device's listing lacks,
+        and otherwise only what the device itself knows.
+        """
+        book = device.book_at(index)
+        file_format = os.path.splitext(book.path or '')[1][1:].upper()
+        formats = [file_format] if file_format else None
+        link = device.linked(book)
+        if link is not None:
+            return self.read_record(link.db, link.book_id, formats)
+        size = human_readable(book.size) if isinstance(book.size, numbers.Number) else ''
+        return Shown(
+            book_id=None,
+            series=device.series_text(book, None),
+            title=book.title or _('Unknown'),
+            authors=authors_to_string(book.authors or [_('Unknown')]),
+            rating='',
+            facts=[part for part in (size, file_format) if part],
+            tags=list(getattr(book, 'tags', None) or ()),
+            description=plain_text(getattr(book, 'comments', None)),
+            cover=device.device_cover(index),
+        )
+
+    def fact_parts(self, mi, api, book_id: int, formats=None) -> list:
         """
         The run-together line after the rating.
 
         Only what is actually known -- a book with no publisher should not show
-        an empty gap between two dots.
+        an empty gap between two dots. `formats` is what to say instead of the
+        library's own, for a device's copy.
         """
         parts = []
         published = mi.format_field('pubdate')[1]
         if published:
             parts.append(published)
-        pages = api.field_for('pages', self.book_id, default_value=None)
+        pages = api.field_for('pages', book_id, default_value=None)
         if pages:
             parts.append(_('%d pages') % pages)
         if mi.publisher:
             parts.append(mi.publisher)
-        formats = api.formats(self.book_id) or ()
+        formats = formats or api.formats(book_id) or ()
         if formats:
             parts.append(', '.join(formats))
         return parts

@@ -62,6 +62,18 @@ that it sits past calibre's ten delegated columns. Tests pass; offscreen screens
 `.calibre-zen/shots/device-columns/{en,he}/` (the window mirrored by hand in the Hebrew run, since
 the test harness does not).
 
+**Device list drawn like the library's, and a row-height choice, built 2026-11-07**
+(`centre/device.py`, `centre/rows.py`, `centre/preview.py`). The device's list got the Details
+card (cover, series, title, author), the row cards and the row heights; a device book matched to a
+library book (`application_id` / `in_library`, set by calibre's own matching) borrows that book's
+cover and series, and the preview shows that book's record with the device's file format. The
+preview follows whichever list is on screen. Row height (Roomy, Default, Compact, Tight) is in the
+Table menu and applies to the library and every device. An unlinked book has only what the device
+knows; the next step for those is reading the cover and metadata out of the file itself (an epub's
+cover is a zip read away; large files make it worth doing on a background thread). Not covered:
+the cover grid and the bookshelf for a device (calibre has neither), and sorting or searching a
+device by the library's columns.
+
 **U6, built 2026-11-05** (`centre/columns.py`, overlay README "Choosing columns"). A Columns
 button beside the Grid/Table switcher opens a popup: a tick per column, search, arrows to move,
 Add column (disabled with the reason when a restart is owed) and Reset, all through calibre's own

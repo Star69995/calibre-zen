@@ -19,8 +19,8 @@ shown from the start:
   blank for a book at the device's root.
 - **Path**: where the book is, from the device's root (`lpath`, which every
   USB driver keeps, with `/` between folders), read root first even when the
-  folder names are Hebrew (`display_path`); the full path on the computer is
-  its tooltip.
+  folder names are Hebrew (`display_path`); its tooltip says the same, for a
+  path too long for the column. Where the device is mounted is never shown.
 
 Six are the library's own columns, from the metadata each book on the device
 carries (what calibre sent with it, or what the driver read from the file), and
@@ -279,9 +279,9 @@ def install() -> bool:
                 book = self.db[self.map[index.row()]]
             except IndexError:
                 return None  # the device went away under the view
-            if role == Qt.ItemDataRole.ToolTipRole:
-                return getattr(book, 'path', None) or None
             text = column.text(book)
+            if role == Qt.ItemDataRole.ToolTipRole:
+                return column.shown(text) or None
             return column.shown(text) if role == Qt.ItemDataRole.DisplayRole else text
         return orig_data(self, index, role)
 

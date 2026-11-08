@@ -43,6 +43,18 @@ msgstr "רשת"
 msgid "Table"
 msgstr "טבלה"
 
+#: centre/rows.py:28
+msgid "Roomy"
+msgstr "מרווח"
+
+#: centre/rows.py:28
+msgid "Tight"
+msgstr "צפוף"
+
+#: centre/layout.py:111
+msgid "Row height"
+msgstr "גובה שורה"
+
 #: centre/layout.py:111
 msgid "Grid size"
 msgstr "גודל הרשת"

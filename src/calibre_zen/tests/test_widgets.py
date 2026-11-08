@@ -461,6 +461,41 @@ class TestFieldsAndRichText(ZenTestCase):
         self.assertEqual(edge, {ed.editor.viewport().palette().base().color().name()}, f'the text area has a border: {edge}')
 
 
+class TestToolbarOverflow(ZenTestCase):
+    "What does not fit on a toolbar opens as an opaque tray (theme/overflow.py)."
+
+    def test_the_tray_is_a_surface_while_it_is_open(self):
+        from qt.core import QAction, QMainWindow, QToolBar, QToolButton
+
+        from calibre_zen.theme import overflow
+
+        win = QMainWindow()
+        self.addCleanup(win.deleteLater)
+        bar = QToolBar(win)
+        win.addToolBar(bar)
+        for i in range(14):
+            bar.addAction(QAction(f'Action number {i}', bar))
+        self.assertTrue(overflow.track(bar))
+        self.assertTrue(overflow.track(bar), 'a second call must be harmless')
+        win.resize(320, 200)
+        win.show()
+        process_events(300)
+        button = bar.findChild(QToolButton, overflow.BUTTON_NAME)
+        self.assertTrue(button.isVisibleTo(bar), 'the bar was meant to be too narrow for its actions')
+        self.assertFalse(bar.property(overflow.OPEN))
+
+        button.click()
+        process_events(300)
+        self.assertTrue(bar.property(overflow.OPEN))
+        img = bar.grab().toImage()
+        blank = QColor(img.pixel(img.width() - 4, img.height() - 4))
+        self.assertEqual(blank.alpha(), 255, 'the page shows through the open tray')
+
+        button.click()
+        process_events(300)
+        self.assertFalse(bar.property(overflow.OPEN))
+
+
 class TestDownloadMetadata(ZenTestCase):
     """
     Download metadata as cards, a side panel and cover tiles (download/). The

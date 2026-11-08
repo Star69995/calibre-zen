@@ -138,7 +138,7 @@ class TestDeviceModel(ZenTestCase):
 
         self.assertEqual(self.cells('lpath', _Qt.ItemDataRole.EditRole), ['documents/a.pdf', 'Books/Bob/b.azw3', 'c.epub'])
         self.assertEqual(self.cells('lpath')[2], device_columns.display_path('c.epub'))
-        self.assertEqual(self.cells('lpath', Qt.ItemDataRole.ToolTipRole)[0], '/media/reader/documents/a.pdf')
+        self.assertEqual(self.cells('lpath', Qt.ItemDataRole.ToolTipRole)[0], device_columns.display_path('documents/a.pdf'), 'from the root, not where it is mounted')
 
     def test_sorting_on_one_orders_the_books_by_it(self):
         self.sort('format')

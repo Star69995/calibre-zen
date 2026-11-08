@@ -2,7 +2,7 @@
 # License: GPL v3 Copyright: 2026, Nadeem Siddique
 
 """
-The book list, restyled: one composite **Details** cell per row -- cover
+The book list -- the library's and each device's -- restyled: one composite **Details** cell per row -- cover
 thumbnail, series line, bold title, author -- followed by whatever other
 columns the reader has configured, on tall rounded row cards.
 
@@ -40,6 +40,7 @@ from qt.core import QColor, QFont, QPainter, QPainterPath, QPalette, QPen, QRect
 from calibre.gui2 import qapplication_or_fail
 from calibre.gui2.library.caches import CoverThumbnailCache
 from calibre.gui2.library.delegates import StyledItemDelegate
+from calibre_zen.centre import device, rows
 from calibre_zen.theme import rewrite
 from calibre_zen.theme.tokens import components, primitives
 
@@ -120,6 +121,30 @@ def setup_view(view) -> None:
     view.horizontalHeader().setStretchLastSection(True)
 
 
+def wrap_delegates(view) -> None:
+    """
+    Put a `ZenCellDelegate` over whatever delegate calibre assigned each column.
+
+    Held on the view because setItemDelegateForColumn does not take ownership --
+    without a Python reference they are collected and every cell falls back to
+    the plain delegate. A column already wrapped is left alone, so this can run
+    again after calibre reassigns delegates.
+    """
+    column_map = getattr(view, 'column_map', None)
+    if not column_map:
+        return
+    previous = {id(wrapper): pair for pair in getattr(view, '_zen_delegates', ()) for wrapper in pair[1:]}
+    kept = view._zen_delegates = []
+    for column, name in enumerate(column_map):
+        inner = view.itemDelegateForColumn(column) or view.itemDelegate()
+        if isinstance(inner, ZenCellDelegate):
+            kept.append(previous[id(inner)])
+            continue
+        wrapper = ZenCellDelegate(inner, view, name == DETAILS_COLUMN)
+        kept.append((inner, wrapper))
+        view.setItemDelegateForColumn(column, wrapper)
+
+
 # }}}
 
 
@@ -140,13 +165,28 @@ def cover_cache():
     """
     global _cover_cache
     if _cover_cache is None:
+        width, height = rows.largest_cover()
         _cover_cache = CoverThumbnailCache(
-            thumbnail_size=(components.TABLE_COVER_W * 2, components.TABLE_COVER_H * 2),
+            thumbnail_size=(width * 2, height * 2),
             name='zen-row-thumbnail-cache',
-            version=1,
+            version=2,
             ram_limit=300,
         )
     return _cover_cache
+
+
+def repaint_on_render(view) -> None:
+    """
+    Have `view` redraw when a cover it asked for arrives.
+
+    `thumbnail_as_pixmap` answers None for a cover not yet rendered and the cell
+    paints a stand-in; without this the stand-in stays until something else
+    happens to repaint the row.
+    """
+    if getattr(view, '_zen_repaints_on_render', False):
+        return
+    view._zen_repaints_on_render = True
+    cover_cache().rendered.connect(lambda *_: view.viewport().update(), type=Qt.ConnectionType.QueuedConnection)
 
 
 # }}}
@@ -253,7 +293,7 @@ class ZenCellDelegate(StyledItemDelegate):
     # }}}
 
     def sizeHint(self, option, index):
-        return QSize(self.inner.sizeHint(option, index).width(), components.TABLE_ROW_HEIGHT)
+        return QSize(self.inner.sizeHint(option, index).width(), rows.height())
 
     def paint(self, painter, option, index):
         chrome = colors()
@@ -316,6 +356,20 @@ class ZenCellDelegate(StyledItemDelegate):
         value = model.index(index.row(), column).data(Qt.ItemDataRole.DisplayRole)
         return '' if value is None else str(value)
 
+    def series_text(self, index) -> str:
+        "The series line: the library's column, or for a device's row what the device and its linked book say."
+        if self.view.is_library_view:
+            return self.sibling_text(index, 'series')
+        book = device.book_at(index)
+        return device.series_text(book, device.linked(book))
+
+    def cover_pixmap(self, index):
+        "The row's cover: None while it is being rendered or when there is none."
+        if not self.view.is_library_view:
+            return device.cover_pixmap(index, cover_cache())
+        book_id = index.data(Qt.ItemDataRole.UserRole)
+        return None if book_id is None else cover_cache().thumbnail_as_pixmap(book_id)
+
     # }}}
 
     def paint_details(self, painter, option, index, chrome, selected: bool) -> None:
@@ -324,13 +378,14 @@ class ZenCellDelegate(StyledItemDelegate):
         rect = option.rect
         left = rect.left() + components.TABLE_PAD_X
 
-        cover_rect = QRect(left, 0, components.TABLE_COVER_W, components.TABLE_COVER_H)
-        cover_rect.moveCenter(QRect(left, rect.top(), components.TABLE_COVER_W, rect.height()).center())
+        cover_w, cover_h = rows.cover_size()
+        cover_rect = QRect(left, 0, cover_w, cover_h)
+        cover_rect.moveCenter(QRect(left, rect.top(), cover_w, rect.height()).center())
         self.paint_cover(painter, cover_rect, index, chrome)
         left = cover_rect.right() + components.TABLE_PAD_X
 
         text_rect = QRect(left, rect.top(), max(0, rect.right() - components.TABLE_PAD_X - left), rect.height())
-        series = self.sibling_text(index, 'series')
+        series = self.series_text(index)
         title = str(index.data(Qt.ItemDataRole.DisplayRole) or '')
         author = self.sibling_text(index, 'authors')
 
@@ -370,10 +425,7 @@ class ZenCellDelegate(StyledItemDelegate):
         painter.restore()
 
     def paint_cover(self, painter, rect, index, chrome) -> None:
-        book_id = index.data(Qt.ItemDataRole.UserRole)
-        pixmap = None
-        if book_id is not None:
-            pixmap = cover_cache().thumbnail_as_pixmap(book_id)
+        pixmap = self.cover_pixmap(index)
 
         path = QPainterPath()
         path.addRoundedRect(QRectF(rect), components.TABLE_COVER_RADIUS, components.TABLE_COVER_RADIUS)
