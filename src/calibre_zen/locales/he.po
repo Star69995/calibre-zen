@@ -1718,3 +1718,7 @@ msgstr "הספר יימחק מהספרייה שלך אחרי שיגיע להתק
 #: send_default.py
 msgid "What clicking Send to device does…"
 msgstr "מה עושה לחיצה על ״שליחה להתקן״…"
+
+#: centre/sorting.py:72
+msgid "Click to sort by title, authors or series"
+msgstr "לחיצה למיון לפי כותרת, מחברים או סדרות"
