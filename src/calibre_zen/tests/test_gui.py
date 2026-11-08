@@ -268,7 +268,11 @@ class TestMainWindow(ZenTestCase):
         for key in ('format', 'folder', 'lpath'):
             self.assertIn(key, found)
             self.assertTrue(found[key].visible, f'{key} is shown from the start')
-        self.assertNotIn('authors', found, 'folded into Details, as in the library')
+        for key in ('tags', 'publisher', 'pubdate', 'rating', 'languages'):
+            self.assertIn(key, found)
+            self.assertFalse(found[key].visible, f'{key} is offered, hidden until shown')
+        for key in ('authors', 'series'):
+            self.assertNotIn(key, found, f'{key} is folded into Details, as in the library')
         self.assertNotIn('inlibrary', found)
         self.assertEqual([c.key for c in found.values() if c.locked], ['title'])
         self.assertEqual(found['title'].title, 'Details')

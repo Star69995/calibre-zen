@@ -50,9 +50,17 @@ fixed columns and none said what a book is as a file; it now has Format (EPUB, A
 too) after Size, each sortable (`CALIBRE_ZEN_DEVICE_COLUMNS=0` takes it away). The Columns button works on
 the device's list too. On the device bar, Send to device turns into Add books to library while the
 device's books are in view. Tests pass; offscreen screenshots in `.calibre-zen/shots/device-columns/`.
-Left to do: a look at the Hebrew window on a real machine (the offscreen run does not mirror the
-window). Asked for, not started: more device columns (series, tags, the library's columns for a
-matched book) and a visible "Sync annotations" for Kindle/Kobo.
+Left to do: a look at the Hebrew window on a real machine. Asked for, not started: the library's
+custom columns for a matched book, and a visible "Sync annotations" for Kindle/Kobo.
+
+**Device list: the library's columns, built 2026-11-07** (`device_columns.py`). Series, Tags,
+Publisher, Published, Rating (as stars) and Languages, from the metadata each book on the device
+carries, offered under the header's Show column and in the Columns panel, hidden until shown (a
+saved layout meets them hidden once, marked as calibre marks an injected column). Each sorts by
+value: a series by name and number, a date and a rating by value. Collections keeps its editor now
+that it sits past calibre's ten delegated columns. Tests pass; offscreen screenshots in
+`.calibre-zen/shots/device-columns/{en,he}/` (the window mirrored by hand in the Hebrew run, since
+the test harness does not).
 
 **Device list drawn like the library's, and a row-height choice, built 2026-11-07**
 (`centre/device.py`, `centre/rows.py`, `centre/preview.py`). The device's list got the Details

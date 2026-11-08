@@ -102,9 +102,12 @@ What is patched, and why it is patched rather than edited:
         as a modern table with a composite Details column.
         CALIBRE_ZEN_CENTRE=0.
 
-    DeviceBooksModel.{__init__, data, sort}
+    DeviceBooksModel.{__init__, data, sort} /
+    DeviceBooksView.{__init__, get_default_state, get_old_state, get_state}
         Wrapped -- see device_columns.py. The list of books on a device gains
-        Format, Folder and Path columns, read from each book's file name.
+        Format, Folder and Path columns, read from each book's file name, and
+        the library's Series, Tags, Publisher, Published, Rating and Languages,
+        hidden until shown.
         CALIBRE_ZEN_DEVICE_COLUMNS=0.
 
     MainWindow.unhandled_exception / main_window.error_dialog /

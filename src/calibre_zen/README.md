@@ -172,7 +172,7 @@ finder/               two search boxes: Find an action and Search settings -- se
 i18n.py               adds locales/<lang>.po to calibre's translator as a fallback -- see "Translations"
 locales/<lang>.po     translations of the strings only this fork has; `he` ships
 toolbars.py           one main toolbar: the device's bar is the main one plus what a device adds -- see "One main toolbar"
-device_columns.py     Format, Folder and Path columns in the list of books on a device, from each book's file name
+device_columns.py     more columns in the list of books on a device: Format, Folder and Path from each book's file name; Series, Tags, Publisher, Published, Rating and Languages from its metadata, hidden until shown
 busy.py               Preferences opens while jobs run; only a clashing save waits -- see "Settings while jobs run"
 library_dialog.py     the Choose library dialog as three choices -- see "Choose library"
 send_default.py       what the Send to device button does, chosen in a window -- see "Send to device's default"
@@ -909,7 +909,8 @@ With the device's books in view the button acts on that list (`gui.current_view(
 followed through `location_selected`). The device's list is drawn around Details
 too, so it is arranged the same way -- `authors` folded in, Details locked -- and
 every other column but `inlibrary` is offered, including Format, Folder and Path,
-which `device_columns.py` adds. Reset is the same arrangement, and Add column says
+and the hidden-at-first Tags, Publisher, Published, Rating and Languages (Series is
+folded into Details with `authors`), which `device_columns.py` adds. Reset is the same arrangement, and Add column says
 why it cannot: calibre's device list takes no custom columns.
 
 ### Finding an action or a setting
@@ -2442,8 +2443,8 @@ settings; the runner refuses to start any other way.
 | `test_icons.py` | every mapped glyph is vendored, every vendored glyph is an SVG Qt accepts, `QIcon.ic` serves the mapped names and falls through for the rest |
 | `test_books.py` | the built-in Goodreads Updater and Book Cleanup: both registered as calibre built-ins, an installed plugin of the same name dropped without deleting its file, the `#goodreads_linked` column on a throwaway library (refused when missing, created and filled after a reopen, a column of another type left alone), each cleanup rule, no double space, a second run a no-op, no word lost, an epub end to end (chapter file split, TOC rebuilt) and `clean_book` keeping `ORIGINAL_EPUB` |
 | `test_toolbars.py` | the device bar's arithmetic, Send to device and Add books to library sharing a place, where a plugin's button goes by default, where an install puts it, and the install dialog's picture (one place per tick, the new button named, "Recommended" only for a place the plugin asked for) and list (a tick that follows the selection, every place in view) |
-| `test_gui.py` (columns) | the picker offers what does something and pins Details, a tick hides and shows through calibre, the arrows move a column but not in front of Details, Reset, the search, the button for the table only; a device's list is drawn around Details like the library's, with Format, Folder and Path among its columns, hides, moves and resets, and the button follows the list in view; one row height for the library and a device; a linked device book borrows the library's series and cover, an unlinked one has only the device's, a dangling link is none; the preview follows the device list when it is on screen |
-| `test_device_columns.py` | the device list's Format, Folder and Path columns: each cell's text, a Hebrew path read root first, where they go, their headers, sorting on each |
+| `test_gui.py` (columns) | the picker offers what does something and pins Details, a tick hides and shows through calibre, the arrows move a column but not in front of Details, Reset, the search, the button for the table only; a device's list is drawn around Details like the library's, with Format, Folder and Path among its columns and the metadata ones hidden, hides, moves and resets, and the button follows the list in view; one row height for the library and a device; a linked device book borrows the library's series and cover, an unlinked one has only the device's, a dangling link is none; the preview follows the device list when it is on screen |
+| `test_device_columns.py` | the device list's added columns: each cell's text (a Hebrew path read root first, a series with its number, stars, language names), where they go, their headers, sorting on each by value, the metadata ones hidden in a new layout and in a saved one once, Collections keeping its editor |
 | `test_gui.py` (finder) | Find an action is a built-in, last on the bar, with `Ctrl+K`; it lists menus and Preferences' pages without All actions' copies, shows a button's key, narrows, says when nothing matches and runs the choice after closing; Search settings reads every page, opens the one a result is on with its tab and its list panel chosen, and marks the setting |
 | `test_finder.py` | the ranking both search boxes share, a path's isolated parts, a Hebrew label's English from both catalogs, Find an action's place at the end of the toolbar and its one-time addition to an arranged one, which page text is indexed |
 | `test_library_dialog.py` | the Choose library dialog: one choice at a time, the folder and OK worded for it, copying only under Create and the dialog tall enough for it, calibre's `accept()` still calling back with the choice |

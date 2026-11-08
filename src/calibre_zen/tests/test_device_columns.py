@@ -2,8 +2,10 @@
 # License: GPL v3 Copyright: 2026, Star
 
 """
-The Format, Folder and Path columns in the list of books on a device: where
-they go, what a cell says, and that sorting on one orders the books by it.
+The columns this fork adds to the list of books on a device (Format, Folder and
+Path from the file name; Series, Tags, Publisher, Published, Rating and
+Languages from its metadata): where they go, what a cell says, that sorting on
+one orders the books by it, and that the metadata ones start hidden.
 """
 
 from calibre_zen import device_columns
@@ -11,10 +13,16 @@ from calibre_zen.tests.base import ZenTestCase, app
 
 
 class Book:
-    def __init__(self, title, lpath):
+    def __init__(self, title, lpath, **metadata):
         self.title, self.title_sorter, self.lpath = title, title, lpath
         self.path = '/media/reader/' + lpath
         self.authors, self.size, self.device_collections = ['A'], 1, []
+        self.series = self.series_index = self.publisher = self.pubdate = self.rating = None
+        self.tags, self.languages = [], []
+        self.__dict__.update(metadata)
+
+
+METADATA = ('series', 'tags', 'publisher', 'pubdate', 'rating', 'languages')
 
 
 class TestCells(ZenTestCase):
@@ -46,8 +54,41 @@ class TestCells(ZenTestCase):
         cm, headers = ['inlibrary', 'title', 'size', 'collections'], {}
         device_columns.add_columns(cm, headers)
         device_columns.add_columns(cm, headers)
-        self.assertEqual(cm, ['inlibrary', 'title', 'size', 'format', 'folder', 'lpath', 'collections'])
-        self.assertEqual(headers, {'format': 'Format', 'folder': 'Folder', 'lpath': 'Path'})
+        self.assertEqual(cm, ['inlibrary', 'title', 'size', 'format', 'folder', 'lpath', *METADATA, 'collections'])
+        self.assertEqual(
+            headers,
+            {
+                'format': 'Format',
+                'folder': 'Folder',
+                'lpath': 'Path',
+                'series': 'Series',
+                'tags': 'Tags',
+                'publisher': 'Publisher',
+                'pubdate': 'Published',
+                'rating': 'Rating',
+                'languages': 'Languages',
+            },
+        )
+
+    def test_the_metadata_cells_read_as_the_librarys(self):
+        from calibre.utils.date import UNDEFINED_DATE, parse_only_date
+
+        b = Book('Alpha', 'a.epub', series='Saga', series_index=2.0, tags=['b', 'A'], publisher='Pub', rating=7, languages=['heb', 'eng'])
+        b.pubdate = parse_only_date('2001-03-15')
+        self.assertEqual(device_columns.series_text(b), 'Saga [2]')
+        self.assertEqual(device_columns.tags_text(b), 'A, b')
+        self.assertEqual(device_columns.publisher_text(b), 'Pub')
+        self.assertIn('2001', device_columns.pubdate_text(b))
+        self.assertEqual(device_columns.rating_text(b), '★★★⯪'[:3] + device_columns.rating_text(Book('x', 'x', rating=1)))
+        self.assertEqual(device_columns.languages_text(b), 'Hebrew, English')
+        empty = Book('Beta', 'b.epub', pubdate=UNDEFINED_DATE)
+        self.assertEqual([c.text(empty) for c in device_columns.COLUMNS if c.key in METADATA], [''] * len(METADATA))
+
+    def test_a_layout_hides_the_metadata_columns_once(self):
+        state = device_columns.hide_new({'hidden_columns': ['authors']})
+        self.assertEqual(state['hidden_columns'], ['authors', *METADATA])
+        state['hidden_columns'] = ['authors']  # the reader showed them all
+        self.assertEqual(device_columns.hide_new(state)['hidden_columns'], ['authors'], 'a column met is left as the reader set it')
 
 
 class TestDeviceModel(ZenTestCase):
@@ -57,8 +98,14 @@ class TestDeviceModel(ZenTestCase):
         from calibre.gui2.library.models import DeviceBooksModel
 
         books = BookList(None, None, None)
-        for title, lpath in (('Alpha', 'documents/a.pdf'), ('Beta', 'Books/Bob/b.azw3'), ('Gamma', 'c.epub')):
-            books.append(Book(title, lpath))
+        from calibre.utils.date import parse_only_date
+
+        for title, lpath, metadata in (
+            ('Alpha', 'documents/a.pdf', {'series': 'Saga', 'series_index': 10.0, 'rating': 4, 'pubdate': parse_only_date('2010-01-01')}),
+            ('Beta', 'Books/Bob/b.azw3', {'series': 'Saga', 'series_index': 2.0, 'rating': 10}),
+            ('Gamma', 'c.epub', {'series': 'Arc', 'series_index': 1.0, 'pubdate': parse_only_date('1999-01-01')}),
+        ):
+            books.append(Book(title, lpath, **metadata))
         self.model = DeviceBooksModel(None)
         self.model.set_database(books)
 
@@ -77,7 +124,7 @@ class TestDeviceModel(ZenTestCase):
         from qt.core import Qt
 
         cm = self.model.column_map
-        self.assertEqual(cm[cm.index('size') + 1 : cm.index('size') + 4], ['format', 'folder', 'lpath'])
+        self.assertEqual(cm[cm.index('size') + 1 : cm.index('size') + 10], ['format', 'folder', 'lpath', *METADATA])
         headers = [self.model.headerData(cm.index(k), Qt.Orientation.Horizontal, Qt.ItemDataRole.DisplayRole) for k in ('format', 'folder', 'lpath')]
         self.assertEqual(headers, ['Format', 'Folder', 'Path'])
 
@@ -106,6 +153,30 @@ class TestDeviceModel(ZenTestCase):
         self.sort('lpath')
         self.assertEqual(self.cells('lpath', Qt.ItemDataRole.EditRole), ['Books/Bob/b.azw3', 'c.epub', 'documents/a.pdf'])
 
+    def test_the_metadata_columns_sort_by_value(self):
+        self.sort('series')
+        self.assertEqual(self.cells('series'), ['Arc [1]', 'Saga [2]', 'Saga [10]'], 'by name, then by number')
+        self.sort('rating', ascending=False)
+        self.assertEqual(self.model.data(self.model.index(0, self.model.column_map.index('title'))), 'Beta')
+        self.sort('pubdate')
+        titles = self.cells('title')
+        self.assertEqual(titles, ['Beta', 'Gamma', 'Alpha'], 'no date first, then oldest')
+
     def test_other_columns_are_still_calibres(self):
         self.sort('title')
         self.assertEqual(self.cells('title')[0], 'Alpha')
+
+
+class TestDeviceView(ZenTestCase):
+    def test_the_metadata_columns_start_hidden_and_collections_keeps_its_editor(self):
+        app()
+        from calibre.gui2.library.delegates import TextDelegate
+        from calibre.gui2.library.views import DeviceBooksView
+
+        view = DeviceBooksView(None)
+        hidden = view.get_default_state()['hidden_columns']
+        self.assertTrue(set(METADATA) <= set(hidden))
+        self.assertFalse({'format', 'folder', 'lpath'} & set(hidden))
+        self.assertTrue(all(view.get_state().get(k + '_injected') for k in METADATA))
+        col = view.column_map.index('collections')
+        self.assertIsInstance(view.itemDelegateForColumn(col), TextDelegate)
