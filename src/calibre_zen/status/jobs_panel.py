@@ -117,11 +117,10 @@ class JobsPanel(QFrame):
     def __init__(self, segment):
         super().__init__(segment, Qt.WindowType.Popup)
         self.segment = segment
-        self.setObjectName('zenJobsPanel')
-        self.setAttribute(Qt.WidgetAttribute.WA_StyledBackground, True)
+        self.setObjectName('zenJobsWindow')
         self.setFixedWidth(components.JOBS_PANEL_WIDTH)
         pad = components.JOBS_PANEL_PAD
-        self.column = QVBoxLayout(self)
+        self.column = QVBoxLayout(popovers.painted_body(self, 'zenJobsPanel'))
         self.column.setContentsMargins(pad, pad, pad, pad)
         self.column.setSpacing(pad)
         self.rows: list[JobRow] = []

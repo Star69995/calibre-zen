@@ -196,11 +196,10 @@ class ColumnsPanel(QFrame):
         super().__init__(button, Qt.WindowType.Popup)
         self.button = button
         self.view = view
-        self.setObjectName('zenColumnsPanel')
-        self.setAttribute(Qt.WidgetAttribute.WA_StyledBackground, True)
+        self.setObjectName('zenColumnsWindow')
         self.setFixedWidth(components.COLUMNS_PANEL_WIDTH)
         pad = components.COLUMNS_PAD
-        column = QVBoxLayout(self)
+        column = QVBoxLayout(popovers.painted_body(self, 'zenColumnsPanel'))
         column.setContentsMargins(pad, pad, pad, pad)
         column.setSpacing(pad)
 
