@@ -10,12 +10,15 @@ import os
 import re
 import shutil
 import tempfile
+import traceback
 
 from calibre.ebooks.oeb.polish.container import get_container
 from calibre.ebooks.oeb.polish.split import split
 from calibre.ebooks.oeb.polish.toc import commit_toc, from_xpaths, get_toc
-from calibre_zen.books.cleanup import BODY, HEADING_RE, HEADINGS, PAGE_BREAK, Options, Stats, clean_document, detect_dash_style, is_latin
+from calibre_zen.books.cleanup import BODY, HEADING_RE, HEADINGS, PAGE_BREAK, Options, Stats, clean_document, detect_dash_style, detect_hyphen_dash, is_latin
 
+ORIGINAL_FORMAT = 'ORIGINAL_EPUB'
+DELETE_CHUNK = 100               # books per call to remove_formats, so a stop is heard
 ORNAMENT_MAX_BYTES = 3000      # a lone image this small is a decorative divider
 HTML_MIMES = ('application/xhtml+xml', 'text/html')
 
@@ -173,7 +176,7 @@ def clean_container(container, report, remove_ornaments=False):
                           if h.get('class')), None)
     opts = Options(dash_style=report.dash_style, latin=is_latin(texts),
                    heading_class=heading_class, is_ornament=None,
-                   remove_ornaments=remove_ornaments)
+                   remove_ornaments=remove_ornaments, hyphen_dash=detect_hyphen_dash(texts))
 
     removed = set()
     for name in names:
@@ -216,11 +219,12 @@ def clean_epub(src, dst=None, title='', remove_ornaments=False):
     return report
 
 
-def clean_book(db, book_id, dry_run=False, remove_ornaments=False):
+def clean_book(db, book_id, dry_run=False, remove_ornaments=False, keep_original=True):
     """Clean the EPUB of one library book (db is ``new_api``).
 
     The first time a book is changed the untouched file is kept as
-    ORIGINAL_EPUB, like calibre's own Polish does."""
+    ORIGINAL_EPUB, like calibre's own Polish does, unless ``keep_original`` is
+    off. An ORIGINAL_EPUB already there is never replaced."""
     title = db.field_for('title', book_id)
     path = db.format_abspath(book_id, 'EPUB')
     if not path:
@@ -232,7 +236,7 @@ def clean_book(db, book_id, dry_run=False, remove_ornaments=False):
         out = os.path.join(tmp, 'cleaned.epub')
         report = clean_epub(path, None if dry_run else out, title, remove_ornaments)
         if report.changed and not dry_run:
-            if 'ORIGINAL_EPUB' not in db.formats(book_id):
+            if keep_original and ORIGINAL_FORMAT not in db.formats(book_id):
                 orig = os.path.join(tmp, 'original.epub')
                 shutil.copyfile(path, orig)
                 db.add_format(book_id, 'ORIGINAL_EPUB', orig, run_hooks=False)
@@ -240,3 +244,75 @@ def clean_book(db, book_id, dry_run=False, remove_ornaments=False):
         return report
     finally:
         shutil.rmtree(tmp, ignore_errors=True)
+
+
+class BatchResult:
+    "What a run over several books did: a Report per book, the ids changed, the failures."
+
+    def __init__(self):
+        self.reports = []
+        self.changed_ids = []
+        self.errors = []
+        self.cancelled = False
+
+
+def clean_books(db, book_ids, dry_run=False, keep_original=True, notifications=None, abort=None, log=None):
+    """Clean the EPUB of each book, as one calibre job does.
+
+    ``notifications`` (a Queue of ``(fraction, message)``), ``abort`` (an Event)
+    and ``log`` are the three keyword arguments calibre gives a ThreadedJob's
+    function; all are optional so it runs without a job too. The report of each
+    book goes to the log, which is the job's details. A book that fails is
+    recorded and the rest carry on."""
+    result = BatchResult()
+    total = len(book_ids)
+    for i, book_id in enumerate(book_ids):
+        if abort is not None and abort.is_set():
+            result.cancelled = True
+            break
+        title = db.field_for('title', book_id) or str(book_id)
+        if notifications is not None:
+            notifications.put((i / total, title))
+        try:
+            report = clean_book(db, book_id, dry_run=dry_run, keep_original=keep_original)
+        except Exception:
+            failure = f'{title}\n{traceback.format_exc()}'
+            result.errors.append(failure)
+            if log is not None:
+                log.error(failure)
+            continue
+        result.reports.append(report)
+        if report.changed:
+            result.changed_ids.append(book_id)
+        if log is not None:
+            log(report.format())
+    if notifications is not None:
+        notifications.put((1, ''))
+    return result
+
+
+def books_with_original(db, book_ids):
+    "The ids among ``book_ids`` that have an ORIGINAL_EPUB."
+    return [book_id for book_id in book_ids if ORIGINAL_FORMAT in db.formats(book_id)]
+
+
+def delete_originals(db, book_ids, notifications=None, abort=None, log=None):
+    """Delete the ORIGINAL_EPUB of each book. Returns the ids it was deleted from.
+
+    Takes a ThreadedJob's three keyword arguments, like ``clean_books``. The
+    cleaned EPUB is not touched; only the kept original goes, for good."""
+    removed = []
+    total = len(book_ids)
+    for start in range(0, total, DELETE_CHUNK):
+        if abort is not None and abort.is_set():
+            break
+        chunk = book_ids[start:start + DELETE_CHUNK]
+        if notifications is not None:
+            notifications.put((start / total, ''))
+        db.remove_formats({book_id: [ORIGINAL_FORMAT] for book_id in chunk})
+        removed.extend(chunk)
+        if log is not None:
+            log(f'Deleted {ORIGINAL_FORMAT} of {len(chunk)} book(s)')
+    if notifications is not None:
+        notifications.put((1, ''))
+    return removed

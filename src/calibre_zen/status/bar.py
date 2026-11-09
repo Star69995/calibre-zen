@@ -77,6 +77,32 @@ class ZenStatusBar(QWidget):
         self.message_timer.timeout.connect(self.clear_message)
 
         self.adopt_tools()
+        self.aim_pointer()
+
+    def aim_pointer(self) -> None:
+        """
+        Make the arrow that shows where a new job went point at our segment.
+
+        calibre animates `gui.jobs_pointer` towards `gui.jobs_button`, which is
+        hidden now (`adopt_tools`) and so sits wherever it was last laid out:
+        the arrow came down on nothing. The animation reads that one attribute,
+        so it is pointed at the segment for the length of the call, which is
+        synchronous, and put back.
+        """
+        pointer = getattr(self.gui, 'jobs_pointer', None)
+        if pointer is None:
+            return
+        start = pointer.start
+
+        def start_at_segment() -> None:
+            hidden = self.gui.jobs_button
+            self.gui.jobs_button = self.jobs
+            try:
+                start()
+            finally:
+                self.gui.jobs_button = hidden
+
+        pointer.start = start_at_segment
 
     # calibre's widgets {{{
 

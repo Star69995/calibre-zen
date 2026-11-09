@@ -39,7 +39,7 @@ import traceback
 from calibre_zen.i18n import N_
 
 # What a device adds, until the reader chooses otherwise in Preferences -> Toolbars & menus.
-DEVICE_ADDITIONS = ('Send To Device', 'Location Manager')
+DEVICE_ADDITIONS = ('Send To Device', 'Update On Device', 'Location Manager')
 
 # A button for the library's books, and the one that takes its place on the bar
 # while a device's books are in view.

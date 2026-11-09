@@ -9,10 +9,13 @@ The real bars are checked in test_gui; this is the arithmetic.
 from calibre_zen import toolbars
 from calibre_zen.tests.base import ZenTestCase
 
-ADD = toolbars.DEVICE_ADDITIONS
+ADD = ('Send To Device', 'Location Manager')  # fixed, so the arithmetic below does not move when the shipped default does
 
 
 class TestDeviceLayout(ZenTestCase):
+    def test_the_shipped_device_buttons_are_send_update_and_the_location_manager(self):
+        self.assertEqual(toolbars.DEVICE_ADDITIONS, ('Send To Device', 'Update On Device', 'Location Manager'))
+
     def test_the_device_buttons_follow_the_books_and_stay_ahead_of_the_app_buttons(self):
         got = toolbars.device_layout(('Add Books', None, 'View', None, 'Help', 'Preferences'), ADD)
         self.assertEqual(got, ('Add Books', None, 'View', None, 'Send To Device', 'Location Manager', None, 'Help', 'Preferences'))

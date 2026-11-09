@@ -43,7 +43,13 @@ _NUM = (r'(?:\d{1,3}|[IVXLC]{1,6}|(?:%s|Ten|Eleven|Twelve|Thirteen|Fourteen|Fift
 HEADING_RE = re.compile(r'^(?:Chapter\s+%s(?:\s*[:.\-–—]\s*.{1,60})?|Prologue|Epilogue)$'
                         % _NUM, re.I)
 # "...timing.” Chapter Eight" glued to the end of the previous paragraph.
-HEADING_TAIL_RE = re.compile(r'(?<=[.!?…”"’)])\s+(Chapter\s+%s)\s*$' % _NUM)
+HEADING_TAIL_RE = re.compile(r'(?<=[.!?…”"’)])\s+(Chapter\s+%s)\s*$' % _NUM, re.I)
+# A heading glued to the end of a paragraph with no stop before it ("... Do’Urden Chapter 1"),
+# and one glued to the start of the next ("CHAPTER 5 Come on, ..."): neither may be merged.
+HEADING_END_RE = re.compile(r'(?:^|\s)(?:Chapter\s+%s|Prologue|Epilogue|Dedication|'
+                            r'Acknowledg(?:e)?ments|About the Author)\s*$' % _NUM, re.I)
+HEADING_START_RE = re.compile(r'(?:Chapter\s+%s|Prologue|Epilogue|Dedication|'
+                              r'Acknowledg(?:e)?ments|About the Author)\b' % _NUM, re.I)
 SMALL_WORDS = {'a', 'an', 'the', 'of', 'and', 'in', 'on', 'to', 'for', 'at', 'or', 'but'}
 PAGE_BREAK = 'page-break-before: always'
 
@@ -52,8 +58,9 @@ class Options:
     """Per-book settings, computed by ``epub.py`` before the first file."""
 
     def __init__(self, dash_style='tight', latin=True, heading_class=None,
-                 is_ornament=None, remove_ornaments=False):
+                 is_ornament=None, remove_ornaments=False, hyphen_dash=False):
         self.dash_style = dash_style          # 'tight' (a—b) or 'spaced' (a — b)
+        self.hyphen_dash = hyphen_dash        # the book writes its dashes as a lone "-"
         self.latin = latin                    # Latin-script text: case-based rules on
         self.heading_class = heading_class    # class copied onto headings we create
         # True for a tiny decorative image. Such images are kept unless
@@ -167,30 +174,57 @@ def _to_emdash(m, S):
     return [(m.start(), m.end(), '—')]
 
 
-# (name, regex, edit function, only-for-latin)
+def _move_space(m, S):
+    "'word ,next' -> 'word, next': one edit, so the report shows the real result."
+    return [(m.start(), m.end(), m.group(1) + ' ')]
+
+
+def _always(opts):
+    return True
+
+
+def _latin(opts):
+    return opts.latin
+
+
+def _latin_hyphen_breaks(opts):
+    "Not in a book that writes its dashes as '-': there 'smile- yes' is no split word."
+    return opts.latin and not opts.hyphen_dash
+
+
+# A “ glued to the word before it ("were-“ the") closes a quote the converter
+# set the wrong way round: the space after it is a real one.
+_OPENING_QUOTE = r'(?<=(?<![^\s—(\[“‘])“)'
+
+# (name, regex, edit function, applies to these Options)
 TEXT_RULES = [
-    ('ascii dash -> em dash', re.compile(r'(?<!-)-{2,3}(?!-)'), _to_emdash, False),
+    ('ascii dash -> em dash', re.compile(r'(?<!-)-{2,3}(?!-)'), _to_emdash, _always),
     ('spaced hyphen -> em dash',
-     re.compile(r'(?<=[A-Za-z”’.!?,]) - (?=[A-Za-z“‘])'), _to_emdash, False),
-    ('space before , ; : ! ?', re.compile(r'(?<=\S)[ ]+(?=[,;:!?])'), _del_spaces, False),
-    ('space before period', re.compile(r'(?<=[^\s.])[ ]+(?=\.(?![ ]*\.))'),
-     _del_spaces, False),
+     re.compile(r'(?<=[A-Za-z”’.!?,]) - (?=[A-Za-z“‘])'), _to_emdash, _always),
+    ('space before , ; ! ? stuck to the next word',
+     re.compile(r'(?<=[A-Za-z0-9”’)])[ ]+([,;!?])(?=[A-Za-z“‘(])'), _move_space, _always),
+    # a , ; : after a sentence end is a misread quote mark: not ours to fix
+    ('space before , ; : ! ?',
+     re.compile(r'(?:(?<=[^\s.!?])[ ]+(?=[,;:!?])|(?<=[.!?])[ ]+(?=[!?]))'), _del_spaces, _always),
+    # not " .04": that period is a decimal point
+    ('space before period', re.compile(r'(?<=[^\s.,;:])[ ]+(?=\.(?![ ]*\.|\d))'),
+     _del_spaces, _always),
     ('space before closing quote/paren', re.compile(r'(?<=\S)[ ]+(?=[”)])'),
-     _del_spaces, False),
-    ('space after opening quote/paren', re.compile(r'(?<=[“(])[ ]+(?=\S)'),
-     _del_spaces, False),
+     _del_spaces, _always),
+    ('space after opening quote/paren', re.compile(r'(?:%s|(?<=\())[ ]+(?=\S)' % _OPENING_QUOTE),
+     _del_spaces, _always),
     ('missing space after , ; ! ?', re.compile(r'(?<=[A-Za-z])[,;!?](?=[A-Za-z“‘(])'),
-     _ins_after, False),
+     _ins_after, _always),
     ('missing space after period',
-     re.compile(r'(?<=[a-z]{2})\.(?=[A-Z](?:[a-z]|\b))'), _ins_after, True),
+     re.compile(r'(?<=[a-z]{2})\.(?=[A-Z](?:[a-z]|\b))'), _ins_after, _latin),
     ('missing space after colon', re.compile(r'(?<=[A-Za-z]):(?=[A-Za-z])'),
-     _ins_after, False),
+     _ins_after, _always),
     ('missing space after closing quote', re.compile(r'(?<=[.!?,]”)(?=[A-Za-z])'),
-     _ins_before, False),
+     _ins_before, _always),
     ('missing space before opening quote', re.compile(r'(?<=[.!?,;:])(?=[“‘])'),
-     _ins_before, False),
+     _ins_before, _always),
     ('broken hyphenated word', re.compile(r'(?<=[a-z]-)[ ]+(?=[a-z])'),
-     _hyphen_space, True),
+     _hyphen_space, _latin_hyphen_breaks),
 ]
 DASH_RULES = {
     'tight': [
@@ -239,8 +273,7 @@ def fix_text(el, opts, stats):
     S = ''.join(_get(s) for s in slots)
     if not _has_alnum(S):       # scene breaks like "* * *"
         return
-    rules = [(n, rx, fn) for n, rx, fn, latin_only in TEXT_RULES
-             if opts.latin or not latin_only]
+    rules = [(n, rx, fn) for n, rx, fn, applies in TEXT_RULES if applies(opts)]
     rules.extend(DASH_RULES[opts.dash_style])
     for name, rx, fn in rules:
         S = ''.join(_get(s) for s in slots)
@@ -410,7 +443,8 @@ def merge_broken_paragraphs(container, opts, stats):
             prev = el
             continue
         pt, nt = _text(prev).rstrip(), _text(el).lstrip()
-        if not pt or not nt or not _has_alnum(pt) or not _has_alnum(nt):
+        if (not pt or not nt or not _has_alnum(pt) or not _has_alnum(nt)
+                or HEADING_END_RE.search(pt) or HEADING_START_RE.match(nt)):
             prev = el
             continue
         if _should_merge_simple(pt, nt):
@@ -557,6 +591,18 @@ def detect_dash_style(texts):
         tight += len(re.findall(r'(?<=\S)%s(?=\S)' % _DASH, t))
         spaced += len(re.findall(r'(?<=\s)%s(?=\s)' % _DASH, t))
     return 'spaced' if spaced > tight and spaced >= 5 else 'tight'
+
+
+HYPHEN_DASH_MIN = 5      # hyphens right before a quote mark that mean "dash"
+
+
+def detect_hyphen_dash(texts):
+    """True when the book writes its dashes as a lone "-" ("smile- yes", "to-“
+    Entreri began"). The tell is a hyphen right before a quote mark: no word
+    is ever split there, while one at the end of a paragraph can be a word
+    cut by a page break."""
+    n = sum(len(re.findall(r'[A-Za-z]-(?=[“”"‘’])', t)) for t in texts)
+    return n >= HYPHEN_DASH_MIN
 
 
 def is_latin(texts):

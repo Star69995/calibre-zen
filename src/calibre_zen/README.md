@@ -211,12 +211,14 @@ tray/                 the menubar or tray app that runs the host
   icon.py             the icon: the app icon's waves, cut out of a square
   waves.svg           those waves, without the square
   settings.py         the three settings the menu changes
-books/                Goodreads Updater and Book Cleanup, built in -- see "Built-in book tools" below
-  __init__.py         install(): registers the two as calibre's built-in interface actions
+books/                Goodreads Updater, Book Cleanup and Update on device, built in -- see "Built-in book tools" below
+  __init__.py         install(): registers them as calibre's built-in interface actions
   actions.py          the two toolbar buttons (Qt only)
   goodreads.py        the #goodreads_linked column from the goodreads identifier
   epub.py             Book Cleanup over one epub: polish container, chapter files, TOC, ORIGINAL_EPUB
   cleanup.py          Book Cleanup's rules on one XHTML document (pure lxml)
+  ondevice.py         Update on device: which files on the device, and the write over each (no Qt)
+  ondevice_action.py  its toolbar button (Qt only)
 icons/
   registry.py         which pack is active; wraps QIcon.ic
   pack.py             a pack: calibre's icon names -> a directory of SVGs
@@ -568,8 +570,8 @@ buttons alone.
 **One main toolbar.** calibre keeps two full layouts, the main toolbar and "the
 main toolbar when a device is connected", and swaps them when a reader is
 plugged in. `toolbars.py` makes the second a list of what a device *adds*
-(`DEVICE_ADDITIONS`: Send to device and the Location manager, the buttons that
-mean nothing without one). A wrap of `BarsManager.init_bars` rebuilds the device
+(`DEVICE_ADDITIONS`: Send to device, Update on device and the Location manager, the
+buttons that mean nothing without one). A wrap of `BarsManager.init_bars` rebuilds the device
 bar as the main layout with those put in after the books' own buttons and ahead
 of the application's run at the far end, so the two bars cannot drift apart and
 a change to the main toolbar is made once. calibre's swap in `update_bars` is
@@ -2187,7 +2189,14 @@ column is offered it, then a restart, because calibre reads its columns when a
 library opens) and **Book Cleanup**
 (repairs PDF-converted EPUBs: chapter headings, blank pages, paragraphs broken
 mid-sentence, spacing around punctuation and dashes; the original is kept as
-`ORIGINAL_EPUB`, and its menu has a *Preview changes* that modifies nothing).
+`ORIGINAL_EPUB` unless the confirmation's *Keep the original* box, on by default,
+is cleared; its menu has a *Preview changes* that modifies nothing and a *Delete
+the originals of selected books* that removes the kept `ORIGINAL_EPUB` of the
+selection, after asking, as a job too).
+Book Cleanup runs as one calibre `ThreadedJob` per click (`epub.clean_books`), so
+it is in the Jobs list with a progress bar and a stop button and the window stays
+usable; the report of each book is the job's details. A finished clean shows a
+status-bar message, and a preview or a run with failures a dialog.
 They are not the look, so they are outside the rule above, and not a replaceable
 part, so they have no switch in `features.py`.
 
@@ -2210,8 +2219,41 @@ can be a file in calibre's own settings folder. The icons are calibre's
 design) and keeps an em dash style the book itself uses: detected by majority,
 tight `a—b` or spaced `a — b`, counting `--` too. Its rules only insert or delete
 characters, so no word can be lost, and a second run changes nothing.
-`tests/test_books.py` checks all of that, and `test_gui` that the window has both
-buttons with icons.
+Three things it holds back from, all seen in a real report: a heading (`Chapter 1`,
+`CHAPTER FOUR`, `Prologue`, `About the Author`) is never merged into the paragraph
+next to it; a book that writes its dashes as a lone `-` (a hyphen right before a
+quote mark, five times or more) has its `word- word` left alone instead of closed up
+as a split word; a `“` glued to the word before it is a closing quote, so the space
+after it stays. A `,` `;` `:` after a sentence end is a misread quote mark and is not
+touched. `tests/test_books.py` checks all of that, and `test_gui` that the window has
+both buttons with icons.
+
+**Update on device** (`ondevice.py`, `ondevice_action.py`) is the third, written
+here: it replaces files on the connected device with the library's copy, where they
+are. Select books in the library -- all of them, if you like -- click it and
+confirm. Each selected book that calibre has matched to a file on the device
+(`application_id`, the match the *On device* column shows) gets the library's file
+**of the same format** written over it, in the same folder under the same name.
+Sending again is not that: calibre derives a new path from the device's folder
+template for every send, so a book the reader filed by hand lands in a second place
+and the old copy stays. A book the library has no file of that format for is left
+alone and named in the confirmation, as are selected books that are not on the
+device; a Kobo's `.kepub.epub` is the library's KEPUB, not its EPUB. A book on the
+device twice is replaced twice.
+
+How the file is written depends on the device (`ondevice.writer_for`). A
+mass-storage device (every `USBMS` driver: Kindle and Kobo over USB, a folder
+device) gets the new file under `<name>.zen-tmp` beside the old one and a rename
+over it, so a transfer that fails half way leaves the old file. An MTP device gets
+`put_file` into the old file's folder; that path is checked against a stub only,
+not a real device. A wireless device has no file to write over and is refused. The
+work is one `DeviceJob` (in the Jobs list, with progress), a failed book is recorded
+and the rest carry on, and the library's metadata is written into the copy as a send
+does, without plugboards. When it ends the device's listing is refreshed the way
+calibre does after a send (`books_uploaded`). The button acts on the library's
+selection, so it is greyed while a device's books are in view; it is on the default
+device toolbar after Send to device, and a toolbar the reader had already arranged
+gets it from Preferences -> Toolbars & menus.
 
 ## Running without a window
 
@@ -2493,7 +2535,8 @@ settings; the runner refuses to start any other way.
 | `test_widgets.py` | widgets painted offscreen and judged by their pixels; the star rating driven through its own mouse, key and wheel events; the calendar's footer and size; both dropdown lists' delegate, sheet and row layout; spin box height; the rich text editor's toolbar and single border |
 | `test_i18n.py` | the translation files compile, keep their placeholders and name only strings that still exist; they sit behind calibre's catalog, not in front of it, and are attached again after a language switch |
 | `test_icons.py` | every mapped glyph is vendored, every vendored glyph is an SVG Qt accepts, `QIcon.ic` serves the mapped names and falls through for the rest |
-| `test_books.py` | the built-in Goodreads Updater and Book Cleanup: both registered as calibre built-ins, an installed plugin of the same name dropped without deleting its file, the `#goodreads_linked` column on a throwaway library (refused when missing, created and filled after a reopen, a column of another type left alone), each cleanup rule, no double space, a second run a no-op, no word lost, an epub end to end (chapter file split, TOC rebuilt) and `clean_book` keeping `ORIGINAL_EPUB` |
+| `test_books.py` | the built-in Goodreads Updater and Book Cleanup: both registered as calibre built-ins, an installed plugin of the same name dropped without deleting its file, the `#goodreads_linked` column on a throwaway library (refused when missing, created and filled after a reopen, a column of another type left alone), each cleanup rule, no double space, a second run a no-op, no word lost, an epub end to end (chapter file split, TOC rebuilt), `clean_book` keeping `ORIGINAL_EPUB`, and `clean_books` (the job function) reporting progress, logging each book and stopping on abort |
+| `test_ondevice.py` | Update on device: a format named as the library names it (a Kobo's `.kepub.epub` is KEPUB), a copy replaced in its own format with the rest said, a file written over its old copy in the folder it was filed in with nothing left beside it, one failing book not stopping the others, a transfer that cannot finish leaving the old file and no scrap, the temporary cover removed; the button end to end with a folder for a device is in `test_gui.py` |
 | `test_toolbars.py` | the device bar's arithmetic, Send to device and Add books to library sharing a place, where a plugin's button goes by default, where an install puts it, and the install dialog's picture (one place per tick, the new button named, "Recommended" only for a place the plugin asked for) and list (a tick that follows the selection, every place in view) |
 | `test_gui.py` (sorting) | a sort on authors or series puts the arrow on Details and names the part in its header, a click on Details asks rather than sorts while other headers still sort, the menu ticks the sort that is on, a part sorts A to Z, a direction turns the sort that is on |
 | `test_gui.py` (columns) | the picker offers what does something and pins Details, a tick hides and shows through calibre, the arrows move a column but not in front of Details, Reset, the search, the button for the table only; a device's list is drawn around Details like the library's, with Format, Folder and Path among its columns and the metadata ones hidden, hides, moves and resets, and the button follows the list in view; one row height for the library and a device; a linked device book borrows the library's series and cover, an unlinked one has only the device's, a dangling link is none; the preview follows the device list when it is on screen |

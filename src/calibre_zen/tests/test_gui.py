@@ -101,7 +101,7 @@ class TestMainWindow(ZenTestCase):
         def books(bar):
             return [names[ac] for ac in bar.added_actions if ac in names]
 
-        added = ('Send To Device', 'Add To Library')
+        added = ('Send To Device', 'Add To Library', 'Update On Device')
         self.assertNotIn('Send To Device', books(plain))
         self.assertEqual([n for n in books(device) if n not in added], books(plain), 'the same buttons, in the same order')
         on_device = books(device)
@@ -137,7 +137,193 @@ class TestMainWindow(ZenTestCase):
                 self.assertIn(name, self.gui.iactions)
                 self.assertFalse(self.gui.iactions[name].qaction.icon().isNull(), 'no icon')
         menu = self.gui.iactions['Book Cleanup'].qaction.menu()
-        self.assertEqual([ac.text() for ac in menu.actions()], ['Clean selected books', 'Preview changes (modifies nothing)'])
+        self.assertEqual([ac.text() for ac in menu.actions()], ['Clean selected books', 'Preview changes (modifies nothing)', '', 'Delete the originals of selected books'])
+
+    def test_book_cleanup_is_a_job_in_the_jobs_list(self):
+        "A click starts one job, the window is not blocked, and the book changes when it ends."
+        from unittest import mock
+
+        from calibre_zen.tests.test_books import make_epub
+
+        api = self.gui.current_db.new_api
+        book_id = sorted(api.all_book_ids())[0]
+        src = os.path.join(self.mkdtemp(), 'in.epub')
+        make_epub(src)
+        api.add_format(book_id, 'EPUB', src, run_hooks=False)
+        self.gui.library_view.select_rows([book_id], using_ids=True)
+        before = len(self.gui.job_manager.jobs)
+
+        with mock.patch('calibre_zen.books.actions.ask_to_clean', return_value=True):
+            self.gui.iactions['Book Cleanup'].run(dry_run=False)
+        self.assertTrue(wait_until(lambda: len(self.gui.job_manager.jobs) > before, timeout_ms=10000), 'the job never reached the list')
+        jobs = self.gui.job_manager.jobs[before:]
+        self.assertEqual(len(jobs), 1)
+        self.assertEqual(jobs[0].description, 'Book Cleanup: 1 book(s)')
+        self.assertTrue(wait_until(lambda: jobs[0].is_finished, timeout_ms=30000))
+        self.assertFalse(jobs[0].failed, jobs[0].details)
+        self.assertIn('ORIGINAL_EPUB', api.formats(book_id), 'the job did the cleaning')
+        self.assertIn('em dash style', jobs[0].details, 'the report is the job details')
+
+    def test_the_cleanup_question_offers_to_keep_the_original_and_starts_with_yes(self):
+        from qt.core import QApplication, QTimer
+
+        from calibre_zen.books.actions import ask_to_clean
+
+        seen = []
+
+        def answer(clear: bool):
+            box = QApplication.activeModalWidget()
+            box.toggle_checkbox.setChecked(not clear)
+            seen.append((box.toggle_checkbox.isVisibleTo(box), box.toggle_checkbox.text()))
+            box.accept()
+
+        QTimer.singleShot(300, lambda: seen.append(QApplication.activeModalWidget().toggle_checkbox.isChecked()) or answer(False))
+        self.assertIs(ask_to_clean(self.gui, 'Book Cleanup', 3), True)
+        self.assertEqual(seen[0], True, 'ticked before the person touches it')
+        self.assertEqual(seen[1], (True, 'Keep the original file as ORIGINAL_EPUB'))
+        QTimer.singleShot(300, lambda: answer(True))
+        self.assertIs(ask_to_clean(self.gui, 'Book Cleanup', 3), False)
+        QTimer.singleShot(300, lambda: QApplication.activeModalWidget().reject())
+        self.assertIsNone(ask_to_clean(self.gui, 'Book Cleanup', 3))
+
+    def run_job(self, call):
+        "Call something that starts one job, and wait until that job has finished."
+        known = list(self.gui.job_manager.jobs)  # the list is kept sorted, so the new job is not necessarily last
+        call()
+        new = []
+        self.assertTrue(wait_until(lambda: new.extend(j for j in self.gui.job_manager.jobs if j not in known) or new, timeout_ms=10000), 'the job never reached the list')
+        job = new[0]
+        self.assertTrue(wait_until(lambda: job.is_finished, timeout_ms=30000))
+        self.assertFalse(job.failed, job.details)
+        process_events(200)  # the callback runs on the event loop
+        return job
+
+    def test_the_original_can_be_declined_and_the_kept_ones_deleted_from_the_menu(self):
+        from unittest import mock
+
+        from calibre_zen.tests.test_books import make_epub
+
+        api = self.gui.current_db.new_api
+        action = self.gui.iactions['Book Cleanup']
+        declined, kept = sorted(api.all_book_ids())[1:3]
+        src = os.path.join(self.mkdtemp(), 'in.epub')
+        make_epub(src)
+        for book_id in (declined, kept):
+            api.add_format(book_id, 'EPUB', src, run_hooks=False)
+
+        self.gui.library_view.select_rows([declined], using_ids=True)
+        with mock.patch('calibre_zen.books.actions.ask_to_clean', return_value=False):
+            self.run_job(lambda: action.run(dry_run=False))
+        self.assertNotIn('ORIGINAL_EPUB', api.formats(declined), 'the box was cleared: no original kept')
+
+        self.gui.library_view.select_rows([kept], using_ids=True)
+        with mock.patch('calibre_zen.books.actions.ask_to_clean', return_value=True):
+            self.run_job(lambda: action.run(dry_run=False))
+        self.assertIn('ORIGINAL_EPUB', api.formats(kept))
+
+        # a book with no original: told so, no job
+        self.gui.library_view.select_rows([declined], using_ids=True)
+        before = len(self.gui.job_manager.jobs)
+        with mock.patch('calibre_zen.books.actions.info_dialog') as told, mock.patch('calibre_zen.books.actions.question_dialog') as asked:
+            action.delete_selected_originals()
+        told.assert_called_once()
+        asked.assert_not_called()
+        self.assertEqual(len(self.gui.job_manager.jobs), before)
+
+        # declining the question deletes nothing; accepting deletes the original and keeps the EPUB
+        cleaned = api.format(kept, 'EPUB')
+        self.gui.library_view.select_rows([kept], using_ids=True)
+        with mock.patch('calibre_zen.books.actions.question_dialog', return_value=False):
+            action.delete_selected_originals()
+        self.assertIn('ORIGINAL_EPUB', api.formats(kept))
+        with mock.patch('calibre_zen.books.actions.question_dialog', return_value=True):
+            job = self.run_job(action.delete_selected_originals)
+        self.assertEqual(job.description, 'Delete originals: 1 book(s)')
+        self.assertNotIn('ORIGINAL_EPUB', api.formats(kept))
+        self.assertEqual(api.format(kept, 'EPUB'), cleaned)
+
+    def test_update_on_device_replaces_the_file_where_it_is_and_refreshes_the_listing(self):
+        "The button end to end with a folder for a device: plan, confirm, job, replace in place, listing."
+        import zipfile
+        from types import SimpleNamespace
+        from unittest import mock
+
+        from calibre.devices.folder_device.driver import FOLDER_DEVICE
+        from calibre.devices.usbms.books import Book, BookList
+        from calibre_zen.tests.test_books import make_epub
+
+        action = self.gui.iactions['Update On Device']
+        self.assertFalse(action.qaction.icon().isNull())
+        api = self.gui.current_db.new_api
+        book_id = sorted(api.all_book_ids())[0]
+        edited = os.path.join(self.mkdtemp(), 'edited.epub')
+        make_epub(edited)
+        api.add_format(book_id, 'EPUB', edited, run_hooks=False)
+        self.gui.library_view.select_rows([book_id], using_ids=True)
+
+        with mock.patch('calibre_zen.books.ondevice_action.error_dialog') as error:
+            action.run()
+        self.assertIn('Connect a device first', error.call_args.args[2])
+
+        disk = self.mkdtemp()
+        filed = os.path.join(disk, 'Shelf', 'Alpha.epub')
+        os.makedirs(os.path.dirname(filed))
+        with open(filed, 'wb') as f:
+            f.write(b'the old copy')
+        device = FOLDER_DEVICE(disk)
+        device.set_progress_reporter(lambda fraction, message: None)
+        on_device = BookList(None, None, None)
+        book = Book(disk + os.sep, 'Shelf/Alpha.epub', other=None)
+        book.title, book.authors, book.application_id = 'Alpha', ['Ann Author'], book_id
+        on_device.append(book)
+        manager, jobs = self.gui.device_manager, []
+
+        def create_job(func, done, description, args=None, kwargs=None):
+            jobs.append((func, description, args))
+
+        with (
+            mock.patch.object(manager, 'connected_device', device),
+            mock.patch.object(self.gui, 'booklists', return_value=(on_device, [], [])),
+            mock.patch.object(manager, 'create_job', create_job),
+            mock.patch.object(self.gui, 'set_books_in_library', return_value=True),
+            mock.patch.object(self.gui, 'refresh_ondevice'),
+            mock.patch('calibre_zen.books.ondevice_action.question_dialog', return_value=True) as asked,
+        ):
+            action.run()
+            self.assertEqual(len(jobs), 1)
+            func, description, args = jobs[0]
+            self.assertEqual(description, 'Update on device: 1 book(s)')
+            self.assertIn('stays where it is', asked.call_args.args[2])
+            with open(filed, 'rb') as f:
+                self.assertEqual(f.read(), b'the old copy', 'nothing is written before the job runs')
+
+            outcome = func(*args)
+            action.finished(SimpleNamespace(failed=False, result=outcome))
+
+        with zipfile.ZipFile(filed) as z:
+            self.assertIn('ch1.xhtml', z.namelist(), "the library's book is over the old one, in the folder it was filed in")
+        self.assertEqual(os.listdir(os.path.dirname(filed)), ['Alpha.epub'])
+        self.assertEqual([b.lpath for b in on_device], ['Shelf/Alpha.epub'], 'one entry, in the same place')
+        self.assertGreater(on_device[0].size, len(b'the old copy'), 'the listing has the new size')
+
+    def test_update_on_device_says_so_when_there_is_nothing_to_do(self):
+        from unittest import mock
+
+        from calibre.devices.folder_device.driver import FOLDER_DEVICE
+
+        action = self.gui.iactions['Update On Device']
+        self.gui.library_view.select_rows([sorted(self.gui.current_db.new_api.all_book_ids())[0]], using_ids=True)
+        manager = self.gui.device_manager
+        with (
+            mock.patch.object(manager, 'connected_device', FOLDER_DEVICE(self.mkdtemp())),
+            mock.patch.object(self.gui, 'booklists', return_value=([], [], [])),
+            mock.patch.object(manager, 'create_job') as create_job,
+            mock.patch('calibre_zen.books.ondevice_action.info_dialog') as info,
+        ):
+            action.run()
+        create_job.assert_not_called()
+        self.assertEqual(info.call_args.args[2], 'Nothing to update on the device.')
+        self.assertIn('not on the device', info.call_args.kwargs['det_msg'])
 
     def test_connect_share_offers_to_keep_sharing(self):
         menu = self.gui.iactions['Connect Share'].share_conn_menu
@@ -513,6 +699,21 @@ class TestMainWindow(ZenTestCase):
         self.assertTrue(rows[0].stop.isEnabled())
         segment.toggle_panel()
         self.assertFalse(panel.isVisible(), 'a second click puts it away')
+
+    def test_the_new_job_arrow_comes_down_on_the_jobs_segment(self):
+        from calibre.gui2 import config
+        from qt.core import QPoint
+
+        pointer, segment = self.gui.jobs_pointer, self.gui.zen_status.jobs
+        hidden = self.gui.jobs_button
+        self.addCleanup(config.set, 'disable_animations', config['disable_animations'])
+        self.addCleanup(pointer.animation.stop)
+        config.set('disable_animations', False)
+        pointer.start()
+        self.assertIs(self.gui.jobs_button, hidden, 'calibre\'s own button is put back')
+        tip = pointer.rect_at(1.0).center().x()
+        left = segment.mapTo(self.gui, QPoint(0, 0)).x()
+        self.assertTrue(left <= tip <= left + segment.width(), f'the arrow ends at x={tip}, the segment spans {left}..{left + segment.width()}')
 
     def test_the_panel_follows_a_job_without_being_rebuilt(self):
         job = self.running_job()

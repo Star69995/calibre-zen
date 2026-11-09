@@ -2,10 +2,10 @@
 # License: GPL v3 Copyright: 2026, Star
 
 """
-Goodreads Updater and Book Cleanup, built in.
+Goodreads Updater, Book Cleanup and Update on device, built in.
 
-They began as Calibre plugins and are carried here so they are in every window
-without installing anything. `install()` makes them calibre's own built-in
+The first two began as Calibre plugins and are carried here so they are in every
+window without installing anything; the third was written here. `install()` makes them calibre's own built-in
 interface actions, without touching calibre's source: the same objects
 `calibre.customize.builtins` lists.
 
@@ -50,7 +50,18 @@ class BookCleanupBase(InterfaceActionBase):
     actual_plugin = 'calibre_zen.books.actions:BookCleanupAction'
 
 
-PLUGINS = (GoodreadsUpdaterBase, BookCleanupBase)
+class UpdateOnDeviceBase(InterfaceActionBase):
+    name = 'Update On Device'
+    description = "Replaces the selected books' files on the connected device with the library's copy, in the same place on the device"
+    supported_platforms = ['windows', 'osx', 'linux']
+    author = 'Star'
+    version = (1, 0, 0)
+    minimum_calibre_version = (5, 0, 0)
+
+    actual_plugin = 'calibre_zen.books.ondevice_action:UpdateOnDeviceAction'
+
+
+PLUGINS = (GoodreadsUpdaterBase, BookCleanupBase, UpdateOnDeviceBase)
 
 
 def register(plugin_classes=PLUGINS) -> list[str]:
@@ -84,7 +95,7 @@ def register(plugin_classes=PLUGINS) -> list[str]:
 
 
 def install() -> bool:
-    "Register the two actions. Safe to call twice."
+    "Register the actions. Safe to call twice."
     global _installed
     if _installed:
         return True

@@ -1200,8 +1200,36 @@ msgstr "יש לבחור קודם ספר אחד או יותר."
 
 #: books/actions.py
 #, python-brace-format
-msgid "Clean the EPUB of {0} book(s)?\n\nThe original file is kept as ORIGINAL_EPUB the first time a book is changed."
-msgstr "לנקות את ה-EPUB של {0} ספרים?\n\nהקובץ המקורי נשמר כ-ORIGINAL_EPUB בפעם הראשונה שספר משתנה."
+msgid "Clean the EPUB of {0} book(s)?"
+msgstr "לנקות את ה-EPUB של {0} ספרים?"
+
+#: books/actions.py
+#, python-brace-format
+msgid "Keep the original file as {0}"
+msgstr "לשמור את הקובץ המקורי בשם {0}"
+
+#: books/actions.py
+msgid "Delete the originals of selected books"
+msgstr "מחיקת המקוריים של הספרים שנבחרו"
+
+#: books/actions.py
+msgid "None of the selected books has an original to delete."
+msgstr "באף אחד מהספרים שנבחרו אין קובץ מקורי למחיקה."
+
+#: books/actions.py
+#, python-brace-format
+msgid "Delete the original file ({0}) of {1} book(s)?\n\nThe cleaned EPUB stays. This cannot be undone."
+msgstr "למחוק את הקובץ המקורי ({0}) של {1} ספרים?\n\nה-EPUB המנוקה נשאר. אי אפשר לבטל פעולה זו."
+
+#: books/actions.py
+#, python-brace-format
+msgid "Delete originals: {0} book(s)"
+msgstr "מחיקת מקוריים: {0} ספרים"
+
+#: books/actions.py
+#, python-brace-format
+msgid "Deleted the original of {0} book(s)."
+msgstr "נמחק המקור של {0} ספרים."
 
 #: books/actions.py
 #, python-brace-format
@@ -1215,8 +1243,72 @@ msgstr "נבדקו {0} ספרים, שונו {1}."
 
 #: books/actions.py
 #, python-brace-format
+msgid "Book Cleanup: {0} book(s)"
+msgstr "ניקוי ספרים: {0} ספרים"
+
+#: books/actions.py
+#, python-brace-format
+msgid "Book Cleanup preview: {0} book(s)"
+msgstr "תצוגה מקדימה של ניקוי ספרים: {0} ספרים"
+
+#: books/actions.py
+msgid "Stopped before the last books."
+msgstr "העבודה נעצרה לפני הספרים האחרונים."
+
+#: books/actions.py
+#, python-brace-format
 msgid "{0} book(s) failed, see details."
 msgstr "הניקוי נכשל ב-{0} ספרים, ראה פרטים."
+
+#: books/ondevice_action.py
+msgid "Update on device"
+msgstr "עדכון בהתקן"
+
+#: books/ondevice_action.py
+msgid "Replace the selected books' files on the connected device with the library's copy, in the same place on the device"
+msgstr "החלפת קובצי הספרים שנבחרו בהתקן המחובר בעותק שבספרייה, באותו מקום בהתקן"
+
+#: books/ondevice_action.py
+msgid "Connect a device first."
+msgstr "יש לחבר קודם התקן."
+
+#: books/ondevice_action.py
+msgid "Books cannot be replaced in place on this kind of device."
+msgstr "בסוג התקן זה אי אפשר להחליף ספרים במקומם."
+
+#: books/ondevice_action.py
+msgid "Nothing to update on the device."
+msgstr "אין מה לעדכן בהתקן."
+
+#: books/ondevice_action.py
+#, python-brace-format
+msgid "Replace {0} file(s) on the device with the library's copy?\n\nEach file stays where it is on the device, in the format it has there."
+msgstr "להחליף {0} קבצים בהתקן בעותק שבספרייה?\n\nכל קובץ נשאר במקומו בהתקן, באותו פורמט."
+
+#: books/ondevice_action.py
+#, python-brace-format
+msgid "Update on device: {0} book(s)"
+msgstr "עדכון בהתקן: {0} ספרים"
+
+#: books/ondevice_action.py
+#, python-brace-format
+msgid "Replaced {0} file(s) on the device."
+msgstr "הוחלפו {0} קבצים בהתקן."
+
+#: books/ondevice_action.py
+#, python-brace-format
+msgid "… and {0} more"
+msgstr "… ועוד {0}"
+
+#: books/ondevice_action.py
+#, python-brace-format
+msgid "{0} selected book(s) are not on the device."
+msgstr "{0} מהספרים שנבחרו אינם בהתקן."
+
+#: books/ondevice_action.py
+#, python-brace-format
+msgid "{0} file(s) on the device have no copy in the same format in the library, and are left as they are:"
+msgstr "ל-{0} קבצים בהתקן אין בספרייה עותק באותו פורמט, והם נשארים כמות שהם:"
 
 #: busy.py
 msgid "Adding, removing or switching off a plugin changes the code a running job is using."

@@ -22,8 +22,8 @@ import zipfile
 from lxml import etree
 
 from calibre_zen import books
-from calibre_zen.books.cleanup import Options, clean_document
-from calibre_zen.books.epub import clean_book, clean_epub
+from calibre_zen.books.cleanup import Options, clean_document, detect_hyphen_dash
+from calibre_zen.books.epub import books_with_original, clean_book, clean_books, clean_epub, delete_originals
 from calibre_zen.books.goodreads import (
     LINKED_COLUMN,
     LINKED_COLUMN_HEADING,
@@ -225,6 +225,41 @@ class TestCleanupRules(unittest.TestCase):
         self.assertEqual([''.join(h.itertext()) for h in root.iter(f'{{{XHTML}}}h2')], ['Chapter One', 'Chapter Two'])
         self.assertEqual(self.texts('<p>She read Chapter Two again and again, slowly</p>'), ['She read Chapter Two again and again, slowly'])
 
+    def test_a_heading_is_never_merged_into_its_neighbour(self):
+        # from a real report: "... CHAPTER FOUR ¶ Tazi stood" and "Chapter 1 ¶ WHEN HE LOOKED"
+        root = self.run_rules('<p>The long night ended at last, she whispered. CHAPTER FOUR</p><p>Tazi stood in the center of a room.</p>')
+        self.assertEqual(block_texts(root), ['The long night ended at last, she whispered.', 'CHAPTER FOUR', 'Tazi stood in the center of a room.'])
+        self.assertEqual([''.join(h.itertext()) for h in root.iter(f'{{{XHTML}}}h2')], ['CHAPTER FOUR'])
+        for first, second in (
+            ('A list of other books by the author Do’Urden Chapter 1', 'WHEN HE LOOKED INSIDE the box'),
+            ('The last line of the book is said with a grin', 'about the author'),
+            ('A story of the Forgotten Realms, a year of shadows', 'Prologue Three living heroes and a villain'),
+            ('Release Date: November, 29th, 2008 and more text', 'Dedication'),
+        ):
+            with self.subTest(first):
+                self.assertEqual(self.texts(f'<p>{first}</p><p>{second}</p>'), [first, second])
+
+    def test_a_quote_the_converter_turned_the_wrong_way_keeps_its_space(self):
+        self.assertEqual(self.texts('<p>“And the were-“ the halfling began. “No.”</p>'), ['“And the were-“ the halfling began. “No.”'])
+        self.assertEqual(self.texts('<p>it was fastest-“ “No.” she said</p>'), ['it was fastest-“ “No.” she said'])
+        self.assertEqual(self.texts('<p>“ Four?” he said</p>'), ['“Four?” he said'])
+
+    def test_a_comma_that_is_a_misread_quote_is_left_alone(self):
+        self.assertEqual(self.texts('<p>of escape. ,Come on then, he said</p>'), ['of escape. ,Come on then, he said'])
+        self.assertEqual(self.texts('<p>CHAPTER SEVEN, . Later that night</p>'), ['CHAPTER SEVEN, . Later that night'])
+        # ...but a comma stuck to the next word moves in one step
+        self.assertEqual(self.texts('<p>It was set on ,a raised section</p>'), ['It was set on, a raised section'])
+
+    def test_a_decimal_point_keeps_its_space(self):
+        self.assertEqual(self.texts('<p>during the next .04 seconds . No</p>'), ['during the next .04 seconds. No'])
+
+    def test_a_dash_written_as_a_hyphen_is_not_a_split_word(self):
+        self.assertEqual(self.texts('<p>he might lead- important information</p>', hyphen_dash=True), ['he might lead- important information'])
+        self.assertEqual(self.texts('<p>he might lead- important information</p>'), ['he might lead-important information'])
+        quote = ''.join(f'<p>said the-“ {n}.</p>' for n in range(5))
+        self.assertTrue(detect_hyphen_dash(block_texts(document(quote))))
+        self.assertFalse(detect_hyphen_dash(['a coal- colored mist- filled field, re- entering', 'a word split by a page-']))
+
     def test_empty_blocks_go_and_images_stay(self):
         root = self.run_rules('<p>one.</p><p/><p> </p><p><img src="o.jpg"/></p><div id="calibre_pb_0"/><p>two.</p>')
         self.assertEqual(block_texts(root), ['one.', '', 'two.'])
@@ -336,6 +371,65 @@ class TestCleanEpub(ZenTestCase):
         self.assertEqual(api.format(book_id, 'ORIGINAL_EPUB'), original, 'the original is kept once, never overwritten')
 
         self.assertEqual(clean_book(api, sorted(api.all_book_ids())[1]).skipped, 'no EPUB format')
+
+    def test_the_original_is_kept_only_when_asked_and_can_be_deleted(self):
+        from calibre.db.legacy import LibraryDatabase
+
+        src = os.path.join(self.mkdtemp(), 'in.epub')
+        make_epub(src)
+        db = LibraryDatabase(short_library(self, 'books-orig'))
+        self.addCleanup(db.close)
+        api = db.new_api
+        ids = sorted(api.all_book_ids())[:2]
+        for book_id in ids:
+            api.add_format(book_id, 'EPUB', src, run_hooks=False)
+
+        self.assertTrue(clean_book(api, ids[0], keep_original=False).changed)
+        self.assertNotIn('ORIGINAL_EPUB', api.formats(ids[0]), 'asked not to keep it')
+        self.assertTrue(clean_book(api, ids[1]).changed)
+        self.assertEqual(books_with_original(api, ids), [ids[1]])
+
+        # an original from an earlier run stays when a later run keeps none
+        api.add_format(ids[1], 'EPUB', src, run_hooks=False)
+        clean_book(api, ids[1], keep_original=False)
+        self.assertEqual(books_with_original(api, ids), [ids[1]])
+
+        cleaned = api.format(ids[1], 'EPUB')
+        self.assertEqual(delete_originals(api, ids), ids, 'every id asked about is reported')
+        self.assertEqual(books_with_original(api, ids), [])
+        self.assertEqual(api.format(ids[1], 'EPUB'), cleaned, 'the cleaned EPUB stays')
+
+    def test_a_job_reports_progress_logs_each_book_and_stops_when_told(self):
+        from queue import Queue
+        from threading import Event
+
+        from calibre.db.legacy import LibraryDatabase
+        from calibre.utils.logging import GUILog
+
+        src = os.path.join(self.mkdtemp(), 'in.epub')
+        make_epub(src)
+        db = LibraryDatabase(short_library(self, 'books-job'))
+        self.addCleanup(db.close)
+        api = db.new_api
+        ids = sorted(api.all_book_ids())[:2]
+        api.add_format(ids[0], 'EPUB', src, run_hooks=False)
+
+        notifications, log = Queue(), GUILog()
+        result = clean_books(api, ids, notifications=notifications, abort=Event(), log=log)
+        self.assertEqual(result.changed_ids, [ids[0]])
+        self.assertEqual(len(result.reports), 2)
+        self.assertEqual(result.errors, [])
+        self.assertIn('skipped: no EPUB format', log.plain_text)
+        fractions = []
+        while not notifications.empty():
+            fractions.append(notifications.get()[0])
+        self.assertEqual(fractions, [0, 0.5, 1])
+
+        stop = Event()
+        stop.set()
+        stopped = clean_books(api, ids, abort=stop)
+        self.assertTrue(stopped.cancelled)
+        self.assertEqual(stopped.reports, [])
 
 
 if __name__ == '__main__':
