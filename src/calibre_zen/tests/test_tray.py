@@ -1375,5 +1375,6 @@ class TestTakeLibraryBack(ZenTestCase):
         import calibre.gui2.main as gm
 
         src = inspect.getsource(gm)
-        self.assertIn("def run_gui(opts, args, app, gui_debug=None):\n    with SingleInstance('db') as si:", src)
+        # 9.18 gave run_gui a return annotation
+        self.assertRegex(src, r"def run_gui\(opts, args, app, gui_debug=None\)( -> [^:]+)?:\n    with SingleInstance\('db'\) as si:")
         self.assertIn('return run_gui(opts, args, app, gui_debug=gui_debug)', inspect.getsource(gm.run_main))
