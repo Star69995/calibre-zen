@@ -28,9 +28,9 @@ it to the guide, not here.
 ## 1. Find the release
 
 [docs/upstream-sync.json](../../../docs/upstream-sync.json) records the newest
-release of each source this fork has **pulled** (merged, not just looked at):
-calibre's tag and commit, and Calibre Zen's commit with its version and calibre
-release. Read it first: it is where reading the changes starts.
+release of each source this fork has **pulled** from. calibre: the merged tag and
+commit. Calibre Zen: the `origin/zen` commit `reviewed` through and the commits
+`taken`. Read it first: it is where reading the changes starts.
 
 ```sh
 git fetch upstream --tags --prune
@@ -49,9 +49,16 @@ origin/zen...zen`). Say which calibre release it is on (`constants.py`,
 `packaging/upstream.json` at `origin/zen`: it may be behind this fork), and
 separate its fixes to `src/calibre_zen/` and `packaging/` from new features such as
 a whole new module. Look at the `origin/wt/*` branches that moved too: they are
-work not merged yet. Report both sources together. Start from the Calibre Zen
-commit in `upstream-sync.json`; if it is no longer an ancestor of `origin/zen`
-(a force-push), say so and fall back to `git merge-base zen origin/zen`.
+work not merged yet. Report both sources together. Read `origin/zen` after the
+`reviewed` commit in `upstream-sync.json`; if that is no longer an ancestor of
+`origin/zen` (a force-push), say so and read from `git merge-base zen origin/zen`.
+
+**From Calibre Zen take macOS fixes only, never its web app or website.** This
+fork has its own identity and site. Never merge `origin/zen`: cherry-pick (`-x`)
+the macOS commits (`packaging/macos/`, nothing else of theirs) after the calibre
+merge commit, as commits of their own, then change their text to this fork's names
+(bundle id `io.github.star69995.calibre-zen-margin`, `$DISPLAY_NAME`). Report
+everything else of theirs as not taken, in one line.
 
 ## 2. Merge, pin, test
 
@@ -83,9 +90,10 @@ Update the "(currently X)" line in CLAUDE.md. **Update
 `docs/upstream-sync.json` in the same commit**: whatever the merge took, and only
 that. Calibre: `pulled` (tag), `commit` (`git rev-parse v<new>^{commit}`) and
 `date`, and the tag must equal `packaging/upstream.json` `version`. Calibre Zen,
-when its commits were merged: `pulled` (the `origin/zen` commit merged), `date`,
-`version` (`zen_version` there) and `calibre` (its calibre release). Leave a source
-alone when nothing was taken from it; a run that only looked changes no file.
+when something was cherry-picked: `taken` gets those `origin/zen` commits (their
+own SHAs, not the cherry-picks'), and `reviewed`, `date`, `version` (`zen_version`
+there) and `calibre` (its calibre release) move to the `origin/zen` commit read up
+to, even if nothing was taken. A run that only looked changes no file.
 Commit on the worktree branch with the guide's trailer plus the attribution the
 session gives.
 
