@@ -27,6 +27,11 @@ it to the guide, not here.
 
 ## 1. Find the release
 
+[docs/upstream-sync.json](../../../docs/upstream-sync.json) records the newest
+release of each source this fork has **pulled** (merged, not just looked at):
+calibre's tag and commit, and Calibre Zen's commit with its version and calibre
+release. Read it first: it is where reading the changes starts.
+
 ```sh
 git fetch upstream --tags --prune
 git tag -l 'v[0-9]*' | sort -V | tail -3          # newest is the target
@@ -36,6 +41,17 @@ python -c "import json;print(json.load(open('packaging/upstream.json'))['version
 Same version: say the fork is current and stop. Otherwise read the changelog of
 **every** release after the current one: `git show v<new>:Changelog.txt`, down to
 the section of the version we are on.
+
+**Also check Calibre Zen (`origin`), every time, not only calibre.** This fork
+sits on both. `git fetch origin --tags --prune`, then
+`git log --no-merges zen..origin/zen` (and `git rev-list --left-right --count
+origin/zen...zen`). Say which calibre release it is on (`constants.py`,
+`packaging/upstream.json` at `origin/zen`: it may be behind this fork), and
+separate its fixes to `src/calibre_zen/` and `packaging/` from new features such as
+a whole new module. Look at the `origin/wt/*` branches that moved too: they are
+work not merged yet. Report both sources together. Start from the Calibre Zen
+commit in `upstream-sync.json`; if it is no longer an ancestor of `origin/zen`
+(a force-push), say so and fall back to `git merge-base zen origin/zen`.
 
 ## 2. Merge, pin, test
 
@@ -63,8 +79,15 @@ Follow the guide's sections 1 to 4. Points that decide the outcome:
   rules between releases; `ruff check --fix` on the fork's own paths only.
 - Compile the tree with the new binary (the guide has the command).
 
-Update the "(currently X)" line in CLAUDE.md. Commit on the worktree branch with
-the guide's trailer plus the attribution the session gives.
+Update the "(currently X)" line in CLAUDE.md. **Update
+`docs/upstream-sync.json` in the same commit**: whatever the merge took, and only
+that. Calibre: `pulled` (tag), `commit` (`git rev-parse v<new>^{commit}`) and
+`date`, and the tag must equal `packaging/upstream.json` `version`. Calibre Zen,
+when its commits were merged: `pulled` (the `origin/zen` commit merged), `date`,
+`version` (`zen_version` there) and `calibre` (its calibre release). Leave a source
+alone when nothing was taken from it; a run that only looked changes no file.
+Commit on the worktree branch with the guide's trailer plus the attribution the
+session gives.
 
 ## 3. Report to the user
 
