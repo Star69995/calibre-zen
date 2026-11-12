@@ -1,7 +1,7 @@
 # Guides
 
 - [The design system](guides/design.md)
-- [Update the upstream calibre release](guides/updating-upstream-calibre.md)
+- [Update the upstream calibre release](guides/updating-upstream-calibre.md), with [the versions pulled so far](upstream-sync.json)
 
 # Plans
 
