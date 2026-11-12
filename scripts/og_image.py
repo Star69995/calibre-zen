@@ -65,7 +65,7 @@ def card(lang):
     p.setFont(body)
     p.setPen(QColor(MUTED))
     p.drawText(QRectF(text.left(), text.top() + 175, text.width(), 50), align, sub)
-    p.drawText(QRectF(text.left(), text.top() + 250, text.width(), 50), align, 'star69995.github.io/calibre-zen')
+    p.drawText(QRectF(text.left(), text.top() + 250, text.width(), 50), align, 'star69995.github.io/calibre-zen-margin')
     p.end()
     out = os.path.join(ROOT, 'site', 'img', f'og-{lang}.png')
     img.save(out)

@@ -12,8 +12,8 @@
     <p>Keep your books in one place. Organize your library, read books, edit details, and convert formats with a simple, intuitive interface for calibre that keeps every feature.</p>
     <p>Based on calibre by Kovid Goyal and Calibre Zen by Nadeem Siddique (purplecandy).</p>
   </description>
-  <url type="homepage">https://star69995.github.io/calibre-zen/</url>
-  <url type="bugtracker">https://github.com/Star69995/calibre-zen/issues</url>
+  <url type="homepage">https://star69995.github.io/calibre-zen-margin/</url>
+  <url type="bugtracker">https://github.com/Star69995/calibre-zen-margin/issues</url>
   <launchable type="desktop-id">io.github.star69995.calibre-zen-margin.desktop</launchable>
   <content_rating type="oars-1.1"/>
 </component>

@@ -7,7 +7,7 @@ a working setup. Delete it, or rewrite it, when it goes stale.
 ## Set up on a new machine
 
 - Branch `zen`. Remotes: `origin` is `purplecandy/calibre-zen` (no write access),
-  `fork` is `Star69995/calibre-zen`; push to `fork`.
+  `fork` is `Star69995/calibre-zen-margin`; push to `fork`.
 - A calibre binary of the **same version as `src/calibre/constants.py`** (9.17.0).
   The installed Calibre Zen 9.15 is refused. The official calibre 9.17 works.
 - Tests (Git Bash): `CALIBRE_ZEN_CALIBRE_DEBUG="<path>/calibre-debug.exe" ./zen-test`.
@@ -79,7 +79,7 @@ branding decision.
 ## Open decisions (yours)
 
 - Product name, and how far the branding departs from Zen.
-- Where releases are hosted (`Star69995/calibre-zen` Releases, or elsewhere).
+- Where releases are hosted (`Star69995/calibre-zen-margin` Releases, or elsewhere).
 - Which of the 19 plugins to rewrite, one source per plugin, and licences.
 - Should Preferences become non-modal.
 - "Apply when jobs finish" in U7, and one message for library switch and

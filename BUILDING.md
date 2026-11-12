@@ -282,7 +282,7 @@ The channel from a push to a user's machine, and what each part promises:
    release page, every file with its sha256 and size -- and GitHub serves the
    newest *published* release's copy at
 
-       https://github.com/Star69995/calibre-zen/releases/latest/download/latest.json
+       https://github.com/Star69995/calibre-zen-margin/releases/latest/download/latest.json
 
    The repository is `zen_repo` in `src/calibre/constants.py`; `update.py`
    and the report dialog's issue link read it from there.

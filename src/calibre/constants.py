@@ -21,15 +21,15 @@ __appname__ = 'calibre-zen-margin'
 # stay calibre's -- plugins and the database schema key off them -- so this
 # sits beside them. The packaging scripts read it, and a release tag is 'v'
 # followed by it.
-zen_version = '0.5.0'
+zen_version = '0.5.1'
 # calibre-zen: what a person sees -- the Dock, the Start menu, the window
 # title, the Store listing. __appname__ stays the identity: config directory,
 # lock, socket, executable and PATH names.
 zen_display_name = 'Calibre Zen Margin'
 # calibre-zen: where this fork lives. Its releases are what the in-app update
 # reads and the website lists; the .msi links its homepage from the Start menu.
-zen_repo = 'Star69995/calibre-zen'
-zen_homepage = 'https://star69995.github.io/calibre-zen/'
+zen_repo = 'Star69995/calibre-zen-margin'
+zen_homepage = 'https://star69995.github.io/calibre-zen-margin/'
 # calibre-zen: the .msi's UpgradeCode. Each fork that installs side by side
 # needs its own, or one .msi upgrades (removes) the other. Never change it
 # once released: it is how a newer .msi finds the one it replaces.

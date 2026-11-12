@@ -1,7 +1,7 @@
 # Releases of my own fork, with automatic updates
 
 Started 2026-11-05. Planning only; nothing is built. The goal is to publish
-Calibre Zen builds from `Star69995/calibre-zen` on GitHub, and to have installed
+Calibre Zen builds from `Star69995/calibre-zen-margin` on GitHub, and to have installed
 copies find and download them on their own, with a way to turn that off.
 
 ## What exists already
@@ -124,7 +124,7 @@ when this lands.
 
 | | What | Notes |
 | --- | --- | --- |
-| R1 | **Releases from your fork.** Enable Actions on `Star69995/calibre-zen`, run `zen-package.yml` on a tag, check the draft release it makes, and publish it. | Needs nothing from `purplecandy`. The macOS signing secrets are optional and the job is gated on them, so without them the macOS build is unsigned. |
+| R1 | **Releases from your fork.** Enable Actions on `Star69995/calibre-zen-margin`, run `zen-package.yml` on a tag, check the draft release it makes, and publish it. | Needs nothing from `purplecandy`. The macOS signing secrets are optional and the job is gated on them, so without them the macOS build is unsigned. |
 | R2 | **Addresses from settings.** `FEED_URL`, `RELEASES_URL` and `NOTES_URL` come from the settings registry (code-quality **I**), defaulting to your repository, with the existing environment override. | One place to change if the repository ever moves. |
 | R3 | **The update mode setting** (off, notify, automatic; **automatic is the default**) in Preferences, in the first-run wizard, and shown in the status bar. | Reads the registry. Replaces the per-user choice that is only an environment variable today. |
 | R4 | **Download in the background, as a job.** The download is a job in the job manager, so it appears in the status-bar jobs segment (U8) with a progress bar and a cancel button. | Reuses `upgrade.download`, which already verifies the `sha256` and size. |
@@ -170,5 +170,5 @@ screenshots of the dialog, the wizard step and the status bar for approval.
 
 - What should the product be called, and which branding level (1 to 4)? It will
   install beside the official Calibre Zen, since the branding is separate.
-- Is GitHub Releases on a public `Star69995/calibre-zen` fine, or do you want to
+- Is GitHub Releases on a public `Star69995/calibre-zen-margin` fine, or do you want to
   host the packages and the feed somewhere else?

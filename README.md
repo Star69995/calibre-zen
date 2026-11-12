@@ -8,7 +8,7 @@ Calibre Zen Margin is a fork of [Calibre Zen](https://github.com/purplecandy/cal
 
 It installs as a separate app beside **calibre** and **Calibre Zen**, with its own folder, settings, lock and command-line names, so neither is touched. The same library opens in any of them.
 
-[Website](https://star69995.github.io/calibre-zen/) · [עברית](https://star69995.github.io/calibre-zen/he/) · [Releases](https://github.com/Star69995/calibre-zen/releases)
+[Website](https://star69995.github.io/calibre-zen-margin/) · [עברית](https://star69995.github.io/calibre-zen-margin/he/) · [Releases](https://github.com/Star69995/calibre-zen-margin/releases)
 
 <br clear="left"/>
 
@@ -22,14 +22,14 @@ Both earlier projects' copyright notices stay where they are (GPL v3; see [COPYR
 
 ## Download
 
-Packages for Windows (x64 `.msi`, portable installer, `.zip`), macOS (universal `.dmg`) and Linux (x86_64 and arm64 `.txz` and Flatpak) are built by CI from calibre's own release binaries on every `v*` tag; see [BUILDING.md](BUILDING.md). Get them from the [website](https://star69995.github.io/calibre-zen/) or the [releases page](https://github.com/Star69995/calibre-zen/releases).
+Packages for Windows (x64 `.msi`, portable installer, `.zip`), macOS (universal `.dmg`) and Linux (x86_64 and arm64 `.txz` and Flatpak) are built by CI from calibre's own release binaries on every `v*` tag; see [BUILDING.md](BUILDING.md). Get them from the [website](https://star69995.github.io/calibre-zen-margin/) or the [releases page](https://github.com/Star69995/calibre-zen-margin/releases).
 
 ### Install on Linux
 
 Run this from the folder where you want the app. It downloads the latest Linux release for your computer, checks its SHA-256, extracts it, and checks the launchers:
 
 ```sh
-curl -fL https://raw.githubusercontent.com/Star69995/calibre-zen/zen/packaging/linux/install-zen.sh -o install-zen.sh && sh install-zen.sh --latest && ./calibre-zen-margin/calibre-zen-margin --version
+curl -fL https://raw.githubusercontent.com/Star69995/calibre-zen-margin/zen/packaging/linux/install-zen.sh -o install-zen.sh && sh install-zen.sh --latest && ./calibre-zen-margin/calibre-zen-margin --version
 ```
 
 If you downloaded the `.txz` and matching `.sha256` files yourself, run `sha256sum -c <archive>.sha256` and then `sh install-zen.sh <archive>.txz`. On a minimal system, install missing graphics libraries for your distro:
@@ -54,11 +54,11 @@ Move any existing `calibre-zen-margin` folder aside before running the installer
 | `.msi` UpgradeCode | its own | `zen_upgrade_code` in `constants.py` |
 | tools on `PATH` | `zen-calibredb`, ... | `margin-calibredb`, ... |
 | portable folder | `Calibre Zen Portable` | `Calibre Zen Margin Portable` |
-| updates from | purplecandy/calibre-zen | Star69995/calibre-zen |
+| updates from | purplecandy/calibre-zen | Star69995/calibre-zen-margin |
 
 ### The website
 
-`site/` is the [project page](https://star69995.github.io/calibre-zen/), deployed to GitHub Pages by `.github/workflows/pages.yml`; it lists releases live, so publishing one is enough. Screenshots come from `scripts/site-shots.sh` (on the library `scripts/showcase_library.py` builds), the link-preview cards from `scripts/og_image.py`, the icon from `imgsrc/margin_mark.py`.
+`site/` is the [project page](https://star69995.github.io/calibre-zen-margin/), deployed to GitHub Pages by `.github/workflows/pages.yml`; it lists releases live, so publishing one is enough. Screenshots come from `scripts/site-shots.sh` (on the library `scripts/showcase_library.py` builds), the link-preview cards from `scripts/og_image.py`, the icon from `imgsrc/margin_mark.py`.
 
 ### Roadmap
 

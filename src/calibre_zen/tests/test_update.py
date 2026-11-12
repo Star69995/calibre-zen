@@ -74,7 +74,7 @@ class TestFeed(ZenTestCase, Fixtures):
     def test_whats_new_is_the_latest_release(self):
         self.addCleanup(setattr, update, '_latest', update._latest)
         update._latest = {'url': 'https://github.com/purplecandy/calibre-zen/releases/tag/v9.9.9'}
-        self.assertEqual(update.notes_url(), 'https://github.com/Star69995/calibre-zen/releases/latest')
+        self.assertEqual(update.notes_url(), 'https://github.com/Star69995/calibre-zen-margin/releases/latest')
         update._latest = {'notes': 'https://calibrezen.com/docs/releases/9.9.9'}
         self.assertEqual(update.notes_url(), 'https://calibrezen.com/docs/releases/9.9.9')
 

@@ -30,7 +30,7 @@ Put your own password in place of `PICK-A-PASSWORD` first. The image will not st
 The compose file comes down with one line, best run in a new folder:
 
 ```sh
-curl -fsSLO https://raw.githubusercontent.com/Star69995/calibre-zen/zen/packaging/docker/compose.yaml
+curl -fsSLO https://raw.githubusercontent.com/Star69995/calibre-zen-margin/zen/packaging/docker/compose.yaml
 ```
 
 Your password goes next to it, in a file named `.env` with one line, `CALIBRE_ZEN_PASSWORD=` and then the password. `docker compose up -d` in that folder starts it. The file holds this:

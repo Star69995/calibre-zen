@@ -3,7 +3,7 @@
 (() => {
   "use strict";
 
-  const REPO = "Star69995/calibre-zen";
+  const REPO = "Star69995/calibre-zen-margin";
   const RELEASES_PAGE = `https://github.com/${REPO}/releases`;
   const API = `https://api.github.com/repos/${REPO}/releases?per_page=100`;
   const CACHE_KEY = "margin-releases-v1";

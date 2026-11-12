@@ -5,7 +5,7 @@ product is **Calibre Zen Margin** (`zen_display_name`), app name
 `calibre-zen-margin` (`__appname__`), PATH prefix `margin-` (`linux.py`), and it
 must install beside both calibre and Calibre Zen: never reuse their names, the
 `.msi` UpgradeCode (`zen_upgrade_code`) or their update feed. Releases, the
-update feed and the website live in `zen_repo` (Star69995/calibre-zen). The
+update feed and the website live in `zen_repo` (Star69995/calibre-zen-margin). The
 code keeps the `zen`/`calibre_zen` names inside, so merges from Calibre Zen
 stay small. Credit Kovid Goyal (calibre) and Nadeem Siddique (Calibre Zen)
 wherever the product is described.

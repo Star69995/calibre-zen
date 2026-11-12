@@ -89,7 +89,7 @@ ENV PATH=/opt/calibre-zen-margin/zen-bin:$PATH \
 ARG VERSION=dev
 LABEL org.opencontainers.image.title="calibre-zen-margin" \
       org.opencontainers.image.description="calibre-zen's host: the calibre web app over your library, no desktop" \
-      org.opencontainers.image.source="https://github.com/Star69995/calibre-zen" \
+      org.opencontainers.image.source="https://github.com/Star69995/calibre-zen-margin" \
       org.opencontainers.image.licenses="GPL-3.0-only" \
       org.opencontainers.image.version="${VERSION}"
 

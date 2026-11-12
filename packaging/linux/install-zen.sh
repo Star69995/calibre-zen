@@ -32,14 +32,14 @@ case "${1:-}" in
             *) die 'this release supports x86_64 and arm64 Linux' ;;
         esac
         release=$(curl -fsSL -o /dev/null -w '%{url_effective}' \
-            https://github.com/Star69995/calibre-zen/releases/latest) || die 'could not find the latest release'
+            https://github.com/Star69995/calibre-zen-margin/releases/latest) || die 'could not find the latest release'
         case "$release" in
-            https://github.com/Star69995/calibre-zen/releases/tag/v*)
+            https://github.com/Star69995/calibre-zen-margin/releases/tag/v*)
                 version=${release##*/v} ;;
             *) die "unexpected release URL: $release" ;;
         esac
         archive="calibre-zen-margin-$version-linux-$arch.txz"
-        base="https://github.com/Star69995/calibre-zen/releases/download/v$version"
+        base="https://github.com/Star69995/calibre-zen-margin/releases/download/v$version"
         for file in "$archive" "$archive.sha256"; do
             printf 'Downloading %s\n' "$file"
             if ! curl -fL --retry 3 -o "$file.part" "$base/$file"; then
