@@ -160,6 +160,8 @@ GPL-3.0, same as calibre.
 
 calibre is built by [Kovid Goyal](https://calibre-ebook.com) and this fork would not exist without it. calibre-zen is not affiliated with or endorsed by the calibre project.
 
+Calibre Zen Margin is a fork of [Calibre Zen](https://github.com/purplecandy/calibre-zen) by Nadeem Siddique (purplecandy). His work was the base this version is built on and the inspiration for making it: the modern interface, and the proof that calibre could feel this simple. Thank you, Nadeem. This project is not affiliated with or endorsed by him.
+
 ### Third party
 
 - [Tabler Icons](https://tabler.io/icons) by Paweł Kuna, MIT licence. The icon set behind every line glyph in the interface

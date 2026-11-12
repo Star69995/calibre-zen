@@ -13,8 +13,8 @@
   --accent-soft: #f3e3da;
   --on-accent: #ffffff;
   --shadow: 0 1px 2px rgb(28 25 23 / 6%), 0 12px 32px -12px rgb(28 25 23 / 22%);
-  --display: "Literata", "Frank Ruhl Libre", Georgia, serif;
-  --body: "Inter", "Heebo", system-ui, -apple-system, "Segoe UI", sans-serif;
+  --display: "Literata", "Alef", Georgia, serif;
+  --body: "Inter", "Alef", system-ui, -apple-system, "Segoe UI", sans-serif;
   --radius: 10px;
   --wrap: 1120px;
   color-scheme: light;
@@ -49,8 +49,8 @@
   color-scheme: dark;
 }
 html[lang="he"] {
-  --display: "Frank Ruhl Libre", "Literata", Georgia, serif;
-  --body: "Heebo", "Inter", system-ui, sans-serif;
+  --display: "Alef", system-ui, sans-serif;
+  --body: "Alef", "Inter", system-ui, sans-serif;
 }
 
 *,

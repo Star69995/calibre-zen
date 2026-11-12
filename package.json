@@ -17,6 +17,6 @@
     "test:list": "node scripts/dev.mjs test --list",
     "seed": "node scripts/dev.mjs seed",
     "gutenberg": "node scripts/dev.mjs gutenberg",
-    "gutenberg:fetch": "node scripts/dev.mjs fetch"
-  }
+    "gutenberg:fetch": "node scripts/dev.mjs fetch",
+    "site": "npx --yes serve site -l 4173"  }
 }
