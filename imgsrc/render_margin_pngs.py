@@ -16,7 +16,7 @@ It also copies the SVG to resources/images/calibre.svg.
 import os
 import shutil
 
-from qt.core import QGuiApplication, QImage, QPainter, Qt, QSvgRenderer
+from qt.core import QGuiApplication, QImage, QPainter, QSvgRenderer, Qt
 
 HERE = os.path.dirname(os.path.abspath(__file__))
 ROOT = os.path.dirname(HERE)
@@ -42,7 +42,7 @@ def render(renderer, side):
 
 
 def main():
-    app = QGuiApplication.instance() or QGuiApplication([])  # noqa: F841 -- QPainter needs one
+    _app = QGuiApplication.instance() or QGuiApplication([])  # QPainter needs one
     svg = os.path.join(HERE, 'calibre.svg')
     renderer = QSvgRenderer(svg)
     if not renderer.isValid():

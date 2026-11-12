@@ -26,7 +26,7 @@ SIZE = (1600, 1000)
 STARTUP_MS = 12000
 SETTLE_MS = 1500
 
-import calibre.gui2.main as M  # noqa: E402
+import calibre.gui2.main as M
 
 
 class NoLock:
@@ -42,8 +42,8 @@ class NoLock:
 
 M.SingleInstance = NoLock
 
-from calibre.gui2 import gprefs  # noqa: E402
-from calibre.utils.config import dynamic, prefs  # noqa: E402
+from calibre.gui2 import gprefs
+from calibre.utils.config import dynamic, prefs
 
 dynamic.set('welcome_wizard_was_run', True)
 prefs.set('library_path', LIB)
@@ -52,7 +52,7 @@ gprefs['show_splash_screen'] = False
 # Otherwise every fresh config adds calibre's Quick Start Guide to the library again.
 gprefs['quick_start_guide_added'] = True
 
-from qt.core import QPainter, Qt, QTimer  # noqa: E402
+from qt.core import QPainter, Qt, QTimer
 
 
 def later(ms, fn):
@@ -94,7 +94,7 @@ def run(app):
         lambda: save(main.grab(), 'table'),
         lambda: (centre.toolbar.switcher.choose(True), select(main, 5)),
         lambda: save(main.grab(), 'grid'),
-        lambda: main.iactions['Find Action'].show_popup(),
+        main.iactions['Find Action'].show_popup,
         lambda: save(with_popup(main, _popup(app)), 'find'),
         lambda: _popup(app) and _popup(app).hide(),
         lambda: centre.toolbar.switcher.choose(False),
