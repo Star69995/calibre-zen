@@ -681,11 +681,11 @@ class HostProcess(Scratch):
         return ans
 
     def test_status_schema(self):
-        from calibre.constants import __version__, zen_version
+        from calibre.constants import __appname__, __version__, zen_version
 
         s = self.status()
         self.assertLessEqual(STATUS_KEYS, set(s))
-        self.assertEqual((s['app'], s['version'], s['calibre']), ('calibre-zen', zen_version, __version__))
+        self.assertEqual((s['app'], s['version'], s['calibre']), (__appname__, zen_version, __version__))
         self.assertEqual(s['pid'], self.proc.pid)
         self.assertEqual(s['port'], self.port)
         self.assertEqual(s['url_prefix'], '')

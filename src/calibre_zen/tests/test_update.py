@@ -39,7 +39,7 @@ MSI = upgrade.Channel('msi', r'-windows-x64\.msi$', target='C:\\zen', relaunch='
 class Fixtures:
     def make_feed(self, folder: str, data: bytes = PACKAGE, **info) -> dict:
         "A feed naming one .msi in `folder`, the way the release workflow writes one."
-        pkg = os.path.join(folder, 'calibre-zen-9.9.9-windows-x64.msi')
+        pkg = os.path.join(folder, 'calibre-zen-margin-9.9.9-windows-x64.msi')
         with open(pkg, 'wb') as f:
             f.write(data)
         entry = {'sha256': sha(data), 'size': len(data), 'url': file_url(pkg)}
@@ -48,7 +48,7 @@ class Fixtures:
             'zen_version': '9.9.9',
             'calibre_version': '9.15.0',
             'url': 'https://github.com/purplecandy/calibre-zen/releases/tag/v9.9.9',
-            'assets': {'calibre-zen-9.9.9-windows-x64.msi': entry, 'calibre-zen-9.9.9-macos.dmg': {'sha256': 'ab', 'size': 1}},
+            'assets': {'calibre-zen-margin-9.9.9-windows-x64.msi': entry, 'calibre-zen-margin-9.9.9-macos.dmg': {'sha256': 'ab', 'size': 1}},
         }
 
 
@@ -71,10 +71,10 @@ class TestFeed(ZenTestCase, Fixtures):
         with self.assertRaises(ValueError):
             update.fetch(file_url(path))
 
-    def test_whats_new_is_the_docs_page(self):
+    def test_whats_new_is_the_latest_release(self):
         self.addCleanup(setattr, update, '_latest', update._latest)
         update._latest = {'url': 'https://github.com/purplecandy/calibre-zen/releases/tag/v9.9.9'}
-        self.assertEqual(update.notes_url(), 'https://calibrezen.com/docs/releases/latest')
+        self.assertEqual(update.notes_url(), 'https://github.com/Star69995/calibre-zen/releases/latest')
         update._latest = {'notes': 'https://calibrezen.com/docs/releases/9.9.9'}
         self.assertEqual(update.notes_url(), 'https://calibrezen.com/docs/releases/9.9.9')
 
@@ -143,9 +143,9 @@ class TestDownload(ZenTestCase, Fixtures):
     def test_each_install_gets_its_own_package(self):
         feed = self.make_feed(self.mkdtemp())
         name, _url, _info = upgrade.asset_for(feed, MSI)
-        self.assertEqual(name, 'calibre-zen-9.9.9-windows-x64.msi')
+        self.assertEqual(name, 'calibre-zen-margin-9.9.9-windows-x64.msi')
         mac = upgrade.Channel('macos', r'-macos\.dmg$')
-        self.assertEqual(upgrade.asset_for(feed, mac)[0], 'calibre-zen-9.9.9-macos.dmg')
+        self.assertEqual(upgrade.asset_for(feed, mac)[0], 'calibre-zen-margin-9.9.9-macos.dmg')
         portable = upgrade.Channel('portable', r'-portable-installer-[\d.]+\.exe$')
         self.assertIsNone(upgrade.asset_for(feed, portable), 'this feed has no portable installer')
         self.assertIsNone(upgrade.asset_for(feed, upgrade.Channel('flatpak', how='x')))
@@ -186,7 +186,7 @@ class TestDownload(ZenTestCase, Fixtures):
         self.assertEqual(os.listdir(self.dir), [])
 
     def test_an_older_package_is_replaced(self):
-        old = os.path.join(self.dir, 'calibre-zen-9.9.8-windows-x64.msi')
+        old = os.path.join(self.dir, 'calibre-zen-margin-9.9.8-windows-x64.msi')
         with open(old, 'wb') as f:
             f.write(b'old')
         theirs = os.path.join(self.dir, 'another-app-2.0.dmg')
@@ -317,7 +317,7 @@ class TestMacSwap(ZenTestCase):
         old = self.make_app(apps, 'old')
         src = self.mkdtemp()
         self.make_app(src, 'new')
-        dmg = os.path.join(self.mkdtemp(), 'calibre-zen-9.9.9-macos.dmg')
+        dmg = os.path.join(self.mkdtemp(), 'calibre-zen-margin-9.9.9-macos.dmg')
         subprocess.run(['hdiutil', 'create', '-quiet', '-fs', 'HFS+', '-format', 'UDZO', '-srcfolder', src, dmg], check=True)
 
         staged = upgrade.stage_macos(dmg, old)
@@ -371,7 +371,7 @@ class TestDialog(ZenTestCase, Fixtures):
         d.primary.click()
         self.assertTrue(wait_until(lambda: d.state == 'ready'), d.state)
         self.assertIn('Install and restart', d.primary.text())
-        self.assertTrue(os.path.isfile(os.path.join(self.dir, 'calibre-zen-9.9.9-windows-x64.msi')))
+        self.assertTrue(os.path.isfile(os.path.join(self.dir, 'calibre-zen-margin-9.9.9-windows-x64.msi')))
 
     def test_a_finished_download_is_not_fetched_again(self):
         feed = self.make_feed(self.mkdtemp())

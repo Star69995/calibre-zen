@@ -13,7 +13,7 @@ This file is how it gets built, and what is still missing.
 | macOS bundle identity (ids, URL scheme, executable) | **done** |
 | Linux desktop + PATH identity | **done**, `calibre_postinstall` not yet exercised |
 | Windows installer identity | via MSIX: `msix.json` carries the Store identity |
-| application icon | **done** on all three: `.icns`, `.png`, `calibre-zen.exe`'s `.ico` and the Store logos, all from `imgsrc/calibre.svg` |
+| application icon | **done** on all three: `.icns`, `.png`, the GUI launcher's `.ico` and the Store logos, all from `imgsrc/calibre.svg`, which `imgsrc/margin_mark.py` draws (the brushed ensō and bookmark); `imgsrc/render_margin_pngs.py` re-renders the PNGs in `icons/` and `resources/images/` with Qt |
 | Linux package | **done** -- `packaging/linux/package.sh`, x86_64 and arm64 |
 | Linux Flatpak | **in progress** -- `packaging/flatpak/package.sh` wraps the Linux package for x86_64 and arm64; a Linux desktop check remains |
 | macOS package | **done** -- `packaging/macos/package.sh`, universal `.dmg` |
@@ -92,10 +92,10 @@ the GitHub release. A release tag is `v<v>`, and the workflow refuses a tag
 that does not equal `v` + `zen_version`, which also keeps upstream's `v9.x`
 tags from building anything if one is ever pushed here.
 
-Beside it, `zen_display_name` (`Calibre Zen`) is what a person sees: the
+Beside it, `zen_display_name` (`Calibre Zen Margin`) is what a person sees: the
 macOS bundle name, Dock and menu bar, the Linux desktop entry, the Windows
 Start menu and Store listing, and the main window's title, which the overlay
-rewrites from `__appname__`. `__appname__` itself stays `calibre-zen`, because
+rewrites from `__appname__`. `__appname__` itself is `calibre-zen-margin`, because
 the config directory, lock, socket and executable names derive from it.
 
 calibre's own `numeric_version` and `__version__` stay exactly calibre's.
@@ -160,7 +160,7 @@ release. Flathub is not part of this packaging workflow.
 **macOS.** The bundle's executable is a shell script that sets the two
 variables and execs `Contents/MacOS/calibre`; everything calibre spawns from
 there inherits them. `Info.plist` gets the fork's name, bundle id
-`io.github.purplecandy.calibre-zen` and URL scheme; `CFBundleIconName` is
+`io.github.star69995.calibre-zen-margin` and URL scheme; `CFBundleIconName` is
 removed, because it points into `Assets.car`, which cannot be rebuilt
 without Xcode, and left in place it wins over `CFBundleIconFile` and the
 Dock shows calibre's icon. The icon is rendered from `imgsrc/calibre.svg`
@@ -282,7 +282,10 @@ The channel from a push to a user's machine, and what each part promises:
    release page, every file with its sha256 and size -- and GitHub serves the
    newest *published* release's copy at
 
-       https://github.com/purplecandy/calibre-zen/releases/latest/download/latest.json
+       https://github.com/Star69995/calibre-zen/releases/latest/download/latest.json
+
+   The repository is `zen_repo` in `src/calibre/constants.py`; `update.py`
+   and the report dialog's issue link read it from there.
 
    A draft is not "latest" until it is published, and the `upstream-<version>`
    mirror entries are pre-releases, so neither can announce itself.
@@ -313,20 +316,29 @@ from it rather than spelled out again. That is deliberate: a merge from
 upstream should conflict in one place, not twenty.
 
 ```
-__appname__ = 'calibre-zen'          src/calibre/constants.py
+__appname__ = 'calibre-zen-margin'   src/calibre/constants.py
 ```
 
-| what | calibre | calibre-zen |
-| --- | --- | --- |
-| config | `~/Library/Preferences/calibre` | `…/calibre-zen` |
-| cache | `~/Library/Caches/calibre` | `…/calibre-zen` |
-| single-instance lock | `calibre-singleinstance-…` | `calibre-zen-singleinstance-…` |
-| GUI IPC socket | `/tmp/calibre-501-gui.sock` | `/tmp/calibre-zen-501-gui.sock` |
-| Windows pipe | `\\.\pipe\CalibreGUI` | `\\.\pipe\CalibreZenGUI` |
-| macOS bundle id | `net.kovidgoyal.calibre` | `io.github.purplecandy.calibre-zen` |
-| URL scheme | `calibre://` | `calibre-zen://` |
-| Linux desktop id | `calibre-gui.desktop` | `calibre-zen-gui.desktop` |
-| Linux icon theme name | `calibre-gui` | `calibre-zen-gui` |
+| what | calibre | Calibre Zen | Calibre Zen Margin |
+| --- | --- | --- | --- |
+| config | `~/Library/Preferences/calibre` | `…/calibre-zen` | `…/calibre-zen-margin` |
+| cache | `~/Library/Caches/calibre` | `…/calibre-zen` | `…/calibre-zen-margin` |
+| single-instance lock | `calibre-singleinstance-…` | `calibre-zen-singleinstance-…` | `calibre-zen-margin-singleinstance-…` |
+| GUI IPC socket | `/tmp/calibre-501-gui.sock` | `/tmp/calibre-zen-501-gui.sock` | `/tmp/calibre-zen-margin-501-gui.sock` |
+| Windows pipe | `\.\pipe\CalibreGUI` | `\.\pipe\CalibreZenGUI` | `\.\pipe\CalibreZenMarginGUI` |
+| macOS bundle id | `net.kovidgoyal.calibre` | `io.github.purplecandy.calibre-zen` | `io.github.star69995.calibre-zen-margin` |
+| URL scheme | `calibre://` | `calibre-zen://` | `calibre-zen-margin://` |
+| Linux desktop id | `calibre-gui.desktop` | `calibre-zen-gui.desktop` | `calibre-zen-margin-gui.desktop` |
+| Linux icon theme name | `calibre-gui` | `calibre-zen-gui` | `calibre-zen-margin-gui` |
+| tools on `PATH` | `calibredb`, … | `zen-calibredb`, … | `margin-calibredb`, … |
+| `.msi` UpgradeCode, Program Files folder | calibre's | Calibre Zen's | `zen_upgrade_code`, `Calibre Zen Margin` |
+| portable folder | `Calibre Portable` | `Calibre Zen Portable` | `Calibre Zen Margin Portable` |
+
+Calibre Zen Margin is a fork of Calibre Zen, and is meant to be installed
+beside it as well as beside calibre: every row differs from both. The rows
+the packaging spells out (the UpgradeCode, the launcher and portable names)
+are read from `constants.py` and `linux.py` rather than written into the
+scripts, so the next rename is again a change in one place.
 
 **One of those was a bug, not a rename.** Upstream derives the single-instance
 lock from `__appname__` but hardcodes the IPC socket as
@@ -352,10 +364,10 @@ Only what reaches `PATH` is prefixed, because that is the only place a
 normally-installed calibre can be collided with:
 
 ```
-calibre-zen        the GUI
-zen-calibredb      -> <install>/calibredb
-zen-ebook-convert  -> <install>/ebook-convert
-zen-calibre-server -> <install>/calibre-server
+calibre-zen-margin    the GUI
+margin-calibredb      -> <install>/calibredb
+margin-ebook-convert  -> <install>/ebook-convert
+margin-calibre-server -> <install>/calibre-server
 …
 ```
 
@@ -448,3 +460,17 @@ no upstream file at all; see `src/calibre_zen/README.md`.
 
 calibre is GPL v3 and so is this. Kovid Goyal's copyright notices stay where
 they are: the fork's name is added to them, never substituted.
+
+## The website
+
+`site/` is the project's page, published to GitHub Pages by
+`.github/workflows/pages.yml` on every push to `zen` that touches it:
+English at the root, Hebrew at `site/he/`. `site/app.js` lists the releases
+live from the GitHub API (only `v*` tags; the `upstream-*` mirror and
+`update-test-*` pre-releases are skipped) and points the download button at
+the visitor's system, so a release needs no change to the site.
+
+The screenshots in `site/img/<lang>/` are taken offscreen from this tree with
+`scripts/site-shots.sh <library>`, in both languages and both themes, on the
+library `scripts/showcase_library.py` builds from Project Gutenberg classics.
+The link-preview cards (`site/img/og-*.png`) are drawn by `scripts/og_image.py`.

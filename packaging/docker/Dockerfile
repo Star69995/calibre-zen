@@ -51,7 +51,7 @@ COPY resources resources
 COPY src src
 ARG TARGETARCH
 ARG UNPINNED_TARBALL=
-# The stage lands at /opt/calibre-zen, the path it has at run time.
+# The stage lands at /opt/calibre-zen-margin, the path it has at run time.
 RUN --mount=type=bind,from=upstream,target=/upstream \
     set -eu; \
     case "${TARGETARCH:-$(uname -m)}" in \
@@ -66,7 +66,7 @@ RUN --mount=type=bind,from=upstream,target=/upstream \
         packaging/linux/package.sh "$arch"
 
 FROM base
-COPY --from=build /opt/calibre-zen /opt/calibre-zen
+COPY --from=build /opt/calibre-zen-margin /opt/calibre-zen-margin
 COPY --chmod=755 packaging/docker/entrypoint.sh /usr/local/bin/zen-entrypoint
 COPY --chmod=755 packaging/docker/healthcheck.sh /usr/local/bin/zen-healthcheck
 # The folder first, at 755: BuildKit's container driver (GitHub's builder) gives
@@ -77,7 +77,7 @@ COPY --chmod=644 packaging/docker/prepare.py /usr/local/lib/calibre-zen/prepare.
 # Everything the server writes goes to /config or /tmp, so the root file
 # system can be mounted read-only. The entrypoint starts as root only to own
 # /config, then drops to PUID:PGID.
-ENV PATH=/opt/calibre-zen/zen-bin:$PATH \
+ENV PATH=/opt/calibre-zen-margin/zen-bin:$PATH \
     CALIBRE_CONFIG_DIRECTORY=/config \
     HOME=/config \
     XDG_CACHE_HOME=/config/cache \
@@ -87,9 +87,9 @@ ENV PATH=/opt/calibre-zen/zen-bin:$PATH \
     PGID=1000
 
 ARG VERSION=dev
-LABEL org.opencontainers.image.title="calibre-zen" \
+LABEL org.opencontainers.image.title="calibre-zen-margin" \
       org.opencontainers.image.description="calibre-zen's host: the calibre web app over your library, no desktop" \
-      org.opencontainers.image.source="https://github.com/purplecandy/calibre-zen" \
+      org.opencontainers.image.source="https://github.com/Star69995/calibre-zen" \
       org.opencontainers.image.licenses="GPL-3.0-only" \
       org.opencontainers.image.version="${VERSION}"
 

@@ -107,13 +107,13 @@ jobs:
 
       - name: Check installation from the archive
         run: |
-          name="calibre-zen-${{ needs.version.outputs.zen }}-linux-${{ matrix.arch }}.txz"
+          name="calibre-zen-margin-${{ needs.version.outputs.zen }}-linux-${{ matrix.arch }}.txz"
           mkdir -p "$RUNNER_TEMP/zen-install-check"
           cd "$RUNNER_TEMP/zen-install-check"
           sh "$GITHUB_WORKSPACE/packaging/linux/install-zen.sh" "$GITHUB_WORKSPACE/dist/$name"
-          sh ./calibre-zen/install-zen.sh --check
-          ./calibre-zen/calibre-zen --version
-          ./calibre-zen/zen-bin/zen-calibredb --version
+          sh ./calibre-zen-margin/install-zen.sh --check
+          ./calibre-zen-margin/calibre-zen-margin --version
+          ./calibre-zen-margin/zen-bin/margin-calibredb --version
 
       - name: Install Flatpak builder
         run: |
@@ -280,7 +280,7 @@ jobs:
       # translations, which this fork does not carry.
       - name: Source tarball
         run: |
-          name="calibre-zen-${{ needs.version.outputs.zen }}"
+          name="calibre-zen-margin-${{ needs.version.outputs.zen }}"
           git archive --format=tar --prefix="$name/" "$GITHUB_SHA" | xz -9 > "packages/$name.tar.xz"
           (cd packages && sha256sum "$name.tar.xz" > "$name.tar.xz.sha256")
 
@@ -334,9 +334,9 @@ jobs:
           draft: ${{ !inputs.prerelease }}
           prerelease: ${{ inputs.prerelease }}
           make_latest: ${{ inputs.prerelease && 'false' || 'legacy' }}
-          name: ${{ inputs.prerelease && format('Update test {0} (not for use)', needs.version.outputs.zen) || format('calibre-zen {0}', needs.version.outputs.zen) }}
+          name: ${{ inputs.prerelease && format('Update test {0} (not for use)', needs.version.outputs.zen) || format('Calibre Zen Margin {0}', needs.version.outputs.zen) }}
           body: |
-            calibre-zen ${{ needs.version.outputs.zen }}, on calibre ${{ needs.version.outputs.calibre }}.
+            Calibre Zen Margin ${{ needs.version.outputs.zen }}, on calibre ${{ needs.version.outputs.calibre }}.
           files: |
             packages/*.txz
             packages/*.flatpak

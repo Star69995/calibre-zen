@@ -25,7 +25,7 @@ the next start. The menu says so, and offers the restart.
 import os
 from typing import NamedTuple
 
-from qt.core import QIcon, QMenu, Qt, QToolButton
+from qt.core import QIcon, QMenu, QMessageBox, Qt, QToolButton
 
 from calibre_zen.i18n import N_
 
@@ -162,6 +162,8 @@ class FeaturesButton(QToolButton):
         self.menu_.addSeparator()
         self.restart_action = self.menu_.addAction(_('Restart to apply'))
         self.restart_action.triggered.connect(self.restart)
+        self.menu_.addSeparator()
+        self.menu_.addAction(_('About %s') % zen_display_name).triggered.connect(self.show_about)
         self.setMenu(self.menu_)
         self.menu_.aboutToShow.connect(self.sync)
         self.sync()
@@ -184,6 +186,27 @@ class FeaturesButton(QToolButton):
             self.restart_action.setText(_('Restart to apply: %s') % names)
         else:
             self.restart_action.setText(_('Restart to apply'))
+
+    def show_about(self) -> None:
+        "Who made this: calibre, then Calibre Zen, then this fork, each by name."
+        from calibre.constants import __version__, zen_display_name, zen_homepage, zen_version
+
+        credits = _(
+            'Based on {calibre} {calibre_version} by Kovid Goyal, and on {zen} by Nadeem Siddique (purplecandy).'
+        ).format(
+            calibre='<a href="https://calibre-ebook.com">calibre</a>',
+            calibre_version=__version__,
+            zen='<a href="https://github.com/purplecandy/calibre-zen">Calibre Zen</a>',
+        )
+        QMessageBox.about(
+            self.window(),
+            _('About %s') % zen_display_name,
+            f'<h3>{zen_display_name} {zen_version}</h3>'
+            f'<p>{_("calibre with a simple, intuitive interface, and every feature kept.")}</p>'
+            f'<p>{credits}</p>'
+            f'<p><a href="{zen_homepage}">{zen_homepage}</a></p>'
+            f'<p>{_("Free software under the GNU GPL v3.")}</p>',
+        )
 
     def toggle(self, key: str, on: bool) -> None:
         set_wanted(key, on)

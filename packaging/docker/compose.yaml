@@ -1,6 +1,6 @@
 services:
   calibre-zen:
-    image: ghcr.io/purplecandy/calibre-zen:latest
+    image: ghcr.io/star69995/calibre-zen-margin:latest
     container_name: calibre-zen
     restart: unless-stopped
     ports:

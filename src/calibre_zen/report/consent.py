@@ -105,7 +105,7 @@ def ask_install_failure(parent, events: list[dict]) -> bool:
         '<p>This usually means a calibre update changed something Zen relies on. '
         'The report tells the maintainers exactly which part, so it can be fixed for the next release.</p>'
     ).format(', '.join(names)) + PRIVACY_LINE
-    return preview.show(parent, 'Calibre Zen: a component did not start', msg, events, skip_name=AUTO_SEND_QUESTION)
+    return preview.show(parent, 'Calibre Zen Margin: a component did not start', msg, events, skip_name=AUTO_SEND_QUESTION)
 
 
 def ask_background(parent, ev: dict) -> bool:
@@ -116,4 +116,4 @@ def ask_background(parent, ev: dict) -> bool:
         '<p>Something in Calibre Zen failed in the background. calibre carried on, and nothing you were doing was affected.</p>'
         '<p>Sending the report helps the maintainers fix it.</p>'
     ) + PRIVACY_LINE
-    return preview.show(parent, 'Calibre Zen: a background error', msg, [ev])
+    return preview.show(parent, 'Calibre Zen Margin: a background error', msg, [ev])

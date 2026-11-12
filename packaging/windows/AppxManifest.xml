@@ -38,7 +38,7 @@
   </Resources>
 
   <Applications>
-    <Application Id="calibrezen" Executable="calibre-zen.exe" EntryPoint="Windows.FullTrustApplication">
+    <Application Id="calibrezen" Executable="@EXECUTABLE@" EntryPoint="Windows.FullTrustApplication">
       <uap:VisualElements
         DisplayName="@DISPLAY_NAME@"
         Description="@DESCRIPTION@"

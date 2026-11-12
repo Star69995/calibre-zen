@@ -53,9 +53,11 @@ import os
 import re
 from urllib.parse import urlsplit
 
-FEED_URL = 'https://github.com/purplecandy/calibre-zen/releases/latest/download/latest.json'
-RELEASES_URL = 'https://github.com/purplecandy/calibre-zen/releases'
-NOTES_URL = 'https://calibrezen.com/docs/releases/latest'
+from calibre.constants import zen_repo
+
+FEED_URL = f'https://github.com/{zen_repo}/releases/latest/download/latest.json'
+RELEASES_URL = f'https://github.com/{zen_repo}/releases'
+NOTES_URL = f'{RELEASES_URL}/latest'
 TIMEOUT = 15
 MAX_REDIRECTS = 5
 NOTIFIED_KEY = 'zen-notified-version-updates'

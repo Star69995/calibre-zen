@@ -360,20 +360,20 @@ msgid "Reset all filters"
 msgstr "אפס את כל המסננים"
 
 #: lookfeel.py:105
-msgid "Calibre Zen has its own look. Changing these settings can make fonts, icon sizes and spacing clash with it."
-msgstr "ל-Calibre Zen יש מראה משלו. שינוי ההגדרות האלה עלול לגרום לגופנים, לגדלי האייקונים ולריווח להתנגש איתו."
+msgid "Calibre Zen Margin has its own look. Changing these settings can make fonts, icon sizes and spacing clash with it."
+msgstr "ל-Calibre Zen Margin יש מראה משלו. שינוי ההגדרות האלה עלול לגרום לגופנים, לגדלי האייקונים ולריווח להתנגש איתו."
 
 #: lookfeel.py:108
-msgid "Reset to Calibre Zen’s defaults"
-msgstr "אפס לברירות המחדל של Calibre Zen"
+msgid "Reset to Calibre Zen Margin’s defaults"
+msgstr "אפס לברירות המחדל של Calibre Zen Margin"
 
 #: lookfeel.py:117
 msgid "Reset Look & feel?"
 msgstr "לאפס את מראה ותחושה?"
 
 #: lookfeel.py:118
-msgid "Reset Look & feel to Calibre Zen’s defaults?"
-msgstr "לאפס את מראה ותחושה לברירות המחדל של Calibre Zen?"
+msgid "Reset Look & feel to Calibre Zen Margin’s defaults?"
+msgstr "לאפס את מראה ותחושה לברירות המחדל של Calibre Zen Margin?"
 
 #: lookfeel.py:119
 msgid "Fonts, icon sizes, colours and the rest of Look & feel go back to the defaults. Your other settings stay as they are."
@@ -396,8 +396,8 @@ msgid "Restart to finish"
 msgstr "הפעל מחדש כדי לסיים"
 
 #: lookfeel.py:148
-msgid "Calibre Zen’s look comes back after a restart."
-msgstr "המראה של Calibre Zen יחזור לאחר הפעלה מחדש."
+msgid "Calibre Zen Margin’s look comes back after a restart."
+msgstr "המראה של Calibre Zen Margin יחזור לאחר הפעלה מחדש."
 
 #: lookfeel.py:150
 #, python-format
@@ -517,8 +517,8 @@ msgid "Choose where your books go"
 msgstr "בחר לאן הספרים שלך ילכו"
 
 #: onboarding/import_page.py:193
-msgid "Set up Calibre Zen"
-msgstr "הגדרת Calibre Zen"
+msgid "Set up Calibre Zen Margin"
+msgstr "הגדרת Calibre Zen Margin"
 
 #: onboarding/import_page.py:195
 msgid "calibre is on this computer too. Its settings can come with you."
@@ -533,8 +533,8 @@ msgid "Bring over my calibre settings"
 msgstr "העבר את ההגדרות שלי מ-calibre"
 
 #: onboarding/import_page.py:199
-msgid "Your library, plugins and preferences. The look stays Calibre Zen’s own."
-msgstr "הספרייה, התוספים וההעדפות שלך. המראה נשאר של Calibre Zen."
+msgid "Your library, plugins and preferences. The look stays Calibre Zen Margin’s own."
+msgstr "הספרייה, התוספים וההעדפות שלך. המראה נשאר של Calibre Zen Margin."
 
 #: onboarding/import_page.py:200
 msgid "Start fresh"
@@ -545,8 +545,8 @@ msgid "Keep what is here or reset it, and pick your library."
 msgstr "השאר את מה שיש כאן או אפס אותו, ובחר את הספרייה שלך."
 
 #: onboarding/import_page.py:204
-msgid "Calibre Zen’s own settings, with a library you pick."
-msgstr "ההגדרות של Calibre Zen עצמו, עם ספרייה לבחירתך."
+msgid "Calibre Zen Margin’s own settings, with a library you pick."
+msgstr "ההגדרות של Calibre Zen Margin עצמו, עם ספרייה לבחירתך."
 
 #: onboarding/import_page.py:206
 msgid "Choose the settings folder, the library, the plugins and which settings come over."
@@ -593,8 +593,8 @@ msgid "Something could not be written. You can try again, or pick another option
 msgstr "לא ניתן היה לכתוב משהו. אפשר לנסות שוב, או לבחור אפשרות אחרת."
 
 #: onboarding/language.py:47
-msgid "The language Calibre Zen speaks"
-msgstr "השפה של Calibre Zen"
+msgid "The language Calibre Zen Margin speaks"
+msgstr "השפה של Calibre Zen Margin"
 
 #: onboarding/page.py:117
 msgid "Recording of the window goes here"
@@ -742,8 +742,8 @@ msgid "Report a bug"
 msgstr "דווח על באג"
 
 #: status/segments.py:223
-msgid "Something wrong with Calibre Zen? Report it, with the version details filled in for you"
-msgstr "משהו לא תקין ב-Calibre Zen? דווח על כך, כשפרטי הגרסה כבר ממולאים עבורך"
+msgid "Something wrong with Calibre Zen Margin? Report it, with the version details filled in for you"
+msgstr "משהו לא תקין ב-Calibre Zen Margin? דווח על כך, כשפרטי הגרסה כבר ממולאים עבורך"
 
 #: status/segments.py:225
 msgid "Report on GitHub…"
@@ -1814,3 +1814,19 @@ msgstr "מה עושה לחיצה על ״שליחה להתקן״…"
 #: centre/sorting.py:72
 msgid "Click to sort by title, authors or series"
 msgstr "לחיצה למיון לפי כותרת, מחברים או סדרות"
+
+#: features.py
+msgid "About %s"
+msgstr "אודות %s"
+
+#: features.py
+msgid "Based on {calibre} {calibre_version} by Kovid Goyal, and on {zen} by Nadeem Siddique (purplecandy)."
+msgstr "מבוסס על {calibre} {calibre_version} מאת Kovid Goyal, ועל {zen} מאת Nadeem Siddique (purplecandy)."
+
+#: features.py
+msgid "calibre with a simple, intuitive interface, and every feature kept."
+msgstr "calibre עם ממשק פשוט ואינטואיטיבי, בלי לוותר על אף יכולת."
+
+#: features.py
+msgid "Free software under the GNU GPL v3."
+msgstr "תוכנה חופשית ברישיון GNU GPL v3."

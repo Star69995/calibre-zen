@@ -21,8 +21,8 @@ class TestIdentity(unittest.TestCase):
     def test_appname_is_the_fork(self):
         from calibre.constants import __appname__, zen_display_name
 
-        self.assertEqual(__appname__, 'calibre-zen')
-        self.assertEqual(zen_display_name, 'Calibre Zen')
+        self.assertEqual(__appname__, 'calibre-zen-margin')
+        self.assertEqual(zen_display_name, 'Calibre Zen Margin')
 
     def test_zen_version_is_a_release_version(self):
         from calibre.constants import zen_version

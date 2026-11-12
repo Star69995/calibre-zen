@@ -1,12 +1,12 @@
-app-id: io.github.purplecandy.calibre-zen
+app-id: io.github.star69995.calibre-zen-margin
 runtime: org.freedesktop.Platform
 runtime-version: '25.08'
 sdk: org.freedesktop.Sdk
-command: calibre-zen
+command: calibre-zen-margin
 separate-locales: false
-rename-desktop-file: calibre-zen-gui.desktop
+rename-desktop-file: calibre-zen-margin-gui.desktop
 rename-mime-file: calibre-mimetypes.xml
-rename-icon: calibre-zen-gui
+rename-icon: calibre-zen-margin-gui
 finish-args:
   # Match calibre's Flatpak: libraries and reader devices can be anywhere.
   - --device=all
@@ -26,44 +26,44 @@ finish-args:
   - --env=SSL_CERT_DIR=/etc/ssl/certs
   - --env=OPENSSL_CONF=/dev/null
 modules:
-  - name: calibre-zen
+  - name: calibre-zen-margin
     buildsystem: simple
     build-options:
       env:
         XDG_UTILS_INSTALL_MODE: system
     build-commands:
       - mkdir -p /app/lib /app/bin /app/share/applications /app/share/desktop-directories /app/share/icons/hicolor /app/share/mime/packages
-      - tar -xJf calibre-zen.txz -C /app/lib
-      - /app/lib/calibre-zen/zen-bin/zen-calibre_postinstall --root=/app --make-errors-fatal
+      - tar -xJf calibre-zen-margin.txz -C /app/lib
+      - /app/lib/calibre-zen-margin/zen-bin/margin-calibre_postinstall --root=/app --make-errors-fatal
       # The postinstall symlinks point to bare calibre binaries. Replace them
       # with our launchers so every desktop entry keeps the fork's identity.
-      - install -Dm755 flatpak-launch /app/bin/calibre-zen
-      - for launcher in /app/lib/calibre-zen/zen-bin/zen-*; do ln -sf calibre-zen "/app/bin/${launcher##*/}"; done
-      - mv /app/share/applications/calibre-zen-ebook-edit.desktop /app/share/applications/$FLATPAK_ID.ebook-edit.desktop
-      - mv /app/share/applications/calibre-zen-ebook-viewer.desktop /app/share/applications/$FLATPAK_ID.ebook-viewer.desktop
-      - mv /app/share/applications/calibre-zen-lrfviewer.desktop /app/share/applications/$FLATPAK_ID.lrfviewer.desktop
-      - sed -i 's/^Name=E-book editor$/Name=Calibre Zen E-book Editor/' /app/share/applications/$FLATPAK_ID.ebook-edit.desktop
-      - sed -i 's/^Name=E-book viewer$/Name=Calibre Zen E-book Viewer/' /app/share/applications/$FLATPAK_ID.ebook-viewer.desktop
-      - for p in 16 32 48 64 128 256; do mv /app/share/icons/hicolor/${p}x${p}/apps/calibre-zen-ebook-edit.png /app/share/icons/hicolor/${p}x${p}/apps/$FLATPAK_ID.ebook-edit.png; done
-      - for p in 16 32 48 64 128 256; do mv /app/share/icons/hicolor/${p}x${p}/apps/calibre-zen-viewer.png /app/share/icons/hicolor/${p}x${p}/apps/$FLATPAK_ID.ebook-viewer.png; done
+      - install -Dm755 flatpak-launch /app/bin/calibre-zen-margin
+      - for launcher in /app/lib/calibre-zen-margin/zen-bin/margin-*; do ln -sf calibre-zen-margin "/app/bin/${launcher##*/}"; done
+      - mv /app/share/applications/calibre-zen-margin-ebook-edit.desktop /app/share/applications/$FLATPAK_ID.ebook-edit.desktop
+      - mv /app/share/applications/calibre-zen-margin-ebook-viewer.desktop /app/share/applications/$FLATPAK_ID.ebook-viewer.desktop
+      - mv /app/share/applications/calibre-zen-margin-lrfviewer.desktop /app/share/applications/$FLATPAK_ID.lrfviewer.desktop
+      - sed -i 's/^Name=E-book editor$/Name=Calibre Zen Margin E-book Editor/' /app/share/applications/$FLATPAK_ID.ebook-edit.desktop
+      - sed -i 's/^Name=E-book viewer$/Name=Calibre Zen Margin E-book Viewer/' /app/share/applications/$FLATPAK_ID.ebook-viewer.desktop
+      - for p in 16 32 48 64 128 256; do mv /app/share/icons/hicolor/${p}x${p}/apps/calibre-zen-margin-ebook-edit.png /app/share/icons/hicolor/${p}x${p}/apps/$FLATPAK_ID.ebook-edit.png; done
+      - for p in 16 32 48 64 128 256; do mv /app/share/icons/hicolor/${p}x${p}/apps/calibre-zen-margin-viewer.png /app/share/icons/hicolor/${p}x${p}/apps/$FLATPAK_ID.ebook-viewer.png; done
       - desktop-file-edit --set-icon=$FLATPAK_ID.ebook-edit /app/share/applications/$FLATPAK_ID.ebook-edit.desktop
       - desktop-file-edit --set-icon=$FLATPAK_ID.ebook-viewer /app/share/applications/$FLATPAK_ID.ebook-viewer.desktop
       - desktop-file-edit --set-icon=$FLATPAK_ID.ebook-viewer /app/share/applications/$FLATPAK_ID.lrfviewer.desktop
       # calibre's generated metadata describes upstream calibre and shows its
       # old screenshots. The Flatpak exports the fork's own metadata instead.
-      - rm -f /app/share/metainfo/calibre-zen-*.metainfo.xml
-      - install -Dm644 io.github.purplecandy.calibre-zen.metainfo.xml /app/share/metainfo/$FLATPAK_ID.metainfo.xml
+      - rm -f /app/share/metainfo/calibre-zen-margin-*.metainfo.xml
+      - install -Dm644 io.github.star69995.calibre-zen-margin.metainfo.xml /app/share/metainfo/$FLATPAK_ID.metainfo.xml
       - install -Dm644 LICENSE /app/share/licenses/$FLATPAK_ID/LICENSE
     cleanup:
-      - /bin/zen-calibre-uninstall
+      - /bin/margin-calibre-uninstall
       - /share/applications/mimeinfo.cache
     sources:
       - type: file
-        path: calibre-zen.txz
+        path: calibre-zen-margin.txz
       - type: file
         path: flatpak-launch
       - type: file
-        path: io.github.purplecandy.calibre-zen.metainfo.xml
+        path: io.github.star69995.calibre-zen-margin.metainfo.xml
       - type: file
         path: LICENSE
     modules:

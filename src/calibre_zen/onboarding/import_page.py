@@ -190,18 +190,18 @@ class ImportPage(QWizardPage):
     # ------------------------------------------------------------ texts
 
     def apply_texts(self):
-        self.setTitle(_('Set up Calibre Zen'))
+        self.setTitle(_('Set up Calibre Zen Margin'))
         if self.found is not None:
             self.setSubTitle(_('calibre is on this computer too. Its settings can come with you.'))
         else:
             self.setSubTitle(_('Pick where your books go, and you are ready to start.'))
         self.buttons[BRING].setText(_('Bring over my calibre settings'))
-        self.notes[BRING].setText(_('Your library, plugins and preferences. The look stays Calibre Zen’s own.'))
+        self.notes[BRING].setText(_('Your library, plugins and preferences. The look stays Calibre Zen Margin’s own.'))
         self.buttons[FRESH].setText(_('Start fresh'))
         if self.rerun:
             self.notes[FRESH].setText(_('Keep what is here or reset it, and pick your library.'))
         else:
-            self.notes[FRESH].setText(_('Calibre Zen’s own settings, with a library you pick.'))
+            self.notes[FRESH].setText(_('Calibre Zen Margin’s own settings, with a library you pick.'))
         self.buttons[ADVANCED].setText(_('Advanced'))
         self.notes[ADVANCED].setText(_('Choose the settings folder, the library, the plugins and which settings come over.'))
         self.bring_settings_label.setText(_('Settings'))

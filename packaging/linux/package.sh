@@ -164,7 +164,7 @@ for exe in "$STAGE"/*; do
     [ -f "$exe" ] && [ -x "$exe" ] || continue
     name=$(basename "$exe")
     [ "$name" = calibre-parallel ] && continue
-    wrap "$name" "$STAGE/zen-bin/zen-$name"
+    wrap "$name" "$STAGE/zen-bin/margin-$name"
 done
 # The GUI, under the application's own name, at the top where people look.
 wrap calibre "$STAGE/zen-bin/$APPNAME"
@@ -199,7 +199,7 @@ sys.exit(0 if ok else 1)
 # ------------------------------------------------------------------- smoke
 say "smoke test: identity"
 MARK=$(mktemp)
-CALIBRE_CONFIG_DIRECTORY="$WORK_CONFIG" "$STAGE/zen-bin/zen-calibre-debug" -c "
+CALIBRE_CONFIG_DIRECTORY="$WORK_CONFIG" "$STAGE/zen-bin/margin-calibre-debug" -c "
 from calibre.constants import __appname__, numeric_version, config_dir, is_running_from_develop
 # The bundle runs Python with -OO, which strips assert statements, so a
 # check has to be an if. No quotes in here: this text sits inside shell
@@ -220,7 +220,7 @@ print('    config dir', config_dir)
 " || die "identity check failed"
 
 say "smoke test: headless GUI with the overlay"
-CALIBRE_CONFIG_DIRECTORY="$WORK_CONFIG" QT_QPA_PLATFORM=offscreen "$STAGE/zen-bin/zen-calibre-debug" -c '
+CALIBRE_CONFIG_DIRECTORY="$WORK_CONFIG" QT_QPA_PLATFORM=offscreen "$STAGE/zen-bin/margin-calibre-debug" -c '
 from calibre.gui2 import Application
 # The bundle runs Python with -OO, which strips assert statements, so a
 # check has to be an if. No quotes in here: this text sits inside shell

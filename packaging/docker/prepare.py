@@ -1,7 +1,7 @@
 # The Python half of the image's start-up, run by entrypoint.sh as the
 # library's owner through calibre-debug, so it uses calibre's own APIs:
 #
-#   zen-calibre-debug -e prepare.py -- USERDB [--create-library DIR]
+#   margin-calibre-debug -e prepare.py -- USERDB [--create-library DIR]
 #
 # Creates an empty library when asked, adds or updates the user named by
 # CALIBRE_ZEN_USERNAME, and prints "auth=1" or "auth=0" as its last line:

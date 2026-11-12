@@ -4,7 +4,7 @@
 set -euo pipefail
 
 REPO="$(cd "$(dirname "$0")/../.." && pwd)"
-APP_ID=io.github.purplecandy.calibre-zen
+APP_ID=io.github.star69995.calibre-zen-margin
 ZEN_VERSION=$(sed -n "s/^zen_version = '\([^']*\)'/\1/p" "$REPO/src/calibre/constants.py")
 [ -n "$ZEN_VERSION" ] || { echo 'no zen_version in constants.py' >&2; exit 1; }
 
@@ -21,17 +21,17 @@ done
 
 DIST="${CALIBRE_ZEN_DIST_DIR:-$REPO/dist}"
 BUILD="${CALIBRE_ZEN_FLATPAK_BUILD_DIR:-$REPO/build/flatpak-$ARCH}"
-NAME="calibre-zen-$ZEN_VERSION-linux-$ARCH"
+NAME="calibre-zen-margin-$ZEN_VERSION-linux-$ARCH"
 TARBALL="$DIST/$NAME.txz"
 [ -f "$TARBALL" ] || { echo "missing $TARBALL; run packaging/linux/package.sh $ARCH first" >&2; exit 1; }
 (cd "$DIST" && sha256sum -c "$NAME.txz.sha256")
 
 rm -rf "$BUILD"
 mkdir -p "$BUILD/context" "$DIST"
-cp "$TARBALL" "$BUILD/context/calibre-zen.txz"
-cp "$REPO/packaging/flatpak/io.github.purplecandy.calibre-zen.yml" "$BUILD/context/"
+cp "$TARBALL" "$BUILD/context/calibre-zen-margin.txz"
+cp "$REPO/packaging/flatpak/io.github.star69995.calibre-zen-margin.yml" "$BUILD/context/"
 cp "$REPO/packaging/flatpak/flatpak-launch" "$BUILD/context/"
-cp "$REPO/packaging/flatpak/io.github.purplecandy.calibre-zen.metainfo.xml" "$BUILD/context/"
+cp "$REPO/packaging/flatpak/io.github.star69995.calibre-zen-margin.metainfo.xml" "$BUILD/context/"
 cp "$REPO/LICENSE" "$BUILD/context/"
 
 flatpak remote-add --user --if-not-exists flathub https://dl.flathub.org/repo/flathub.flatpakrepo
@@ -51,9 +51,9 @@ for path in \
 done
 
 flatpak-builder --run "$BUILD/app" "$BUILD/context/$APP_ID.yml" \
-    /bin/sh -c 'CALIBRE_CONFIG_DIRECTORY=/tmp/calibre-zen-smoke calibre-zen --version'
+    /bin/sh -c 'CALIBRE_CONFIG_DIRECTORY=/tmp/calibre-zen-margin-smoke calibre-zen-margin --version'
 
-OUT="$DIST/calibre-zen-$ZEN_VERSION-linux-$ARCH.flatpak"
+OUT="$DIST/calibre-zen-margin-$ZEN_VERSION-linux-$ARCH.flatpak"
 flatpak build-bundle "$BUILD/repo" "$OUT" "$APP_ID" \
     --runtime-repo=https://dl.flathub.org/repo/flathub.flatpakrepo
 (cd "$DIST" && sha256sum "$(basename "$OUT")" > "$(basename "$OUT").sha256")

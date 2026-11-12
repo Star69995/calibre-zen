@@ -1,4 +1,4 @@
-# Publish the calibre-zen image to ghcr.io/purplecandy/calibre-zen: built for
+# Publish the calibre-zen image to ghcr.io/star69995/calibre-zen-margin: built for
 # amd64 and arm64 on native runners, checked by packaging/docker/check-image.sh,
 # then pushed as one multi-arch image.
 #
@@ -28,7 +28,7 @@ permissions:
   contents: read
 
 env:
-  IMAGE: ghcr.io/purplecandy/calibre-zen
+  IMAGE: ghcr.io/star69995/calibre-zen-margin
 
 concurrency:
   group: zen-docker-publish-${{ github.ref }}

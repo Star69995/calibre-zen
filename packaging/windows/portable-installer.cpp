@@ -11,8 +11,8 @@
  *     stored zip and links easylzma to undo that; we have no easylzma and a
  *     deflate zip is about the same size.
  *   - The names: the folder is "Calibre Zen Portable" and the launchers are
- *     calibre-zen-portable.exe, zen-ebook-viewer-portable.exe and
- *     zen-ebook-edit-portable.exe, so an install can sit beside calibre's own
+ *     calibre-zen-margin-portable.exe, margin-ebook-viewer-portable.exe and
+ *     margin-ebook-edit-portable.exe, so an install can sit beside calibre's own
  *     Calibre Portable. Inside the folder the layout is upstream's, because
  *     calibre's portable mode (CALIBRE_PORTABLE_BUILD, get_portable_base) is
  *     built around it: Calibre\ holds the program, Calibre Library\ and
@@ -49,11 +49,24 @@
 #define BUFSIZE 4096
 #define arraysz(x) (sizeof(x) / sizeof(x[0]))
 
-#define PORTABLE_DIR L"Calibre Zen Portable"
-#define UNPACK_DIR L"_unpack_calibre_zen_portable"
-#define MAIN_LAUNCHER L"calibre-zen-portable.exe"
-#define VIEWER_LAUNCHER L"zen-ebook-viewer-portable.exe"
-#define EDITOR_LAUNCHER L"zen-ebook-edit-portable.exe"
+// package.ps1 defines all five in zen_config.h, from the fork's names, so a
+// second fork's portable folder never lands on this one's. The values here
+// are only for building the file by hand.
+#ifndef PORTABLE_DIR
+#define PORTABLE_DIR L"Calibre Zen Margin Portable"
+#endif
+#ifndef UNPACK_DIR
+#define UNPACK_DIR L"_unpack_calibre_zen_margin_portable"
+#endif
+#ifndef MAIN_LAUNCHER
+#define MAIN_LAUNCHER L"calibre-zen-margin-portable.exe"
+#endif
+#ifndef VIEWER_LAUNCHER
+#define VIEWER_LAUNCHER L"margin-ebook-viewer-portable.exe"
+#endif
+#ifndef EDITOR_LAUNCHER
+#define EDITOR_LAUNCHER L"margin-ebook-edit-portable.exe"
+#endif
 
 // The frozen binaries keep upstream's names inside Calibre\, so these are
 // what a running install shows up as.

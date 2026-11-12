@@ -79,6 +79,8 @@
 /.calibre-zen/perf-library/
 /.calibre-zen/gutenberg-library/
 /.calibre-zen/gutenberg-sources/
+/.calibre-zen/showcase-library/
+/.calibre-zen/showcase-sources/
 # Screenshots taken for approval (CLAUDE.md, "Checking a change"), by topic.
 /.calibre-zen/shots/
 # calibre-zen: downloaded upstream installers, verified against packaging/upstream.json

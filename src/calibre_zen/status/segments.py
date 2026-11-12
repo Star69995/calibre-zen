@@ -220,7 +220,7 @@ class ReportSegment(Segment):
         from qt.core import QMenu
 
         self.setText(_('Report a bug'))
-        self.setToolTip(_('Something wrong with Calibre Zen? Report it, with the version details filled in for you'))
+        self.setToolTip(_('Something wrong with Calibre Zen Margin? Report it, with the version details filled in for you'))
         self.menu_ = QMenu(self)
         self.github = self.menu_.addAction(_('Report on GitHub…'))
         self.github.triggered.connect(self.open_github)

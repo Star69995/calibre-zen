@@ -8,7 +8,7 @@
 # against /config's user database, and no server starts.
 set -eu
 
-ZEN=/opt/calibre-zen
+ZEN=/opt/calibre-zen-margin
 HOST="$ZEN/src/calibre_zen/host/__main__.py"
 PREPARE=/usr/local/lib/calibre-zen/prepare.py
 USERDB=/config/server-users.sqlite
@@ -85,7 +85,7 @@ me="$(id -u):$(id -g)"
 mkdir -p "${XDG_CACHE_HOME:-/config/cache}"
 
 if [ -n "$manage" ]; then
-    exec "$ZEN/zen-bin/zen-calibre-debug" -e "$HOST" -- --userdb "$USERDB" "$@"
+    exec "$ZEN/zen-bin/margin-calibre-debug" -e "$HOST" -- --userdb "$USERDB" "$@"
 fi
 
 # calibre cannot open a library it cannot write to: it writes a test file and
@@ -127,9 +127,9 @@ fi
 # Create the library if needed, add or update the login user, and learn
 # whether any user exists. The last line of output is "auth=0" or "auth=1".
 if [ -n "$create" ]; then
-    out=$("$ZEN/zen-bin/zen-calibre-debug" -e "$PREPARE" -- "$USERDB" --create-library "$create") || die "start-up failed (above)"
+    out=$("$ZEN/zen-bin/margin-calibre-debug" -e "$PREPARE" -- "$USERDB" --create-library "$create") || die "start-up failed (above)"
 else
-    out=$("$ZEN/zen-bin/zen-calibre-debug" -e "$PREPARE" -- "$USERDB") || die "start-up failed (above)"
+    out=$("$ZEN/zen-bin/margin-calibre-debug" -e "$PREPARE" -- "$USERDB") || die "start-up failed (above)"
 fi
 case "$(printf '%s\n' "$out" | tail -n 1)" in
     auth=1) auth=1 ;;
@@ -169,5 +169,5 @@ if [ -z "$own_auto_add" ]; then
     fi
 fi
 log "starting the host on port $PORT"
-set -- "$ZEN/zen-bin/zen-calibre-debug" -e "$HOST" -- "$@"
+set -- "$ZEN/zen-bin/margin-calibre-debug" -e "$HOST" -- "$@"
 exec "$@"

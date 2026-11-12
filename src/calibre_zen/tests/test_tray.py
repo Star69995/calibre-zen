@@ -21,7 +21,7 @@ from unittest import mock
 from calibre_zen.tests.base import ZenTestCase, wait_until
 
 STATUS = {
-    'app': 'calibre-zen',
+    'app': 'calibre-zen-margin',
     'port': 8099,
     'url_prefix': '',
     'urls': ['http://192.168.1.18:8099/'],
@@ -231,7 +231,7 @@ class TestKeeper(TrayTestCase):
         self.sharing()
         self.launch.proc.rc = k.LIBRARY_BUSY
         self.assertTrue(wait_until(lambda: kp.state == k.PAUSED))
-        self.assertEqual(tray.state_action.text(), 'Paused while Calibre Zen is open')
+        self.assertEqual(tray.state_action.text(), 'Paused while Calibre Zen Margin is open')
         self.assertFalse(tray.browser_action.isEnabled())
         for ac in (tray.share_action, tray.write_action, tray.auto_add_action):
             self.assertFalse(ac.isEnabled(), ac.text())
@@ -523,7 +523,7 @@ class TestHandOver(TrayTestCase):
         self.assertNotIn(NO_FOREGROUND_ENV, gui.kw['env'])
         # Opening until the window is up, and Open greyed out so it is not started twice.
         self.assertEqual(kp.state, k.OPENING)
-        self.assertEqual(tray.gui_action.text(), 'Opening Calibre Zen…')
+        self.assertEqual(tray.gui_action.text(), 'Opening Calibre Zen Margin…')
         self.assertFalse(tray.gui_action.isEnabled())
         tray.gui_action.trigger()
         self.assertEqual(len(self.popen.calls), 1)
@@ -532,8 +532,8 @@ class TestHandOver(TrayTestCase):
         self.assertEqual(kp.state, k.OPENING)
         tray.on_message('opened')  # now it is
         self.assertEqual(kp.state, k.PAUSED)
-        self.assertEqual(tray.state_action.text(), 'Paused while Calibre Zen is open')
-        self.assertEqual(tray.gui_action.text(), 'Open Calibre Zen')
+        self.assertEqual(tray.state_action.text(), 'Paused while Calibre Zen Margin is open')
+        self.assertEqual(tray.gui_action.text(), 'Open Calibre Zen Margin')
         self.assertTrue(tray.gui_action.isEnabled())
         self.locks.names.discard('GUI')
         # The host stays down while the full app runs, retries or not.
@@ -611,7 +611,7 @@ class TestFullAppLock(TrayTestCase):
         wait_until(lambda: False, int(kp.GUI_GRACE * 1000 * 3))
         self.assertEqual(len(self.launch.started), 1)
         self.assertEqual(kp.state, k.PAUSED)
-        self.assertEqual(tray.state_action.text(), 'Paused while Calibre Zen is open')
+        self.assertEqual(tray.state_action.text(), 'Paused while Calibre Zen Margin is open')
         # The new app quits for good: after the grace period, the host.
         freed = time.monotonic()
         self.locks.names.discard('GUI')
@@ -1112,7 +1112,7 @@ class TestWindowSays(TrayTestCase):
         kp, tray = self.paused_with_window_open()
         kp.GUI_GRACE = 0.3
         tray.on_message(channel.RESTARTING)
-        self.assertEqual(tray.state_action.text(), 'Calibre Zen is restarting…')
+        self.assertEqual(tray.state_action.text(), 'Calibre Zen Margin is restarting…')
         self.assertFalse(tray.gui_action.isEnabled())
         self.locks.names.discard('GUI')  # the old window has gone
         threading.Timer(0.1, lambda: self.locks.names.add('GUI')).start()  # the new one is up
@@ -1120,7 +1120,7 @@ class TestWindowSays(TrayTestCase):
         self.assertEqual(self.launch.started, [])
         tray.on_message(channel.OPENED)
         self.assertEqual(kp.state, k.PAUSED)
-        self.assertEqual(tray.state_action.text(), 'Paused while Calibre Zen is open')
+        self.assertEqual(tray.state_action.text(), 'Paused while Calibre Zen Margin is open')
 
     def test_a_message_the_lock_never_backs_up_gives_up(self):
         from calibre_zen.tray import channel
@@ -1153,8 +1153,8 @@ class TestWindowSays(TrayTestCase):
         self.assertEqual(kp.state, k.OPENING)
         self.popen.calls[0].rc = 0
         self.assertTrue(wait_until(lambda: kp.state == k.PAUSED, 3000), kp.state)
-        self.assertEqual(tray.gui_action.text(), 'Open Calibre Zen')
-        self.assertEqual(tray.state_action.text(), 'Paused while Calibre Zen is open')
+        self.assertEqual(tray.gui_action.text(), 'Open Calibre Zen Margin')
+        self.assertEqual(tray.state_action.text(), 'Paused while Calibre Zen Margin is open')
 
 
 class TestChannel(ZenTestCase):
@@ -1284,7 +1284,7 @@ class TestDockWindow(TrayTestCase):
         self.sharing()
         self.locks.names.add('GUI')  # the new window has its own lock already
         self.assertTrue(tray.on_message(channel.RELEASE))
-        self.assertEqual(tray.state_action.text(), 'Opening Calibre Zen…')
+        self.assertEqual(tray.state_action.text(), 'Opening Calibre Zen Margin…')
         self.assertFalse(tray.gui_action.isEnabled())
         self.assertTrue(wait_until(lambda: self.launch.procs[0].rc is not None))
         self.assertEqual(self.launch.stopped, [LOCAL_URL])

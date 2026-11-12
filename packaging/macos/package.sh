@@ -57,7 +57,7 @@ ZEN_VERSION=$(sed -n "s/^zen_version = '\([^']*\)'/\1/p" "$REPO/src/calibre/cons
 DISPLAY_NAME=$(sed -n "s/^zen_display_name = '\([^']*\)'/\1/p" "$REPO/src/calibre/constants.py")
 [ -n "$DISPLAY_NAME" ] || die "could not read zen_display_name from src/calibre/constants.py"
 say "$DISPLAY_NAME $ZEN_VERSION ($APPNAME)"
-BUNDLE_ID="io.github.purplecandy.$APPNAME"
+BUNDLE_ID="io.github.star69995.$APPNAME"
 
 CACHE="${CALIBRE_ZEN_UPSTREAM_CACHE:-$REPO/.calibre-zen/upstream}"
 BUILD="${CALIBRE_ZEN_BUILD_DIR:-$REPO/build/macos}"
@@ -183,7 +183,7 @@ plutil -replace CFBundleVersion            -string "$ZEN_VERSION" "$PL"
 # Xcode; left in place it wins and the Dock shows calibre's icon.
 plutil -remove CFBundleIconName "$PL" 2>/dev/null || true
 plutil -replace CFBundleURLTypes -json "[{\"CFBundleTypeRole\":\"Viewer\",\"CFBundleURLName\":\"$BUNDLE_ID-url\",\"CFBundleURLSchemes\":[\"$APPNAME\"]}]" "$PL"
-plutil -replace NSHumanReadableCopyright -string "$APPNAME $ZEN_VERSION on calibre $VERSION. Copyright Kovid Goyal; $APPNAME fork copyright Nadeem Siddique" "$PL"
+plutil -replace NSHumanReadableCopyright -string "$APPNAME $ZEN_VERSION on calibre $VERSION. Copyright Kovid Goyal; Calibre Zen copyright Nadeem Siddique; $DISPLAY_NAME by Star" "$PL"
 
 # -------------------------------------------------------------------- sign
 # With CALIBRE_ZEN_SIGN_IDENTITY set, sign.py signs inside-out with the

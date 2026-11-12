@@ -49,7 +49,9 @@ OFFER_DELAY_MS = 2500
 
 
 def enabled() -> bool:
-    return os.environ.get('CALIBRE_ZEN_REPORT', '1') not in ('0', 'false', 'no', 'off')
+    from calibre_zen.report.transport import DSN
+
+    return bool(DSN) and os.environ.get('CALIBRE_ZEN_REPORT', '1') not in ('0', 'false', 'no', 'off')
 
 
 def install() -> bool:

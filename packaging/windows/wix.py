@@ -22,13 +22,14 @@ from xml.sax.saxutils import escape, quoteattr
 
 HERE = os.path.dirname(os.path.abspath(__file__))
 
-# The executables a user may type into the Run dialog. Never the frozen
-# upstream names: registering calibre.exe here would point calibre's own
-# App Paths entry at this tree.
-LAUNCHERS = ('calibre-zen.exe', 'zen-ebook-viewer.exe', 'zen-ebook-edit.exe')
+# The executables a user may type into the Run dialog arrive as the LAUNCHERS
+# field, ';'-separated, GUI first, then viewer and editor. Never the frozen
+# upstream names: registering calibre.exe here would point calibre's own App
+# Paths entry at this tree, and package.ps1 names them from __appname__ and
+# PATH_PREFIX so another fork's entries are not taken either.
 
 
-def components(stage):
+def components(stage, launchers):
     ids = count()
     file_ids = {}
     out = []
@@ -47,7 +48,7 @@ def components(stage):
             checksum = ' Checksum="yes"' if name.lower().endswith('.exe') else ''
             out.append(f'{pad}<Component Id="component_{fid}" Feature="MainApplication" Guid="*">')
             out.append(f'{pad}\t<File Id="file_{fid}" Source={quoteattr(full)} Name={quoteattr(name)} ReadOnly="yes" KeyPath="yes"{checksum}/>')
-            if depth == 0 and name in LAUNCHERS:
+            if depth == 0 and name in launchers:
                 # https://learn.microsoft.com/windows/win32/shell/app-registration
                 key = rf'SOFTWARE\Microsoft\Windows\CurrentVersion\App Paths\{name}'
                 out.append(f'{pad}\t<RegistryValue Root="HKLM" Key={quoteattr(key)} Value="[#file_{fid}]" Type="string" />')
@@ -68,9 +69,10 @@ def main():
         raise SystemExit(f'{stage} is not a directory')
     os.makedirs(out_dir, exist_ok=True)
 
-    body, file_ids = components(stage)
+    launchers = fields.pop('LAUNCHERS').split(';')
+    body, file_ids = components(stage, launchers)
     fields['COMPONENTS'] = body
-    for field, exe in (('MAIN_EXE_ID', LAUNCHERS[0]), ('VIEWER_EXE_ID', LAUNCHERS[1]), ('EDITOR_EXE_ID', LAUNCHERS[2])):
+    for field, exe in zip(('MAIN_EXE_ID', 'VIEWER_EXE_ID', 'EDITOR_EXE_ID'), launchers, strict=True):
         if exe not in file_ids:
             raise SystemExit(f'{exe} is not at the top of {stage}')
         fields[field] = f'file_{file_ids[exe]}'

@@ -2,7 +2,7 @@
 
 This image shares your calibre library on your home server. Open it in any web browser, on a phone, tablet or computer, to find and read your books.
 
-The image is `ghcr.io/purplecandy/calibre-zen`, for Intel and ARM servers alike.
+The image is `ghcr.io/star69995/calibre-zen-margin`, for Intel and ARM servers alike.
 
 - **`latest`** is the newest release, and the steady choice.
 - **`edge`** has the newest changes as soon as they are made, so it can have rough edges.
@@ -20,7 +20,7 @@ docker run -d --name calibre-zen \
   -v /path/to/library:/library \
   -v /path/to/config:/config \
   --restart unless-stopped \
-  ghcr.io/purplecandy/calibre-zen:latest
+  ghcr.io/star69995/calibre-zen-margin:latest
 ```
 
 Put your own password in place of `PICK-A-PASSWORD` first. The image will not start with that placeholder. Then open `http://your-server:8080` and sign in.
@@ -30,7 +30,7 @@ Put your own password in place of `PICK-A-PASSWORD` first. The image will not st
 The compose file comes down with one line, best run in a new folder:
 
 ```sh
-curl -fsSLO https://raw.githubusercontent.com/purplecandy/calibre-zen/zen/packaging/docker/compose.yaml
+curl -fsSLO https://raw.githubusercontent.com/Star69995/calibre-zen/zen/packaging/docker/compose.yaml
 ```
 
 Your password goes next to it, in a file named `.env` with one line, `CALIBRE_ZEN_PASSWORD=` and then the password. `docker compose up -d` in that folder starts it. The file holds this:
@@ -38,7 +38,7 @@ Your password goes next to it, in a file named `.env` with one line, `CALIBRE_ZE
 ```yaml
 services:
   calibre-zen:
-    image: ghcr.io/purplecandy/calibre-zen:latest
+    image: ghcr.io/star69995/calibre-zen-margin:latest
     container_name: calibre-zen
     restart: unless-stopped
     ports:
@@ -134,7 +134,7 @@ The server never runs as root. It starts as root only to give `/config` and any 
 An update is the new image pulled and the container started again. Your books and settings stay in the folders you mounted. With Compose, `docker compose pull && docker compose up -d` does both.
 
 ```sh
-docker pull ghcr.io/purplecandy/calibre-zen:latest
+docker pull ghcr.io/star69995/calibre-zen-margin:latest
 docker rm -f calibre-zen
 ```
 

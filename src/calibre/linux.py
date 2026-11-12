@@ -28,7 +28,7 @@ from calibre.utils.resources import get_path as P
 # wrong would be a runtime failure in a worker nobody is watching. Only what
 # lands in PATH is prefixed -- which is the only place a normally-installed
 # calibre can be collided with in the first place.
-PATH_PREFIX = 'zen-'
+PATH_PREFIX = 'margin-'
 
 
 def path_name(exe):

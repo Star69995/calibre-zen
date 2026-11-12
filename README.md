@@ -1,31 +1,35 @@
-# calibre-zen
+# Calibre Zen Margin
 
-<img align="left" src="resources/images/lt.png" height="180" width="180"/>
+<img align="left" src="resources/images/lt.png" height="160" width="160"/>
 
-A modern calibre for people who love ebooks.
+**calibre with a simple, intuitive interface, and every feature kept.**
 
-calibre-zen rethinks calibre's interface so the hard things get easy and the easy things get trivial. Same library manager, far less friction.
+Calibre Zen Margin is a fork of [Calibre Zen](https://github.com/purplecandy/calibre-zen), which is a fork of [calibre](https://calibre-ebook.com). The interface is put in order so the thing you came to do is the thing you see; nothing calibre can do is taken away. English and Hebrew, with the whole window right to left in Hebrew.
 
-It installs as a separate app, so **calibre stays untouched**. Run both at once. Your libraries, settings and plugins do not move.
+It installs as a separate app beside **calibre** and **Calibre Zen**, with its own folder, settings, lock and command-line names, so neither is touched. The same library opens in any of them.
 
-[Website](https://calibrezen.com) · [Demo](https://youtu.be/Lc22AfF9u2c) · [Releases](https://github.com/purplecandy/calibre-zen/releases)
+[Website](https://star69995.github.io/calibre-zen/) · [עברית](https://star69995.github.io/calibre-zen/he/) · [Releases](https://github.com/Star69995/calibre-zen/releases)
 
 <br clear="left"/>
 
-![calibre-zen](screenshots/library.png)
+## Credits
 
----
+- **calibre** by **Kovid Goyal**, since 2006: the library, conversion, devices, the viewer, the editor and the content server. Every feature here is his.
+- **Calibre Zen** by **Nadeem Siddique (purplecandy)**: the modern interface this fork is built on -- the theme, the filter panel, the preview pane and the toolbar.
+- **Calibre Zen Margin** by **Star**: Windows support, Hebrew and right to left, Find an action (`Ctrl+K`) and Preferences search, the device list's columns, Send and Update on device, the jobs panel, Goodreads Updater and Book Cleanup built in.
 
-## Status
+Both earlier projects' copyright notices stay where they are (GPL v3; see [COPYRIGHT](COPYRIGHT)).
 
-Early access. Packages for macOS (universal), Linux (x86_64 and arm64) and Windows (x64) are built by CI from calibre's own release binaries; see [BUILDING.md](BUILDING.md) for how, and the [releases page](https://github.com/purplecandy/calibre-zen/releases) for downloads.
+## Download
+
+Packages for Windows (x64 `.msi`, portable installer, `.zip`), macOS (universal `.dmg`) and Linux (x86_64 and arm64 `.txz` and Flatpak) are built by CI from calibre's own release binaries on every `v*` tag; see [BUILDING.md](BUILDING.md). Get them from the [website](https://star69995.github.io/calibre-zen/) or the [releases page](https://github.com/Star69995/calibre-zen/releases).
 
 ### Install on Linux
 
 Run this from the folder where you want the app. It downloads the latest Linux release for your computer, checks its SHA-256, extracts it, and checks the launchers:
 
 ```sh
-curl -fL https://raw.githubusercontent.com/purplecandy/calibre-zen/zen/packaging/linux/install-zen.sh -o install-zen.sh && sh install-zen.sh --latest && ./calibre-zen/calibre-zen --version
+curl -fL https://raw.githubusercontent.com/Star69995/calibre-zen/zen/packaging/linux/install-zen.sh -o install-zen.sh && sh install-zen.sh --latest && ./calibre-zen-margin/calibre-zen-margin --version
 ```
 
 If you downloaded the `.txz` and matching `.sha256` files yourself, run `sha256sum -c <archive>.sha256` and then `sh install-zen.sh <archive>.txz`. On a minimal system, install missing graphics libraries for your distro:
@@ -37,11 +41,24 @@ If you downloaded the `.txz` and matching `.sha256` files yourself, run `sha256s
 | openSUSE | `sudo zypper install libglvnd Mesa-libGL1 libxcb-cursor0` |
 | Arch | `sudo pacman -S libglvnd xcb-util-cursor` |
 
-Move any existing `calibre-zen` folder aside before running the installer. Keep it until the new copy opens.
+Move any existing `calibre-zen-margin` folder aside before running the installer. Keep it until the new copy opens.
 
-The interface has had a full overhaul, so expect some bugs. Back up your library before doing anything destructive.
+**macOS:** the app is not notarized, so it is refused the first time; open System Settings > Privacy & Security and click Open Anyway. **Windows:** SmartScreen will warn until the download has built a reputation; choose "More info" and run anyway.
 
-**macOS:** the app is not notarized, so a double-click is refused the first time. Right-click the app, choose Open, once. **Windows:** SmartScreen will warn until the download has built a reputation; choose "More info" and run anyway.
+### Beside Calibre Zen
+
+| | Calibre Zen | Calibre Zen Margin |
+| --- | --- | --- |
+| app name (config, cache, lock, pipe) | `calibre-zen` | `calibre-zen-margin` |
+| Windows folder, Start menu | `Calibre Zen` | `Calibre Zen Margin` |
+| `.msi` UpgradeCode | its own | `zen_upgrade_code` in `constants.py` |
+| tools on `PATH` | `zen-calibredb`, ... | `margin-calibredb`, ... |
+| portable folder | `Calibre Zen Portable` | `Calibre Zen Margin Portable` |
+| updates from | purplecandy/calibre-zen | Star69995/calibre-zen |
+
+### The website
+
+`site/` is the [project page](https://star69995.github.io/calibre-zen/), deployed to GitHub Pages by `.github/workflows/pages.yml`; it lists releases live, so publishing one is enough. Screenshots come from `scripts/site-shots.sh` (on the library `scripts/showcase_library.py` builds), the link-preview cards from `scripts/og_image.py`, the icon from `imgsrc/margin_mark.py`.
 
 ### Roadmap
 

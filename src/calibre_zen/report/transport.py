@@ -28,7 +28,10 @@ import sys
 import threading
 from urllib.parse import urlsplit
 
-DSN = 'https://d9bd222e394c9233451e3f8fb8d29a26@o4512109070057472.ingest.de.sentry.io/4512109080281168'
+# Empty: Calibre Zen Margin has no Sentry project of its own, and reports must
+# not reach Calibre Zen's. While it is empty, report.enabled() is False and
+# nothing is wrapped. Put a project's DSN here to turn reporting back on.
+DSN = ''
 TIMEOUT = 8
 DRY_ENV = 'CALIBRE_ZEN_REPORT_DRY'
 

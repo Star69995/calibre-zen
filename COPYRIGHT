@@ -4,18 +4,23 @@ License: GPL-3
  The full text of the GPL is distributed as in
  /usr/share/common-licenses/GPL-3 on Debian systems.
 
-Files: imgsrc/calibre.svg resources/images/calibre.svg resources/images/lt.png
- resources/images/library.png resources/images/favicon-192.png
- resources/images/favicon-512.png icons/calibre.png
-Copyright: DiceBear
-License: CC0-1.0
- The calibre-zen application icon is "Waves" by DiceBear
- (https://www.dicebear.com), dedicated to the public domain under CC0 1.0
- (https://creativecommons.org/publicdomain/zero/1.0/). CC0 waives the
- attribution requirement; the credit is kept because it is the right thing to
- do, not because the licence compels it. The PNGs listed are renderings of
- that SVG. calibre's own artwork for these files is in the git history, under
- Kovid Goyal's copyright and the GPL, and is not shipped by this fork.
+Files: src/calibre_zen/*
+Copyright: Copyright (C) 2026 Nadeem Siddique (Calibre Zen)
+ Copyright (C) 2026 Star (Calibre Zen Margin)
+License: GPL-3
+ Calibre Zen by Nadeem Siddique (purplecandy), with the changes of its fork
+ Calibre Zen Margin. Each file names its own author.
+
+Files: imgsrc/calibre.svg imgsrc/margin_mark.py resources/images/calibre.svg
+ resources/images/lt.png resources/images/library.png
+ resources/images/favicon-192.png resources/images/favicon-512.png
+ icons/calibre.png
+Copyright: Copyright (C) 2026 Star
+License: GPL-3
+ The Calibre Zen Margin mark: a brushed ensō with a bookmark, drawn by
+ imgsrc/margin_mark.py. The PNGs are renderings of that SVG. Calibre Zen's
+ icon ("Waves" by DiceBear, CC0 1.0) and calibre's own artwork for these
+ files are in the git history and are not shipped by this fork.
 
 Files: resources/content-server/font-awesome/*
 Copyright: Various

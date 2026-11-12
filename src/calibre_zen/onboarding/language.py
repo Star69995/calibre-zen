@@ -44,7 +44,7 @@ class LanguageButton(QPushButton):
     def sync(self, *args):
         box = self.box()
         self.setText(box.currentText())
-        self.setToolTip(_('The language Calibre Zen speaks'))
+        self.setToolTip(_('The language Calibre Zen Margin speaks'))
 
     def build_menu(self):
         self.menu_.clear()

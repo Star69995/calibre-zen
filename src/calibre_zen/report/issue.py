@@ -24,11 +24,13 @@ diagnostics puts the same two blocks on the clipboard for pasting there.
 import platform
 from urllib.parse import urlencode
 
-GITHUB_REPO = 'purplecandy/calibre-zen'
+from calibre.constants import zen_repo
+
+GITHUB_REPO = zen_repo
 GITHUB_ISSUES = f'https://github.com/{GITHUB_REPO}/issues'
 TEMPLATE = '01-bug.yml'
 # The menu hides the entry while this is empty.
-REDDIT_URL = 'https://www.reddit.com/r/CalibreZen/'
+REDDIT_URL = ''
 # Where calibre's own bugs go. Kovid takes reports on the forum and Launchpad,
 # not GitHub, and a bug that reproduces without Zen is his, not ours.
 CALIBRE_BUGS_URL = 'https://calibre-ebook.com/bugs'
@@ -44,7 +46,7 @@ def environment_block() -> str:
     zen = event.zen_context()
     modules = zen.get('modules') or {}
     lines = [
-        f'Calibre Zen {zen_version} on calibre {__version__} ({event.environment()})',
+        f'Calibre Zen Margin {zen_version} on calibre {__version__} ({event.environment()})',
         _os_line(),
         f'Qt {event._qt_version()}, Python {platform.python_version()}',
         f'Scheme {zen.get("scheme")}, appearance {zen.get("appearance")}, icons {zen.get("icons")}, font {zen.get("font")}',

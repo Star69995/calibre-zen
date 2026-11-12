@@ -1,7 +1,7 @@
 {
-  "_comment": "The Store identity for the MSIX. identity_name, publisher and publisher_display_name must be copied exactly from Partner Center: Product management -> Product Identity (Package/Identity/Name, Package/Identity/Publisher, Package/Properties/PublisherDisplayName). The Store rejects a package whose identity differs from the reservation. The display name comes from zen_display_name in src/calibre/constants.py and must equal a name reserved in Partner Center (Calibre Zen). The package version is zen_version (src/calibre/constants.py) plus '.0': the Store needs four parts, a 0 last, and an increase on every submission, so a resubmission bumps zen_version.",
-  "identity_name": "purplecandy.CalibreZen",
-  "publisher": "CN=7DA4F44E-873A-415F-907E-E48C3ECC96F1",
-  "publisher_display_name": "purplecandy",
-  "description": "A modern calibre for people who love ebooks. Installs beside calibre; your libraries, settings and plugins do not move."
+  "_comment": "The Store identity for the MSIX. identity_name, publisher and publisher_display_name must be copied exactly from Partner Center: Product management -> Product Identity (Package/Identity/Name, Package/Identity/Publisher, Package/Properties/PublisherDisplayName). The Store rejects a package whose identity differs from the reservation. The display name comes from zen_display_name in src/calibre/constants.py and must equal a name reserved in Partner Center (Calibre Zen Margin). The package version is zen_version (src/calibre/constants.py) plus '.0': the Store needs four parts, a 0 last, and an increase on every submission, so a resubmission bumps zen_version. Calibre Zen Margin has no Store reservation yet: the identity below is a placeholder in the right format, so the .msix builds (and can be sideloaded); replace all three from Partner Center before a submission.",
+  "identity_name": "Star69995.CalibreZenMargin",
+  "publisher": "CN=Star69995",
+  "publisher_display_name": "Star69995",
+  "description": "calibre with a simple, intuitive interface that keeps every feature. Installs beside calibre and Calibre Zen; your libraries, settings and plugins do not move."
 }
