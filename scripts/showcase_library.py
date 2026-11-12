@@ -101,7 +101,10 @@ def main():
         mi.pubdate = parse_date(row['Issued'])
         mi.rating = rnd.choice((6, 8, 8, 10, 10))
         mi.identifiers = {'gutenberg': str(pg_id)}
-        cover = open(cover_path, 'rb').read() if os.path.exists(cover_path) else None
+        cover = None
+        if os.path.exists(cover_path):
+            with open(cover_path, 'rb') as f:
+                cover = f.read()
         api.create_book_entry(mi, cover=cover)
         print(pg_id, title, '/', ', '.join(mi.authors), flush=True)
     print('library:', out)

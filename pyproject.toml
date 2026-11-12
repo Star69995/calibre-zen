@@ -291,6 +291,9 @@ ignore = [
 "src/calibre/gui2/*" = ['ANN']
 "{manual,setup,stubs}/*" = ['ANN']
 "src/{odf,qt}/*" = ['ANN']
+# calibre-zen: the fork's own code is not annotated; upstream's typing rules
+# (turned on for the whole tree in 9.18) are for upstream's packages
+"{src/calibre_zen,packaging,scripts,imgsrc,docs,.calibre-zen}/*" = ['ANN']
 # These modules wrap a browser, whose operations can all block indefinitely on
 # the network, so every one of them takes an explicit timeout
 "src/calibre/web/automate/{camoufox,recipes}.py" = ['async-function-with-timeout']

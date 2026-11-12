@@ -433,6 +433,7 @@ All marked `# calibre-zen:` so a merge conflict is obvious.
 | `src/calibre/constants.py` | `__appname__`; `CALIBRE_ZEN_PACKAGED` turns `is_running_from_develop` off |
 | `src/calibre/utils/ipc/__init__.py` | the IPC socket derived from `__appname__` |
 | `src/calibre/linux.py` | `path_name()`, `desktop_id()`: prefixed PATH names and desktop ids |
+| `pyproject.toml` | ruff's `ANN` rules (upstream's typing, on for the whole tree since 9.18) are off for the fork's own paths |
 | `src/calibre/gui2/__init__.py` | the overlay's entry point after `PaletteManager` |
 | `setup/install.py` | also copies `.qss`, `.svg`, `.ttf` out of `src/` |
 | `bypy/macos/__main__.py` | bundle identity, for the day a real build is wanted |

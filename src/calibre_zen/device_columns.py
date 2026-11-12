@@ -62,11 +62,13 @@ Off with `CALIBRE_ZEN_DEVICE_COLUMNS=0`.
 
 import os
 import posixpath
-from collections.abc import Callable
-from typing import NamedTuple
+from typing import TYPE_CHECKING, NamedTuple
 
 from calibre_zen.features import from_env
 from calibre_zen.i18n import N_
+
+if TYPE_CHECKING:
+    from collections.abc import Callable
 
 AFTER = 'size'  # the column they follow
 CALIBRE_DELEGATES = 10  # how many columns DeviceBooksView.__init__ gives a TextDelegate
