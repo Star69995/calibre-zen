@@ -142,7 +142,7 @@ lipo -info "$C/MacOS/$APPNAME" | sed 's/^/    /'
 # ------------------------------------------------------------- nested apps
 # The bundle is four apps, each inside the one above it:
 #
-#   Calibre Zen.app                  the library window   io.github.purplecandy.calibre-zen
+#   Calibre Zen Margin.app           the library window   io.github.star69995.calibre-zen-margin
 #     Contents/ebook-viewer.app      the reader           <that>.ebook-viewer
 #       Contents/ebook-edit.app      the book editor      <that>.ebook-edit
 #         Contents/headless.app      background workers   <that>.calibre-parallel
