@@ -140,6 +140,20 @@ or conventions), update the project's CLAUDE.md (or create one if it
 doesn't exist yet) and its README.md in the same pass, so neither drifts
 from the code.
 
+### Sub-agents and model choice
+
+Delegate to a sub-agent on a cheaper model (Haiku, or Sonnet for slightly
+heavier work) only for mechanical, read-only, wide-reach tasks where you need
+the conclusion and not the raw material: broad code searches across many
+files, running the test suite and summarizing the failures from long output,
+reading long logs. This keeps the main context small and the cost low.
+
+Keep on the main model: edits, design and architecture decisions, UI/visual
+verification and judging screenshots, upstream merges, and anything that needs
+the conversation's context. Don't delegate a small task you can do in one or
+two tool calls - starting an agent costs more than it saves. Never use
+"always delegate"; check what a sub-agent returns before relying on it.
+
 ## Web UI rules (`site/`)
 
 The website is this project's browser UI; these apply to it (not to the Qt app).

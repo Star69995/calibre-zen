@@ -102,11 +102,25 @@ class TestSelectionFill(ZenTestCase):
 class TestGlyphInk(ZenTestCase):
     "A glyph is inked for the fill it is drawn on, or it is not there at all."
 
+    def glyph_corner(self, button):
+        "The button's picture and the rectangle of it the glyph is in."
+        return button.grab().toImage(), button.rect().adjusted(8, 4, -button.width() * 2 // 3, -4)
+
     def glyph_colours(self, button) -> set:
         "Every colour in the glyph's corner of the button, minus its fill."
-        img = button.grab().toImage()
-        area = button.rect().adjusted(8, 4, -button.width() * 2 // 3, -4)
+        img, area = self.glyph_corner(button)
         return colours(img, area) - {dominant(img, area)}
+
+    def glyph_ink(self, button) -> str:
+        """
+        The colour the glyph is drawn in: of the colours in its corner, the one
+        furthest from the fill. The edge of the glyph is anti-aliased through
+        every shade between the two, so the set of colours alone cannot say
+        what the ink is (on Windows it holds the on-accent colour by chance).
+        """
+        img, area = self.glyph_corner(button)
+        fill = dominant(img, area)
+        return max(colours(img, area) - {fill}, key=lambda c: contrast(c, fill))
 
     def primary(self) -> QPushButton:
         b = QPushButton(QIcon.ic('ok.png'), 'Apply')
@@ -147,9 +161,8 @@ class TestGlyphInk(ZenTestCase):
         b = self.primary()
         b.setEnabled(False)
         process_events()
-        seen = self.glyph_colours(b)
-        self.assertTrue(seen, 'no glyph painted at all')
-        self.assertNotIn(chrome.accent_text, seen, 'a disabled default button flipped its glyph to on-accent')
+        self.assertTrue(self.glyph_colours(b), 'no glyph painted at all')
+        self.assertNotEqual(chrome.accent_text, self.glyph_ink(b), 'a disabled default button flipped its glyph to on-accent')
 
     def test_destructive_default_button_keeps_the_danger_ink(self):
         "The danger tint wins over :default in the sheet, so the glyph follows the tint, not the accent."
