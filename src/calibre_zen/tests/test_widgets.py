@@ -477,7 +477,10 @@ class TestToolbarOverflow(ZenTestCase):
             bar.addAction(QAction(f'Action number {i}', bar))
         self.assertTrue(overflow.track(bar))
         self.assertTrue(overflow.track(bar), 'a second call must be harmless')
-        win.resize(320, 200)
+        # Narrow, so the bar overflows, but tall: Qt 6 never returns from opening the tray of a
+        # bar in a window too short to grow it into (a bare QToolBar hangs the same way, with
+        # no overlay at all), which hung this test on Linux CI and on Windows.
+        win.resize(320, 400)
         win.show()
         process_events(300)
         button = bar.findChild(QToolButton, overflow.BUTTON_NAME)
