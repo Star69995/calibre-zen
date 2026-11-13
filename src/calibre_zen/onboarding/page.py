@@ -4,7 +4,8 @@
 """
 One wizard page per layout change: a title, one line, and a recording.
 
-`STEPS` is the whole content. Each entry is what the wizard's header says --
+`STEPS` is the whole content, in English; the page translates it when it
+sets its texts, so a language switch in the wizard reaches it. Each entry is what the wizard's header says --
 the page title and the one-line subtitle under it -- and the recording that
 fills the page below. The first step takes the slot of calibre's finish page,
 because that is the page every other page's `nextId` points at; the rest are
@@ -28,6 +29,8 @@ from qt.core import QColor, QLabel, QMovie, QPainter, QPen, QSize, QSizePolicy, 
 
 from calibre.gui2.wizard import FinishPage
 from calibre.utils.localization import _
+from calibre_zen.i18n import N_
+from calibre_zen.onboarding import parts
 from calibre_zen.theme import rewrite
 from calibre_zen.theme.tokens import components
 
@@ -36,25 +39,25 @@ ASSETS = os.path.join(HERE, 'assets')
 
 
 class Step(NamedTuple):
-    title: str  # the wizard header's title
-    blurb: str  # the one line under it: what changed
+    title: str  # the wizard header's title, untranslated
+    blurb: str  # the one line under it: what changed, untranslated
     demo: str  # a file under assets/, or '' while there is none
 
 
 STEPS = (
     Step(
-        _('Updated menus'),
-        _('A minimalist and elegant top menu: it takes less space and behaves consistently.'),
+        N_('Updated menus'),
+        N_('A minimalist and elegant top menu: it takes less space and behaves consistently.'),
         'top-menu.gif',
     ),
     Step(
-        _('Updated filters'),
-        _('Filters that make it easy to see what is applied, and to toggle anything else quickly.'),
+        N_('Updated filters'),
+        N_('Filters that make it easy to see what is applied, and to toggle anything else quickly.'),
         'side-filters.gif',
     ),
     Step(
-        _('Themes and Zen settings'),
-        _('Switch between light, dim and dark in a click, and turn off any revamped part you do not like.'),
+        N_('Themes and Zen settings'),
+        N_('Switch between light, dim and dark in a click, and turn off any revamped part you do not like.'),
         'themes-and-zen-settings.gif',
     ),
 )
@@ -183,8 +186,9 @@ class StepMixin:
         # The form's setupUi calls retranslateUi before build() has run.
         if getattr(self, 'step', None) is None:
             return
-        self.setTitle(self.step.title)
-        self.setSubTitle(self.step.blurb)
+        # Translated here, not in STEPS: the wizard can change language
+        # while it is open, and every page's texts are set again when it does.
+        parts.header(self, _(self.step.title), _(self.step.blurb))
         # Upstream's footer opens with a "Congratulations!" heading; ours is
         # the one line of it that tells the reader something. `%s` is filled
         # in by Wizard.set_finish_text with the Finish button's real label,

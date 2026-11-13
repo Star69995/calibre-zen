@@ -142,6 +142,20 @@ class Fallback(unittest.TestCase):
         self.assertEqual(_('Cover'), 'כריכה')
         self.assertNotIn('Cover', parse(os.path.join(i18n.LOCALES, 'he.po')))
 
+    def test_hebrew_tells_qt_to_lay_out_right_to_left(self):
+        from qt.core import QCoreApplication
+
+        from calibre_zen.tests.base import app
+
+        app()
+        self.switch_to('he')
+        self.assertEqual(self.localization._(i18n.LAYOUT_DIRECTION), 'RTL')
+        # What Qt itself asks, through calibre's translator and our fallback,
+        # once the new translator is Qt's as calibre's language switch makes it.
+        self.localization.install_qt_translator()
+        self.addCleanup(self.localization.install_qt_translator)  # after tearDown's switch back
+        self.assertEqual(QCoreApplication.translate('QGuiApplication', 'QT_LAYOUT_DIRECTION'), 'RTL')
+
     def test_a_language_with_no_catalog_is_left_alone(self):
         self.switch_to('de')
         self.assertEqual(self.localization._('Reset all filters'), 'Reset all filters')

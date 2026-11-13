@@ -29,6 +29,11 @@ def read_json(path: str):
         return json.load(f)
 
 
+def shown(label) -> str:
+    "A value label's text without the marks that keep a path left to right."
+    return label.text().strip('\u2066\u2069\u200e\u200f')
+
+
 def touch(path: str, data: bytes = b'') -> None:
     os.makedirs(os.path.dirname(path), exist_ok=True)
     with open(path, 'wb') as f:
@@ -451,8 +456,8 @@ class TestSetupPage(Fixtures, ZenTestCase):
         page, _advanced = self.pages(self.wizard(src))
         self.assertIsInstance(page.form, forms.Form)
         self.assertEqual(page.mode(), import_page.BRING)
-        self.assertEqual(page.bring_settings.text(), src)
-        self.assertEqual(page.bring_library.text(), '/books/Calibre Library')
+        self.assertEqual(shown(page.bring_settings), src)
+        self.assertEqual(shown(page.bring_library), '/books/Calibre Library')
         self.assertEqual(page.bring_plugins.text(), 'DeDRM')
         self.assertEqual(self.next_text(page), 'Apply & Continue', 'Next does the work, so it says so')
         self.assertTrue(page.backup_card.isHidden(), 'a first run has nothing to back up')
@@ -487,7 +492,7 @@ class TestSetupPage(Fixtures, ZenTestCase):
         library = self.make_library()
         with mock.patch('calibre.gui2.choose_dir', return_value=library):
             page.pick_library.click()
-        self.assertEqual(page.fresh_library.text(), library)
+        self.assertEqual(shown(page.fresh_library), library)
         self.assertEqual(self.next_text(page), 'Apply & Continue')
         self.assertEqual(page.nextId(), DevicePage.ID)
         with mock.patch.object(import_page.importer, 'use_library') as use, mock.patch.object(import_page.importer, 'reset') as reset:
@@ -571,7 +576,7 @@ class TestAdvancedPage(Fixtures, ZenTestCase):
 
     def test_it_starts_from_what_was_found(self):
         page = self.pages(self.wizard(self.make_calibre()))[1]
-        self.assertEqual(page.library_value.text(), '/books/Calibre Library')
+        self.assertEqual(shown(page.library_value), '/books/Calibre Library')
         self.assertEqual(set(page.group_checks), {g.key for g in page_groups()})
         self.assertTrue(all(b.isChecked() for b in page.group_checks.values()))
         self.assertEqual(list(page.plugin_checks), ['DeDRM.zip'])
@@ -589,8 +594,8 @@ class TestAdvancedPage(Fixtures, ZenTestCase):
         config = os.path.join(outer, 'config')
         with mock.patch('calibre.gui2.choose_dir', return_value=outer):
             page.pick_settings.click()
-        self.assertEqual(page.settings_value.text(), config)
-        self.assertEqual(page.library_value.text(), library, 'the library those settings name')
+        self.assertEqual(shown(page.settings_value), config)
+        self.assertEqual(shown(page.library_value), library, 'the library those settings name')
         self.assertEqual(list(page.plugin_checks), ['Quality Check.zip'], "the new folder's plugins")
         page.group_checks['windows'].setChecked(False)
         page.plugin_checks['Quality Check.zip'].setChecked(False)
@@ -630,10 +635,10 @@ class TestAdvancedPage(Fixtures, ZenTestCase):
         with_files = self.with_files()
         with mock.patch('calibre.gui2.choose_dir', return_value=with_files), mock.patch('calibre.gui2.question_dialog', return_value=False):
             page.pick_library.click()
-        self.assertNotEqual(page.library_value.text(), with_files)
+        self.assertNotEqual(shown(page.library_value), with_files)
         with mock.patch('calibre.gui2.choose_dir', return_value=with_files), mock.patch('calibre.gui2.question_dialog', return_value=True):
             page.pick_library.click()
-        self.assertEqual(page.library_value.text(), with_files)
+        self.assertEqual(shown(page.library_value), with_files)
 
     def test_a_rerun_backs_up_first(self):
         from calibre_zen.onboarding import advanced_page

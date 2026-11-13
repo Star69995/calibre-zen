@@ -57,6 +57,39 @@ def value(parent) -> QLabel:
     return label
 
 
+def header(page, title: str, subtitle: str) -> None:
+    """
+    A page's title and the line under it, starting on the window's side.
+
+    A Hebrew line that opens with a Latin word ("calibre מותקן...") is taken
+    for a left-to-right one and laid out from the left, full stop and all.
+    """
+    from calibre_zen.library_dialog import at_start
+
+    page.setTitle(at_start(title))
+    page.setSubTitle(at_start(subtitle))
+
+
+def path_text(path: str) -> str:
+    """
+    A folder as a value shows it: read left to right in any language.
+
+    A Windows path with a Hebrew folder name in it, set as it is, is reordered
+    by the bidi algorithm in a right-to-left window ("ספריית קליבר\\C:\\Users").
+    Isolating it keeps its order; '' stays ''.
+    """
+    from calibre_zen.library_dialog import isolated
+
+    return isolated(path) if path else ''
+
+
+def inline_path(path: str) -> str:
+    "A folder inside a sentence: kept in its order without changing the sentence's."
+    from calibre_zen.library_dialog import LRI, PDI
+
+    return LRI + path + PDI
+
+
 def picker(parent, slot, tooltip: str) -> QToolButton:
     "A row's folder button, in the form's tool slot."
     from calibre_zen.icons import registry

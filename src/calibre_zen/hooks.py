@@ -218,7 +218,7 @@ import os
 
 from calibre_zen import i18n
 
-# Before the imports below: onboarding/page.py translates at import time.
+# Before the imports below, so a string translated at import finds our catalog.
 i18n.install()
 
 from calibre_zen import (

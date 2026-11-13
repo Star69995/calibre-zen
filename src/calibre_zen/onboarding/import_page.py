@@ -167,10 +167,10 @@ class ImportPage(QWizardPage):
         self.shared.setVisible(mode == BRING)
         self.advanced_hint.setVisible(mode == ADVANCED and not self.done)
         if self.found is not None:
-            self.bring_settings.setText(self.found.path)
-            self.bring_library.setText(self.found.library or _('None'))
+            self.bring_settings.setText(parts.path_text(self.found.path))
+            self.bring_library.setText(parts.path_text(self.found.library) or _('None'))
             self.bring_plugins.setText(', '.join(self.found.plugins) or _('None'))
-        self.fresh_library.setText(self.library_path)
+        self.fresh_library.setText(parts.path_text(self.library_path))
         self.fresh_library.setToolTip(self.library_path)
         problem = self.trouble()
         self.problem.setText(problem)
@@ -190,11 +190,11 @@ class ImportPage(QWizardPage):
     # ------------------------------------------------------------ texts
 
     def apply_texts(self):
-        self.setTitle(_('Set up Calibre Zen Margin'))
         if self.found is not None:
-            self.setSubTitle(_('calibre is on this computer too. Its settings can come with you.'))
+            subtitle = _('calibre is on this computer too. Its settings can come with you.')
         else:
-            self.setSubTitle(_('Pick where your books go, and you are ready to start.'))
+            subtitle = _('Pick where your books go, and you are ready to start.')
+        parts.header(self, _('Set up Calibre Zen Margin'), subtitle)
         self.buttons[BRING].setText(_('Bring over my calibre settings'))
         self.notes[BRING].setText(_('Your library, plugins and preferences. The look stays Calibre Zen Margin’s own.'))
         self.buttons[FRESH].setText(_('Start fresh'))
@@ -227,7 +227,7 @@ class ImportPage(QWizardPage):
         }
         text = lines.get(self.done, '')
         if text and self.backup_path:
-            text += '\n' + _('Your old settings are saved in %s') % self.backup_path
+            text += '\n' + _('Your old settings are saved in %s') % parts.inline_path(self.backup_path)
         return text
 
     def retranslateUi(self, page):

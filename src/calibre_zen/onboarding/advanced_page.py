@@ -166,11 +166,10 @@ class AdvancedPage(QWizardPage):
         self.completeChanged.emit()
 
     def refresh(self):
-        self.setTitle(_('Choose what comes over'))
-        self.setSubTitle(_('Pick the folders, the settings and the plugins to bring.'))
-        self.settings_value.setText(self.settings_path or _('Not chosen'))
+        parts.header(self, _('Choose what comes over'), _('Pick the folders, the settings and the plugins to bring.'))
+        self.settings_value.setText(parts.path_text(self.settings_path) or _('Not chosen'))
         self.settings_value.setToolTip(self.settings_path)
-        self.library_value.setText(self.library_path or _('Not chosen'))
+        self.library_value.setText(parts.path_text(self.library_path) or _('Not chosen'))
         self.library_value.setToolTip(self.library_path)
         problem = self.trouble()
         self.problem.setText(problem)
@@ -187,7 +186,7 @@ class AdvancedPage(QWizardPage):
             return ''
         text = _('Your chosen settings are here now.')
         if self.backup_path:
-            text += '\n' + _('Your old settings are saved in %s') % self.backup_path
+            text += '\n' + _('Your old settings are saved in %s') % parts.inline_path(self.backup_path)
         return text
 
     # ------------------------------------------------------------ choosing

@@ -67,7 +67,9 @@ Strings only this fork has are translated in `src/calibre_zen/locales/<lang>.po`
 and added behind calibre's own catalog by `src/calibre_zen/i18n.py`. Write UI text
 with `_()` / `ngettext()`; add the pair to a language's `.po` to ship it there.
 Keep placeholders exactly; `tests/test_i18n.py` checks them. A missing
-translation is not a test failure.
+translation is not a test failure. The window is right to left in Hebrew because `he.po` translates
+`QT_LAYOUT_DIRECTION` to `RTL` (calibre's catalog does not, so stock calibre
+stays left to right); see the overlay README's translation section.
 
 ## Taking a new calibre release
 

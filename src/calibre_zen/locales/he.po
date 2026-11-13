@@ -11,6 +11,11 @@ msgstr ""
 "Content-Transfer-Encoding: 8bit\n"
 "Plural-Forms: nplurals=2; plural=(n != 1);\n"
 
+#: i18n.py:110
+#. Not a sentence: Qt reads "RTL" here as "lay the window out right to left".
+msgid "QT_LAYOUT_DIRECTION"
+msgstr "RTL"
+
 #: centre/grid.py:166
 msgid "Natural"
 msgstr "טבעי"

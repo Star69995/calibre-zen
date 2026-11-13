@@ -240,9 +240,18 @@ the rest. Nothing is written to the install directory.
 
 Two details are why `i18n.py` is not a one-line call. The wizard's language box
 runs `set_translators()` again, which builds a new translator, so that call is
-wrapped to attach ours to the new one. And some modules translate at import
-(`STEPS` in `onboarding/page.py`), so `hooks.py` installs `i18n` before it
-imports them.
+wrapped to attach ours to the new one. And `hooks.py` installs `i18n` before it
+imports the rest, so a string translated at import still finds ours. A table
+of texts is better kept in English with `N_()` and translated where it is
+shown (`STEPS` in `onboarding/page.py`): a string translated at import stays in
+the language the app started in after the wizard switches.
+
+Right to left comes from the catalog too: `he.po` translates
+`QT_LAYOUT_DIRECTION` to `RTL`, which is how Qt is told to mirror every window
+(calibre's own catalogs never say so, which left calibre left to right in
+Hebrew), and `i18n.follow_translator_direction` has Qt read it again whenever
+calibre installs its translator, at start and after the wizard switches
+language. Another right-to-left language gets the same entry in its `.po`.
 
 To translate a string, write it with `_()` as usual; to ship it in a language,
 add a `msgid`/`msgstr` pair to that language's `.po`. Keep the placeholders

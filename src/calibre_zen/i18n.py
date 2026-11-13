@@ -16,8 +16,16 @@ Two things make "add them once" not enough:
 * calibre changes language while running -- the welcome wizard's language box
   calls `set_translators()` again, which builds a new translator and drops the
   fallback. The call is wrapped, so the new translator gets ours too.
-* some of our modules translate at import (`STEPS` in onboarding/page.py), so
-  `hooks.py` installs this before it imports them.
+* a string translated at import needs the catalog already there, so
+  `hooks.py` installs this before it imports the rest. (Tables of texts are
+  kept in English with `N_()` instead, so a language switch reaches them.)
+
+The layout direction rides on the same catalog. Qt mirrors the whole
+application when its translator turns `QT_LAYOUT_DIRECTION` into "RTL";
+calibre's catalogs never do, so calibre is left to right even in Hebrew. Ours
+does (`LAYOUT_DIRECTION`), and `follow_translator_direction` has Qt read it
+again each time calibre installs its translator, since that sends Qt no
+LanguageChange of its own.
 
 A `.po` is compiled with calibre's own `msgfmt`, in memory, when the language
 is picked; nothing is written to the install directory, which a package may
@@ -91,6 +99,22 @@ def attach() -> bool:
     return True
 
 
+def redetect_direction() -> None:
+    """
+    Have Qt read `LAYOUT_DIRECTION` again, from the translator just installed.
+
+    Qt reads it on a LanguageChange, and installing calibre's translator sends
+    none: calibre's is a QTranslator subclass with no file loaded, which Qt
+    takes for an empty one and installs without a word. Setting the direction
+    back to automatic is Qt's own way to make it look again, and every window
+    is told of the change.
+    """
+    from qt.core import QGuiApplication, Qt
+
+    if QGuiApplication.instance() is not None:
+        QGuiApplication.setLayoutDirection(Qt.LayoutDirection.LayoutDirectionAuto)
+
+
 def N_(msgid: str) -> str:
     """
     `msgid`, unchanged: a mark that a string in a table is translated later, by
@@ -98,6 +122,15 @@ def N_(msgid: str) -> str:
     see the string, which a bare literal in a tuple would hide from them.
     """
     return msgid
+
+
+# Qt lays the whole application out right to left when its translator turns
+# this string into "RTL" (QGuiApplication reads it on every LanguageChange).
+# calibre's catalogs have no entry for it, so calibre stays left to right in
+# Hebrew and Arabic; a catalog here that should mirror the window translates
+# it, and Qt does the rest -- the main window, menus, dialogs and the welcome
+# wizard, at start and after the wizard switches language.
+LAYOUT_DIRECTION = N_('QT_LAYOUT_DIRECTION')
 
 
 def override(msgid: str) -> str:
@@ -114,6 +147,29 @@ def override(msgid: str) -> str:
         if ans != msgid:
             return ans
     return _(msgid)
+
+
+def follow_translator_direction() -> None:
+    """
+    Re-detect the layout direction whenever calibre installs Qt's translator:
+    in Application.__init__, and after the welcome wizard's language box
+    switches language (both go through `Application.load_translations`).
+    """
+    from calibre.gui2 import Application
+
+    orig = Application.load_translations
+    if hasattr(orig, '__wrapped__'):
+        return
+
+    @wraps(orig)
+    def load_translations(self):
+        orig(self)
+        try:
+            redetect_direction()
+        except Exception:
+            traceback.print_exc()
+
+    Application.load_translations = load_translations
 
 
 def install() -> bool:
@@ -138,6 +194,7 @@ def install() -> bool:
                 return result
 
             cls.__call__ = __call__
+        follow_translator_direction()
         attach()
     except Exception:
         # Untranslated strings are an acceptable Tuesday; a window that does not
