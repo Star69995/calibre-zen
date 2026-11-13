@@ -19,7 +19,7 @@ This file is how it gets built, and what is still missing.
 | macOS package | **done** -- `packaging/macos/package.sh`, universal `.dmg` |
 | Windows package | **done** -- `packaging/windows/package.ps1`, x64 `.msi` (WiX), portable installer `.exe`, `.zip`, and `.msix` for the Store |
 | release parity | **done** -- every kind of file an upstream release has: two `.txz`, `.dmg`, `.msi`, portable installer, source `.tar.xz` |
-| CI | `.github/workflows/zen-ci.yml` on every push and pull request: lint, compile, tests (below). `.github/workflows/zen-package.yml` on pushes to `zen` and tags, one job per platform; the Windows job installs and removes the `.msi` and runs the portable installer |
+| CI | `.github/workflows/zen-ci.yml` on every push and pull request: lint, compile, tests (below). `.github/workflows/zen-package.yml` on pushes to `zen-margin` and tags, one job per platform; the Windows job installs and removes the `.msi` and runs the portable installer |
 | signing | macOS **Developer ID + notarization**, secret-gated; Windows: the Store signs the `.msix`, the rest is unsigned; Linux n/a |
 
 ## How it is built
@@ -421,7 +421,7 @@ Locally, `./zen-test` finds `calibre.app` on macOS or `calibre-debug` on PATH,
 insists the version matches `src/calibre/constants.py`, and runs in about
 five seconds after the first launch has compiled the forms.
 
-`zen package` is the slower check and runs only on pushes to `zen` and on
+`zen package` is the slower check and runs only on pushes to `zen-margin` and on
 tags: it builds each platform's package and smoke-tests it headless.
 
 ## The fork's edits to upstream files
@@ -485,7 +485,7 @@ they are: the fork's name is added to them, never substituted.
 ## The website
 
 `site/` is the project's page, published to GitHub Pages by
-`.github/workflows/pages.yml` on every push to `zen` that touches it:
+`.github/workflows/pages.yml` on every push to `zen-margin` that touches it:
 English at the root, Hebrew at `site/he/`. `site/app.js` lists the releases
 live from the GitHub API (only `v*` tags; the `upstream-*` mirror and
 `update-test-*` pre-releases are skipped) and points the download button at

@@ -4,7 +4,7 @@ name: Website
 
 on:
   push:
-    branches: [zen]
+    branches: [zen-margin]
     paths: ["site/**", ".github/workflows/pages.yml"]
   workflow_dispatch:
 

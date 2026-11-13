@@ -18,7 +18,7 @@ it to the guide, not here.
 - Work in a **new worktree** (`wt/upstream-<version>`), never in the user's
   checkout: it usually holds unfinished work.
 - Stop after the local commit and the report. **Do not push, open a PR or merge
-  into `zen` unless asked.** When asked: this machine's `gh` account has no write
+  into `zen-margin` unless asked.** When asked: this machine's `gh` account has no write
   access to `purplecandy/calibre-zen`, so push to the `fork` remote and open the PR
   from there against `purplecandy/calibre-zen` base `zen` (`gh auth status` first).
 - Merge a release **tag**, never upstream `master`. A fix that is on `master` only and
@@ -46,14 +46,14 @@ the section of the version we are on.
 
 **Also check Calibre Zen (`origin`), every time, not only calibre.** This fork
 sits on both. `git fetch origin --tags --prune`, then
-`git log --no-merges zen..origin/zen` (and `git rev-list --left-right --count
-origin/zen...zen`). Say which calibre release it is on (`constants.py`,
+`git log --no-merges zen-margin..origin/zen` (and `git rev-list --left-right --count
+origin/zen...zen-margin`). Say which calibre release it is on (`constants.py`,
 `packaging/upstream.json` at `origin/zen`: it may be behind this fork), and
 separate its fixes to `src/calibre_zen/` and `packaging/` from new features such as
 a whole new module. Look at the `origin/wt/*` branches that moved too: they are
 work not merged yet. Report both sources together. Read `origin/zen` after the
 `reviewed` commit in `upstream-sync.json`; if that is no longer an ancestor of
-`origin/zen` (a force-push), say so and read from `git merge-base zen origin/zen`.
+`origin/zen` (a force-push), say so and read from `git merge-base zen-margin origin/zen`.
 
 **From Calibre Zen take macOS fixes only, never its web app or website.** This
 fork has its own identity and site. Never merge `origin/zen`: cherry-pick (`-x`)
@@ -66,8 +66,8 @@ everything else of theirs as not taken, in one line.
 
 Follow the guide's sections 1 to 4. Points that decide the outcome:
 
-- `git rev-list --left-right --count origin/zen...zen` tells whether local `zen`
-  has commits `origin/zen` lacks. Base the worktree on local `zen` and say so.
+- `git rev-list --left-right --count origin/zen...zen-margin` tells whether local `zen-margin`
+  has commits `origin/zen` lacks. Base the worktree on local `zen-margin` and say so.
 - The only expected conflict is `src/calibre/constants.py`. Anything else is a
   fork edit (`# calibre-zen:` markers, the table in BUILDING.md) meeting new
   upstream code; look at it, do not take either side blindly.
@@ -78,7 +78,7 @@ Follow the guide's sections 1 to 4. Points that decide the outcome:
   also rewrites history in the `_comment` fields.
 - Get the matching binary (Windows: unpack the `.msi` with `msiexec /a`; macOS: the
   `.dmg`), check its sha256 against `upstream.json` first.
-- **Judge the test run against a baseline**: the previous `zen` in a second
+- **Judge the test run against a baseline**: the previous `zen-margin` in a second
   worktree, run with the previous release's binary. Only failures present in the
   merge and not in the baseline are yours. When they name an overlay audit
   (`test_srvfix` audit, `test_reader_look` colours), fix it in `src/calibre_zen/` as

@@ -12,7 +12,7 @@ Most of the machinery is here, and was written for `purplecandy/calibre-zen`:
   binary with this fork's Python laid on top, so the same calibre tag as
   `packaging/upstream.json` is required.
 - **A release workflow** (`.github/workflows/zen-package.yml`): runs on pushes to
-  `zen` and on tags `v*`, one job per platform, and a tag push collects the
+  `zen-margin` and on tags `v*`, one job per platform, and a tag push collects the
   packages into a **draft** release with a `sha256` per file and a `latest.json`
   feed. A manual run with `prerelease` publishes an "Update test" release with its
   own feed, for trying the in-app update on a real install.
@@ -148,7 +148,7 @@ when this lands.
   to pay for signing is a later decision.
 - **The trust model.** An automatic update means whoever can push a tag to your
   repository can put code on every installed copy. Turn on two-factor sign-in,
-  protect the `zen` branch and the `v*` tags, and consider signed tags. The
+  protect the `zen-margin` branch and the `v*` tags, and consider signed tags. The
   `sha256` in the feed guards against a bad download, not against a bad release.
 - **Fork-of-a-fork.** `purplecandy` can change `zen-package.yml` and the
   packaging. Merge from `origin` deliberately, as the guide for upstream calibre

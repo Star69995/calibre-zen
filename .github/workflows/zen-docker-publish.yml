@@ -2,9 +2,9 @@
 # amd64 and arm64 on native runners, checked by packaging/docker/check-image.sh,
 # then pushed as one multi-arch image.
 #
-#   push to zen      :edge, the newest merged code
+#   push to zen-margin :edge, the newest merged code
 #   tag v<zen>       :<zen>, :<major.minor> and :latest
-#   manual run       :edge, from zen only
+#   manual run       :edge, from zen-margin only
 #
 # Only events that run code already on this repository's branches or tags
 # start it. Pull requests are checked by zen-docker.yml, which has no write
@@ -14,7 +14,7 @@ name: zen-docker-publish
 
 on:
   push:
-    branches: [zen]
+    branches: [zen-margin]
     tags: ['v*']
     paths:
       - .github/workflows/zen-docker-publish.yml
@@ -57,7 +57,7 @@ jobs:
           echo "zen=$zen" >> "$GITHUB_OUTPUT"
           publish=false
           case "$GITHUB_EVENT_NAME:$GITHUB_REF" in
-            push:refs/heads/zen|workflow_dispatch:refs/heads/zen) publish=true ;;
+            push:refs/heads/zen-margin|workflow_dispatch:refs/heads/zen-margin) publish=true ;;
             push:refs/tags/v*)
               # Upstream's tags are v* too (v9.15.0). Only this fork's own
               # release tag, exactly v<zen_version>, publishes.

@@ -6,14 +6,14 @@ This guide covers the source merge, installer pin, checks, and pull request. It 
 
 ## 1. Start from the current fork branch
 
-Use a clean worktree based on the latest `zen`. In these examples, replace `9.15.0` and `9.17.0` with the old and new releases. Skipping a release is fine: merge the newest tag directly, and read the changelog of every release in between.
+Use a clean worktree based on the latest `zen-margin`. In these examples, replace `9.15.0` and `9.17.0` with the old and new releases. Skipping a release is fine: merge the newest tag directly, and read the changelog of every release in between.
 
 ```sh
 old_version=9.15.0
 new_version=9.17.0
 git fetch origin zen
 git fetch upstream tag "v$new_version"
-git worktree add -b "wt/upstream-$new_version" "../calibre-upstream-$new_version" origin/zen
+git worktree add -b "wt/upstream-$new_version" "../calibre-upstream-$new_version" zen-margin
 cd "../calibre-upstream-$new_version"
 git status --short
 ```
