@@ -8,7 +8,7 @@ a working setup. Delete it, or rewrite it, when it goes stale.
 
 - Branch `zen`. Remotes: `origin` is `purplecandy/calibre-zen` (no write access),
   `fork` is `Star69995/calibre-zen-margin`; push to `fork`.
-- A calibre binary of the **same version as `src/calibre/constants.py`** (9.17.0).
+- A calibre binary of the **same version as `src/calibre/constants.py`** (9.18.0).
   The installed Calibre Zen 9.15 is refused. The official calibre 9.17 works.
 - Tests (Git Bash): `CALIBRE_ZEN_CALIBRE_DEBUG="<path>/calibre-debug.exe" ./zen-test`.
   On Windows set `TEMP`, `TMP` and `TMPDIR` to a short folder (e.g. `C:\zt`), and run

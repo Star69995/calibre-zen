@@ -88,9 +88,9 @@ class UpdateOnDeviceAction(InterfaceAction):
         if not plan.items:
             info_dialog(self.gui, self.title, _('Nothing to update on the device.'), det_msg=plan_notes(plan), show=True)
             return
-        asked = _("Replace {0} file(s) on the device with the library's copy?\n\nEach file stays where it is on the device, in the format it has there.").format(
-            len(plan.items)
-        )
+        asked = _(
+            "Replace {0} file(s) on the device with the library's copy?\n\nEach file stays where it is on the device, in the format it has there."
+        ).format(len(plan.items))
         if not question_dialog(self.gui, self.title, asked, det_msg=plan_notes(plan)):
             return
 

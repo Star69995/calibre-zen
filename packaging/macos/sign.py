@@ -133,7 +133,8 @@ def make_certificate_useable():
         yield
         return
     password = os.environ.get('CALIBRE_ZEN_SIGN_P12_PASSWORD', '')
-    keychain = tempfile.NamedTemporaryFile(suffix='.keychain', dir=os.path.expanduser('~'), delete=False).name
+    with tempfile.NamedTemporaryFile(suffix='.keychain', dir=os.path.expanduser('~'), delete=False) as f:
+        keychain = f.name
     os.remove(keychain)
     keychain_password = str(uuid4())
     run('security', 'create-keychain', '-p', keychain_password, keychain)

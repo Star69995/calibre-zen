@@ -27,7 +27,7 @@ from __future__ import annotations
 
 from typing import NamedTuple
 
-from qt.core import QAbstractItemView, QFrame, QHBoxLayout, QIcon, QLabel, QListWidget, QVBoxLayout, QWidget, Qt
+from qt.core import QAbstractItemView, QFrame, QHBoxLayout, QIcon, QLabel, QListWidget, Qt, QVBoxLayout, QWidget
 
 from calibre_zen import toolbars
 from calibre_zen.theme.tokens import components
@@ -252,7 +252,7 @@ def attach(dialog, gui, plugin) -> PlacementPicture:
     picture = PlacementPicture(gui, plugin, dialog)
     layout = dialog._layout
     layout.insertWidget(layout.indexOf(dialog._locations_list) + 1, picture)
-    refresh = lambda: picture.show_for(dialog.selected_locations())  # noqa: E731
+    refresh = lambda: picture.show_for(dialog.selected_locations())  # ruff: ignore[lambda-assignment]
     dialog._locations_list.itemSelectionChanged.connect(refresh)
     refresh()
     dialog.placement = picture

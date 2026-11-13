@@ -18,8 +18,9 @@ Nothing here writes to the library or the device.
 
 from typing import NamedTuple
 
-from calibre.utils.img import image_from_data
 from qt.core import QPixmap
+
+from calibre.utils.img import image_from_data
 
 
 class Linked(NamedTuple):

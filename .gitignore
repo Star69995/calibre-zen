@@ -20,6 +20,7 @@
 !/docs/README.md
 !/docs/guides/
 !/docs/plans/
+!/docs/upstream-sync.json
 /resources/localization
 /resources/hyphenation
 /resources/scripts.calibre_msgpack

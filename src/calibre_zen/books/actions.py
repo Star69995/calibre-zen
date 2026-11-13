@@ -18,14 +18,7 @@ from calibre.gui2.actions import InterfaceAction
 from calibre.gui2.dialogs.message_box import MessageBox
 from calibre.gui2.threaded_jobs import ThreadedJob
 from calibre_zen.books.epub import ORIGINAL_FORMAT, books_with_original, clean_books, delete_originals
-from calibre_zen.books.goodreads import (
-    LINKED_COLUMN,
-    MissingColumnError,
-    WrongColumnTypeError,
-    create_linked_column,
-    update_goodreads_linked,
-)
-
+from calibre_zen.books.goodreads import LINKED_COLUMN, MissingColumnError, WrongColumnTypeError, create_linked_column, update_goodreads_linked
 
 JOB_TYPE = 'book_cleanup'  # one at a time: two runs over the same books would race
 STATUS_MESSAGE_MS = 5000
@@ -106,7 +99,9 @@ class BookCleanupAction(InterfaceAction):
         self.create_menu_action(self.menu, 'book_cleanup_clean', _('Clean selected books'), triggered=lambda: self.run(dry_run=False))
         self.create_menu_action(self.menu, 'book_cleanup_preview', _('Preview changes (modifies nothing)'), triggered=lambda: self.run(dry_run=True))
         self.menu.addSeparator()
-        self.create_menu_action(self.menu, 'book_cleanup_delete_originals', _('Delete the originals of selected books'), triggered=self.delete_selected_originals)
+        self.create_menu_action(
+            self.menu, 'book_cleanup_delete_originals', _('Delete the originals of selected books'), triggered=self.delete_selected_originals
+        )
 
     def run(self, dry_run: bool) -> None:
         title = _('Book Cleanup')
@@ -170,7 +165,9 @@ class BookCleanupAction(InterfaceAction):
         if not with_original:
             info_dialog(self.gui, title, _('None of the selected books has an original to delete.'), show=True)
             return
-        asked = _('Delete the original file ({0}) of {1} book(s)?\n\nThe cleaned EPUB stays. This cannot be undone.').format(ORIGINAL_FORMAT, len(with_original))
+        asked = _('Delete the original file ({0}) of {1} book(s)?\n\nThe cleaned EPUB stays. This cannot be undone.').format(
+            ORIGINAL_FORMAT, len(with_original)
+        )
         if not question_dialog(self.gui, title, asked, default_yes=False):
             return
         job = ThreadedJob(

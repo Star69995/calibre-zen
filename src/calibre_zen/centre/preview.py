@@ -64,9 +64,9 @@ from qt.core import (
     QWidget,
 )
 
+from calibre import human_readable
 from calibre.ebooks.metadata import authors_to_string
 from calibre.gui2.library.caches import CoverThumbnailCache
-from calibre import human_readable
 from calibre_zen.centre import device
 from calibre_zen.theme import generate, rewrite
 from calibre_zen.theme.tokens import components

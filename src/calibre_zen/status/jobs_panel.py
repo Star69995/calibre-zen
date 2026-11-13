@@ -18,7 +18,7 @@ the place for the log, the details and the finished jobs.
 
 from __future__ import annotations
 
-from qt.core import QFrame, QHBoxLayout, QLabel, QProgressBar, QPushButton, QTimer, QToolButton, QVBoxLayout, QWidget, Qt
+from qt.core import QFrame, QHBoxLayout, QLabel, QProgressBar, QPushButton, Qt, QTimer, QToolButton, QVBoxLayout, QWidget
 
 from calibre.utils.localization import ngettext
 from calibre_zen import popovers

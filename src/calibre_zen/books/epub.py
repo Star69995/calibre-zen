@@ -6,6 +6,7 @@
 No Qt here. Uses calibre's polish container (so OPF/NCX stay consistent) and
 the library's ``new_api`` for reading/writing formats.
 """
+
 import os
 import re
 import shutil
@@ -18,8 +19,8 @@ from calibre.ebooks.oeb.polish.toc import commit_toc, from_xpaths, get_toc
 from calibre_zen.books.cleanup import BODY, HEADING_RE, HEADINGS, PAGE_BREAK, Options, Stats, clean_document, detect_dash_style, detect_hyphen_dash, is_latin
 
 ORIGINAL_FORMAT = 'ORIGINAL_EPUB'
-DELETE_CHUNK = 100               # books per call to remove_formats, so a stop is heard
-ORNAMENT_MAX_BYTES = 3000      # a lone image this small is a decorative divider
+DELETE_CHUNK = 100  # books per call to remove_formats, so a stop is heard
+ORNAMENT_MAX_BYTES = 3000  # a lone image this small is a decorative divider
 HTML_MIMES = ('application/xhtml+xml', 'text/html')
 
 
@@ -45,9 +46,9 @@ class Report:
             return '\n'.join(out + ['  nothing to change'])
         out.append('  em dash style: ' + self.dash_style)
         for rule, n in sorted(self.stats.counts.items(), key=lambda kv: -kv[1]):
-            out.append('  %5d  %s' % (n, rule))
+            out.append(f'  {n:5d}  {rule}')
             for before, after in self.stats.samples.get(rule, [])[:samples]:
-                out.append('           %r -> %r' % (before, after))
+                out.append(f'           {before!r} -> {after!r}')
         if self.removed_files:
             out.append('  removed unused files: ' + ', '.join(self.removed_files))
         if self.toc_note:
@@ -56,8 +57,7 @@ class Report:
 
 
 def _html_names(container):
-    return [name for name, _linear in container.spine_names
-            if container.mime_map.get(name) in HTML_MIMES]
+    return [name for name, _linear in container.spine_names if container.mime_map.get(name) in HTML_MIMES]
 
 
 def _body_texts(container, names):
@@ -95,24 +95,24 @@ def _heading_texts(container, names):
 def _rebuild_toc_if_safe(container, names, report):
     """Only when we created headings, and the old TOC is a flat list of the
     same kind of headings: then it is safe to regenerate it from the <h2>s."""
-    created = (report.stats.counts['chapter heading recognised']
-               + report.stats.counts['chapter heading split from paragraph']
-               + report.stats.counts['first line promoted to heading'])
+    created = (
+        report.stats.counts['chapter heading recognised']
+        + report.stats.counts['chapter heading split from paragraph']
+        + report.stats.counts['first line promoted to heading']
+    )
     if not created:
         return
     toc = get_toc(container)
     items = list(toc.iterdescendants())
     titles = {re.sub(r'\s+', ' ', i.title or '').strip() for i in items}
-    h2_texts = {re.sub(r'\s+', ' ', ''.join(h.itertext())).strip()
-                for _n, h in _heading_texts(container, names)}
+    h2_texts = {re.sub(r'\s+', ' ', ''.join(h.itertext())).strip() for _n, h in _heading_texts(container, names)}
     flat = all(len(i) == 0 for i in items)
     if not items or (flat and titles <= h2_texts):
         new = from_xpaths(container, ['//h:h2'])
         commit_toc(container, new)
-        report.toc_note = 'rebuilt from headings (%d entries, was %d)' % (
-            len(list(new.iterdescendants())), len(items))
+        report.toc_note = f'rebuilt from headings ({len(list(new.iterdescendants()))} entries, was {len(items)})'
     else:
-        report.toc_note = 'left as is (it has custom structure); %d new heading(s)' % created
+        report.toc_note = f'left as is (it has custom structure); {created} new heading(s)'
 
 
 def _split_chapters(container, report):
@@ -130,9 +130,7 @@ def _split_chapters(container, report):
                 continue
             for h in body.iter(*HEADINGS):
                 text = re.sub(r'\s+', ' ', ''.join(h.itertext())).strip()
-                if HEADING_RE.match(text) and any(
-                        ''.join(p.itertext()).strip()
-                        for p in h.itersiblings(preceding=True) if isinstance(p.tag, str)):
+                if HEADING_RE.match(text) and any(''.join(p.itertext()).strip() for p in h.itersiblings(preceding=True) if isinstance(p.tag, str)):
                     target = (name, h)
                     break
             if target:
@@ -144,7 +142,7 @@ def _split_chapters(container, report):
         if added_id:
             h.set('id', 'book_cleanup_split')
         hid = h.get('id')
-        new_name = split(container, name, '//*[@id="%s"]' % hid)
+        new_name = split(container, name, f'//*[@id="{hid}"]')
         # the heading is the first block of the new file now: no page-break
         # style needed, and drop the temporary id
         for el in container.parsed(new_name).iter(*HEADINGS):
@@ -168,15 +166,19 @@ def clean_container(container, report, remove_ornaments=False):
     def ornament_checker(name):
         def is_ornament(src):
             target = container.href_to_name(src, name)
-            return bool(target and target in container.mime_map and
-                        len(container.raw_data(target, decode=False)) < ORNAMENT_MAX_BYTES)
+            return bool(target and target in container.mime_map and len(container.raw_data(target, decode=False)) < ORNAMENT_MAX_BYTES)
+
         return is_ornament
 
-    heading_class = next((h.get('class') for _n, h in _heading_texts(container, names)
-                          if h.get('class')), None)
-    opts = Options(dash_style=report.dash_style, latin=is_latin(texts),
-                   heading_class=heading_class, is_ornament=None,
-                   remove_ornaments=remove_ornaments, hyphen_dash=detect_hyphen_dash(texts))
+    heading_class = next((h.get('class') for _n, h in _heading_texts(container, names) if h.get('class')), None)
+    opts = Options(
+        dash_style=report.dash_style,
+        latin=is_latin(texts),
+        heading_class=heading_class,
+        is_ornament=None,
+        remove_ornaments=remove_ornaments,
+        hyphen_dash=detect_hyphen_dash(texts),
+    )
 
     removed = set()
     for name in names:
@@ -205,6 +207,7 @@ def clean_container(container, report, remove_ornaments=False):
 
 def _fingerprint(root):
     from lxml import etree
+
     return etree.tostring(root)
 
 
@@ -306,7 +309,7 @@ def delete_originals(db, book_ids, notifications=None, abort=None, log=None):
     for start in range(0, total, DELETE_CHUNK):
         if abort is not None and abort.is_set():
             break
-        chunk = book_ids[start:start + DELETE_CHUNK]
+        chunk = book_ids[start : start + DELETE_CHUNK]
         if notifications is not None:
             notifications.put((start / total, ''))
         db.remove_formats({book_id: [ORIGINAL_FORMAT] for book_id in chunk})

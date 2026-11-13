@@ -62,7 +62,7 @@ def compile_po(path: str) -> bytes | None:
     buf = io.BytesIO()
     try:
         msgfmt.make_with_stats(path, buf)
-    except (Exception, SystemExit):
+    except Exception, SystemExit:
         traceback.print_exc()
         return None
     return buf.getvalue()

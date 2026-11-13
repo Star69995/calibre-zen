@@ -46,7 +46,9 @@ def update_goodreads_linked(db) -> tuple[set[int], int]:
         raise MissingColumnError(_("The library has no column with the lookup name '{0}'.").format(LINKED_COLUMN))
     if meta['datatype'] != 'bool':
         raise WrongColumnTypeError(
-            _("The library's column '{0}' is not a yes/no column.\nRename it under Preferences → Add your own columns, then run this again.").format(LINKED_COLUMN)
+            _("The library's column '{0}' is not a yes/no column.\nRename it under Preferences → Add your own columns, then run this again.").format(
+                LINKED_COLUMN
+            )
         )
 
     all_ids = db.all_book_ids()

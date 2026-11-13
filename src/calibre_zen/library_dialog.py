@@ -184,9 +184,9 @@ def warning_line(parent) -> QWidget:
     text.setOpenExternalLinks(True)
     link = localize_user_manual_link(NAS_FAQ)
     text.setText(
-        _('Keep libraries off network drives and cloud-synced folders (Dropbox, OneDrive and the like): calibre can lose data there. <a href="{}">Why?</a>').format(
-            link
-        )
+        _(
+            'Keep libraries off network drives and cloud-synced folders (Dropbox, OneDrive and the like): calibre can lose data there. <a href="{}">Why?</a>'
+        ).format(link)
     )
     row.addWidget(text, 1)
     return w

@@ -21,7 +21,9 @@ it to the guide, not here.
   into `zen` unless asked.** When asked: this machine's `gh` account has no write
   access to `purplecandy/calibre-zen`, so push to the `fork` remote and open the PR
   from there against `purplecandy/calibre-zen` base `zen` (`gh auth status` first).
-- Merge a release **tag**, never upstream `master`.
+- Merge a release **tag**, never upstream `master`. A fix that is on `master` only and
+  the user wants early is cherry-picked (`git cherry-pick -x`) and its SHA added to
+  `picked` in `upstream-sync.json`; the next release that contains it empties `picked`.
 - Clean up at the end: the baseline worktree, the downloaded installer and the
   unpacked bundle (all under the scratchpad directory).
 

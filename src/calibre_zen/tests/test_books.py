@@ -277,7 +277,10 @@ class TestCleanupRules(unittest.TestCase):
         body = '<p>Focus,I  told ,myself</p><p>“Okay, fine.</p><p>I’ll go.”</p><p>Chapter Nine</p><p>a crystal- encrusted cell —ok</p>'
         before = block_texts(document(body))
         after = block_texts(self.run_rules(body))
-        skeleton = lambda ts: re.sub(r'[-—]+', '—', re.sub(r'\s+', '', ''.join(ts)))
+
+        def skeleton(ts):
+            return re.sub(r'[-—]+', '—', re.sub(r'\s+', '', ''.join(ts)))
+
         self.assertEqual(skeleton(before), skeleton(after))
 
 
@@ -354,7 +357,7 @@ class TestCleanEpub(ZenTestCase):
         db = LibraryDatabase(short_library(self, 'books-clean'))
         self.addCleanup(db.close)
         api = db.new_api
-        book_id = sorted(api.all_book_ids())[0]
+        book_id = min(api.all_book_ids())
         self.assertTrue(api.add_format(book_id, 'EPUB', src, run_hooks=False))
         original = api.format(book_id, 'EPUB')
 

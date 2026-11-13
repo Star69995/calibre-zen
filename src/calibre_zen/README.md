@@ -176,6 +176,7 @@ locales/<lang>.po     translations of the strings only this fork has; `he` ships
 toolbars.py           one main toolbar: the device's bar is the main one plus what a device adds -- see "One main toolbar"
 device_columns.py     more columns in the list of books on a device: Format, Folder and Path from each book's file name; Series, Tags, Publisher, Published, Rating and Languages from its metadata, hidden until shown
 busy.py               Preferences opens while jobs run; only a clashing save waits -- see "Settings while jobs run"
+prefs_overview.py     Preferences opens on its overview whole: the window grows by what the scroll bar says is missing, never past the screen
 library_dialog.py     the Choose library dialog as three choices -- see "Choose library"
 send_default.py       what the Send to device button does, chosen in a window -- see "Send to device's default"
 send_formats.py       PDF last in a device's format order, as the main window reads it -- see "Send to device's default"
@@ -2530,7 +2531,7 @@ settings; the runner refuses to start any other way.
 
 | module | what it checks |
 | --- | --- |
-| `test_identity.py` | the fork's names and versions, the upstream pin, that no upstream file is changed except the listed ones, and that the overlay has no bare `assert` (the bundle runs `-OO`) |
+| `test_identity.py` | the fork's names and versions, the upstream pin, that no upstream file is changed except the listed ones (and upstream fixes cherry-picked ahead of a release, named under `calibre.picked` in `docs/upstream-sync.json`), and that the overlay has no bare `assert` (the bundle runs `-OO`) |
 | `test_theme.py` | every scheme, in both polarities and both darknesses, renders with no placeholder left and balanced braces; templates only name known tokens; the marks render to files |
 | `test_widgets.py` | widgets painted offscreen and judged by their pixels; the star rating driven through its own mouse, key and wheel events; the calendar's footer and size; both dropdown lists' delegate, sheet and row layout; spin box height; the rich text editor's toolbar and single border |
 | `test_i18n.py` | the translation files compile, keep their placeholders and name only strings that still exist; they sit behind calibre's catalog, not in front of it, and are attached again after a language switch |

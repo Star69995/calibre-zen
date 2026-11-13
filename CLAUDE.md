@@ -20,14 +20,15 @@ as `packaging/upstream.json`.
 ## Running and testing from source
 
 Both need a calibre binary of the **same version as `src/calibre/constants.py`**
-(currently 9.17.0). The installed Calibre Zen of that version works; a newer
+(currently 9.18.0). The installed Calibre Zen of that version works; a newer
 upstream calibre does not.
 
 - Tests: `CALIBRE_ZEN_CALIBRE_DEBUG=<path to calibre-debug> ./zen-test [module ...] [-k name]`
   (a POSIX shell; Git Bash on Windows). Runs in English with a throwaway config.
-  `./zen-test i18n` runs one module. Some tests fail on Windows before any change
-  (path separators in `test_tray`, `test_update`, ...); compare against a clean
-  checkout rather than assuming a failure is yours.
+  `./zen-test i18n` runs one module. Every test passes on Windows except one widget
+  test that can hang there (the guide below says how to run around it); a new
+  failure is yours, so keep the tests platform-neutral (build expected paths with
+  `os.path`, pipe names with `tests.base.endpoint_name()`).
 - The app: `./calibre-zen` is macOS only. On Windows use `.\calibre-zen.cmd`
   (wraps `calibre-zen.ps1`), which borrows the binary from
   `C:\Program Files\Calibre Zen` (or `CALIBRE_ZEN_BUNDLE`), keeps settings and a

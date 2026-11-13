@@ -32,20 +32,23 @@ reader's, a double-click on a cover still opens the book
 window is built; `centre.install()` does. Off with the rest of the centre.
 """
 
+import re
+
 from calibre.utils import config_base
 
 TWEAK = 'doubleclick_on_library_view'
 UPSTREAM = 'open_viewer'
 OURS = 'edit_cell'
+# The note above the tweak, matched up to the line break: a checkout with Windows line endings has \r\n there.
+DEFAULT_NOTE = re.compile(rf'# Default: {UPSTREAM}\.(?=\r?\n# Example: {TWEAK} =)')
 
 _installed = False
 
 
 def rewrite(raw: str) -> str:
     "calibre's default tweaks text, with our default for the one tweak."
-    return raw.replace(f"{TWEAK} = '{UPSTREAM}'", f"{TWEAK} = '{OURS}'").replace(
-        f'# Default: {UPSTREAM}.\n# Example: {TWEAK} =', f'# Default: {OURS}.\n# Example: {TWEAK} ='
-    )
+    raw = raw.replace(f"{TWEAK} = '{UPSTREAM}'", f"{TWEAK} = '{OURS}'")
+    return DEFAULT_NOTE.sub(f'# Default: {OURS}.', raw)
 
 
 def install() -> bool:

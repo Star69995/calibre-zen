@@ -39,9 +39,8 @@ from __future__ import annotations
 
 import traceback
 from collections import Counter
-from collections.abc import Callable
 from functools import partial
-from typing import NamedTuple
+from typing import TYPE_CHECKING, NamedTuple
 
 from qt.core import (
     QAbstractButton,
@@ -68,6 +67,9 @@ from qt.core import (
 from calibre_zen.finder import english, match
 from calibre_zen.finder.results import ResultsView
 from calibre_zen.theme.tokens import components
+
+if TYPE_CHECKING:
+    from collections.abc import Callable
 
 # Where the results go in the dialog's stack: after the overview (0) and the open page (1).
 RESULTS_PAGE = 2

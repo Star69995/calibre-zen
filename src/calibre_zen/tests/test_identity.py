@@ -17,6 +17,17 @@ def repo_root() -> str:
     return os.path.abspath(os.path.join(os.path.dirname(calibre_zen.__file__), '..', '..'))
 
 
+def picked_upstream_fixes(root: str) -> list[str]:
+    "Upstream commits cherry-picked after the pinned tag, as docs/upstream-sync.json records them."
+    with open(os.path.join(root, 'docs', 'upstream-sync.json')) as f:
+        return json.load(f)['calibre'].get('picked', [])
+
+
+def edited_lines(diff: str) -> list[str]:
+    "The lines a diff adds and removes, without its headers and positions, so two diffs of one change compare equal."
+    return sorted(ln for ln in diff.splitlines() if ln[:1] in '+-' and not ln.startswith(('+++', '---')))
+
+
 class TestIdentity(unittest.TestCase):
     def test_appname_is_the_fork(self):
         from calibre.constants import __appname__, zen_display_name
@@ -46,13 +57,14 @@ class TestIdentity(unittest.TestCase):
 
     def test_ipc_endpoints_carry_the_name(self):
         "Installing beside calibre depends on these never being calibre's."
-        from calibre.constants import __appname__, islinux
+        from calibre.constants import __appname__, ismacos
         from calibre.utils.ipc import gui_socket_address, viewer_socket_address
+        from calibre_zen.tests.base import endpoint_name
 
         for addr in (gui_socket_address(), viewer_socket_address()):
-            self.assertIn(__appname__, addr)
-        if not islinux:
-            # Linux locks on an abstract socket instead; there is no path.
+            self.assertIn(endpoint_name(), addr)
+        if ismacos:
+            # Only a lock file has a path: Windows locks on a mutex and Linux on an abstract socket.
             from calibre.utils.lock import singleinstance_path
 
             self.assertIn(__appname__, singleinstance_path('GUI'))
@@ -80,7 +92,9 @@ class TestIdentity(unittest.TestCase):
         The rule in .claude/CLAUDE.md as a test: against the upstream tag, the
         only files that differ under src/calibre and setup/ are the hook, the
         install copy rule, the fork-identity files, and files whose whole
-        change is `.setProperty('zenVariant', ...)` lines.
+        change is `.setProperty('zenVariant', ...)` lines. A file that differs
+        only by an upstream fix cherry-picked ahead of the next release (listed in
+        docs/upstream-sync.json) is allowed too.
         """
         import subprocess
 
@@ -106,13 +120,20 @@ class TestIdentity(unittest.TestCase):
             'src/calibre/linux.py',
             'src/calibre/gui2/update.py',
         }
+        picks = picked_upstream_fixes(root)
+        if any(subprocess.run(['git', '-C', root, 'cat-file', '-e', sha + '^{commit}'], capture_output=True).returncode for sha in picks):
+            self.skipTest('a cherry-picked upstream fix is not fetched')
         changed = [f for f in git('diff', '--name-only', tag, '--', 'src/calibre', 'setup').split('\n') if f]
         offenders = []
         for f in changed:
             if f in allowed:
                 continue
-            added = [ln[1:].strip() for ln in git('diff', '--unified=0', tag, '--', f).splitlines() if ln.startswith('+') and not ln.startswith('+++')]
-            removed = [ln for ln in git('diff', '--unified=0', tag, '--', f).splitlines() if ln.startswith('-') and not ln.startswith('---')]
+            diff = git('diff', '--unified=0', tag, '--', f)
+            upstream_fix = edited_lines(''.join(git('show', '--format=', '--unified=0', sha, '--', f) for sha in picks))
+            if upstream_fix and edited_lines(diff) == upstream_fix:
+                continue  # upstream's own fix, taken ahead of the next release
+            added = [ln[1:].strip() for ln in diff.splitlines() if ln.startswith('+') and not ln.startswith('+++')]
+            removed = [ln for ln in diff.splitlines() if ln.startswith('-') and not ln.startswith('---')]
             if removed or not added or not all("setProperty('zenVariant'" in ln for ln in added):
                 offenders.append(f)
         self.assertEqual(offenders, [], 'upstream files changed for something other than identity or a variant tag: ' + ', '.join(offenders))
