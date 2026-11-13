@@ -49,6 +49,9 @@ if TYPE_CHECKING:
     from calibre.ebooks.metadata.book.base import FieldMetadataDict
 
 pretty_print_opf = False
+# calibre-zen: the scheme of a book's own UUID identifier is part of the OPF format, and is what
+# the readers below and calibre itself look for. It is not the fork's __appname__.
+APP_ID_SCHEME = 'calibre'
 
 
 class PrettyPrint:
@@ -1620,8 +1623,8 @@ class OPFCreator(Metadata):
             DC_ELEM(
                 'identifier',
                 str(self.application_id),
-                opf_attrs={'scheme': __appname__},
-                dc_attrs={'id': __appname__ + '_id'},
+                opf_attrs={'scheme': APP_ID_SCHEME},
+                dc_attrs={'id': APP_ID_SCHEME + '_id'},
             )
         )
         if self.pubdate is not None:
@@ -1699,7 +1702,7 @@ class OPFCreator(Metadata):
         serialize_user_metadata(metadata, self.get_all_user_metadata(False))
 
         root = E.package(metadata, manifest, spine, guide)
-        root.set('unique-identifier', __appname__ + '_id')
+        root.set('unique-identifier', APP_ID_SCHEME + '_id')
         root.set('version', '2.0')
         raw = etree.tostring(root, pretty_print=True, xml_declaration=True, encoding=encoding)
         raw = raw.replace(DNS.encode('utf-8'), OPF2_NS.encode('utf-8'))
@@ -1747,7 +1750,7 @@ def metadata_to_opf(mi: Metadata, as_string: bool = True, default_lang: str | No
             f'''
     <package xmlns="http://www.idpf.org/2007/opf" unique-identifier="uuid_id" version="2.0">
         <metadata xmlns:dc="http://purl.org/dc/elements/1.1/" xmlns:opf="http://www.idpf.org/2007/opf">
-            <dc:identifier opf:scheme="{__appname__}" id="{__appname__}_id"></dc:identifier>
+            <dc:identifier opf:scheme="{APP_ID_SCHEME}" id="{APP_ID_SCHEME}_id"></dc:identifier>
             <dc:identifier opf:scheme="uuid" id="uuid_id"></dc:identifier>
             </metadata>
         <guide/>

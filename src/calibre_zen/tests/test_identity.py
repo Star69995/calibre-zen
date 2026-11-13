@@ -115,6 +115,8 @@ class TestIdentity(unittest.TestCase):
             'src/calibre/gui2/__init__.py',  # the hook
             'setup/install.py',  # also copy .qss/.svg/.ttf
             'setup/__init__.py',  # the source tree's name stays 'calibre', so calibre's own CI can build it
+            'src/calibre/ebooks/metadata/opf2.py',  # the UUID identifier's scheme stays 'calibre', as the OPF format has it
+            'src/calibre/db/tests/notes.py',  # base64 padding follows the length of the fork's own logo
             # fork identity, every hunk marked and listed in BUILDING.md
             'src/calibre/constants.py',
             'src/calibre/utils/ipc/__init__.py',

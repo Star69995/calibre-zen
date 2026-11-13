@@ -493,11 +493,14 @@ class NotesTest(BaseTest):
                 resources = cache.notes_resources_used_by('authors', author_id)
                 self.ae(len(resources), 1)
                 self.ae(cache.get_notes_resource(next(iter(resources)))['name'], name)
-        for image_name, padding in (('book.png', 2), ('catalog.png', 1), ('lt.png', 0)):
+        for image_name in ('book.png', 'catalog.png', 'lt.png'):
             cache, _ = self.create_notes_db()
             author_id = min(cache.all_field_ids('authors'))
             image = get_image_path(image_name, data=True)
             payload = standard_b64encode(image).decode('ascii')
+            # calibre-zen: calibre's lt.png is 16845 bytes (no padding); the fork's own logo is not,
+            # so the padding is worked out from the length rather than written down.
+            padding = -len(image) % 3
             self.ae(len(payload) - len(payload.rstrip('=')), padding)
             for url_scheme in ('data', 'DATA', 'DaTa'):
                 for encoding, encoded_payload in (

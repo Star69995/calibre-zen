@@ -436,6 +436,8 @@ All marked `# calibre-zen:` so a merge conflict is obvious.
 | `pyproject.toml` | ruff's `ANN` rules (upstream's typing, on for the whole tree since 9.18) are off for the fork's own paths |
 | `src/calibre/gui2/__init__.py` | the overlay's entry point after `PaletteManager` |
 | `setup/install.py` | also copies `.qss`, `.svg`, `.ttf` out of `src/` |
+| `src/calibre/ebooks/metadata/opf2.py` | the scheme and id of a book's UUID identifier are the constant `APP_ID_SCHEME = 'calibre'`, not `__appname__`: the readers in the same file, calibre and every other OPF reader look for `calibre`, so with the fork's name a book got a second, foreign identifier |
+| `src/calibre/db/tests/notes.py` | one test's base64 padding is worked out from the image's length, since `resources/images/lt.png` is the fork's own logo and not the same size as calibre's |
 | `setup/__init__.py` | `__appname__` is fixed to `calibre`: setup/ reads it as the name of the source tree (package directory, translation catalogue, entry points), which the fork's `__appname__` is not. Without it `setup.py bootstrap` finds no translations and calibre's own `CI` workflow stops there |
 | `bypy/macos/__main__.py` | bundle identity, for the day a real build is wanted |
 
