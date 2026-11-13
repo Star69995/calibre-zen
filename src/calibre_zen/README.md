@@ -2531,7 +2531,7 @@ settings; the runner refuses to start any other way.
 
 | module | what it checks |
 | --- | --- |
-| `test_identity.py` | the fork's names and versions, the upstream pin, that no upstream file is changed except the listed ones, and that the overlay has no bare `assert` (the bundle runs `-OO`) |
+| `test_identity.py` | the fork's names and versions, the upstream pin, that no upstream file is changed except the listed ones (and upstream fixes cherry-picked ahead of a release, named under `calibre.picked` in `docs/upstream-sync.json`), and that the overlay has no bare `assert` (the bundle runs `-OO`) |
 | `test_theme.py` | every scheme, in both polarities and both darknesses, renders with no placeholder left and balanced braces; templates only name known tokens; the marks render to files |
 | `test_widgets.py` | widgets painted offscreen and judged by their pixels; the star rating driven through its own mouse, key and wheel events; the calendar's footer and size; both dropdown lists' delegate, sheet and row layout; spin box height; the rich text editor's toolbar and single border |
 | `test_i18n.py` | the translation files compile, keep their placeholders and name only strings that still exist; they sit behind calibre's catalog, not in front of it, and are attached again after a language switch |

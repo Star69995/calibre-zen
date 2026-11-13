@@ -13,6 +13,7 @@ paragraphs broken in the middle of a sentence, spaces around punctuation and
 dashes. Every text edit goes through ``_apply`` which only inserts or deletes
 characters, so inline markup survives and no words can be lost.
 """
+
 import re
 from collections import Counter
 
@@ -22,34 +23,39 @@ XHTML = 'http://www.w3.org/1999/xhtml'
 
 
 def _q(tag):
-    return '{%s}%s' % (XHTML, tag)
+    return f'{{{XHTML}}}{tag}'
 
 
-P, DIV, IMG, BR, H2, BODY, HEAD, TITLE = (
-    _q(t) for t in ('p', 'div', 'img', 'br', 'h2', 'body', 'head', 'title'))
-HEADINGS = {_q('h%d' % i) for i in range(1, 7)}
+P, DIV, IMG, BR, H2, BODY, HEAD, TITLE = (_q(t) for t in ('p', 'div', 'img', 'br', 'h2', 'body', 'head', 'title'))
+HEADINGS = {_q(f'h{i}') for i in range(1, 7)}
 # Anything in an otherwise empty paragraph that makes it worth keeping.
-CONTENT_TAGS = {IMG, _q('svg'), _q('object'), _q('hr'), _q('table'), _q('audio'),
-                _q('video')}
+CONTENT_TAGS = {IMG, _q('svg'), _q('object'), _q('hr'), _q('table'), _q('audio'), _q('video')}
 SKIP_TEXT = {_q('pre'), _q('code'), _q('script'), _q('style')}
 
 WS = '[ \t\r\n\f]+'
 OPEN_QUOTES = '“"‘'
 
 _ONES = 'One|Two|Three|Four|Five|Six|Seven|Eight|Nine'
-_NUM = (r'(?:\d{1,3}|[IVXLC]{1,6}|(?:%s|Ten|Eleven|Twelve|Thirteen|Fourteen|Fifteen|'
-        r'Sixteen|Seventeen|Eighteen|Nineteen|(?:Twenty|Thirty|Forty|Fifty|Sixty)'
-        r'(?:[- ](?:%s))?))' % (_ONES, _ONES))
-HEADING_RE = re.compile(r'^(?:Chapter\s+%s(?:\s*[:.\-–—]\s*.{1,60})?|Prologue|Epilogue)$'
-                        % _NUM, re.I)
+_NUM = (
+    rf'(?:\d{{1,3}}|[IVXLC]{{1,6}}|(?:{_ONES}|Ten|Eleven|Twelve|Thirteen|Fourteen|Fifteen|'
+    r'Sixteen|Seventeen|Eighteen|Nineteen|(?:Twenty|Thirty|Forty|Fifty|Sixty)'
+    rf'(?:[- ](?:{_ONES}))?))'
+)
+HEADING_RE = re.compile(rf'^(?:Chapter\s+{_NUM}(?:\s*[:.\-–—]\s*.{{1,60}})?|Prologue|Epilogue)$', re.I)
 # "...timing.” Chapter Eight" glued to the end of the previous paragraph.
-HEADING_TAIL_RE = re.compile(r'(?<=[.!?…”"’)])\s+(Chapter\s+%s)\s*$' % _NUM, re.I)
+HEADING_TAIL_RE = re.compile(rf'(?<=[.!?…”"’)])\s+(Chapter\s+{_NUM})\s*$', re.I)
 # A heading glued to the end of a paragraph with no stop before it ("... Do’Urden Chapter 1"),
 # and one glued to the start of the next ("CHAPTER 5 Come on, ..."): neither may be merged.
-HEADING_END_RE = re.compile(r'(?:^|\s)(?:Chapter\s+%s|Prologue|Epilogue|Dedication|'
-                            r'Acknowledg(?:e)?ments|About the Author)\s*$' % _NUM, re.I)
-HEADING_START_RE = re.compile(r'(?:Chapter\s+%s|Prologue|Epilogue|Dedication|'
-                              r'Acknowledg(?:e)?ments|About the Author)\b' % _NUM, re.I)
+HEADING_END_RE = re.compile(
+    rf'(?:^|\s)(?:Chapter\s+{_NUM}|Prologue|Epilogue|Dedication|'
+    r'Acknowledg(?:e)?ments|About the Author)\s*$',
+    re.I,
+)
+HEADING_START_RE = re.compile(
+    rf'(?:Chapter\s+{_NUM}|Prologue|Epilogue|Dedication|'
+    r'Acknowledg(?:e)?ments|About the Author)\b',
+    re.I,
+)
 SMALL_WORDS = {'a', 'an', 'the', 'of', 'and', 'in', 'on', 'to', 'for', 'at', 'or', 'but'}
 PAGE_BREAK = 'page-break-before: always'
 
@@ -57,12 +63,11 @@ PAGE_BREAK = 'page-break-before: always'
 class Options:
     """Per-book settings, computed by ``epub.py`` before the first file."""
 
-    def __init__(self, dash_style='tight', latin=True, heading_class=None,
-                 is_ornament=None, remove_ornaments=False, hyphen_dash=False):
-        self.dash_style = dash_style          # 'tight' (a—b) or 'spaced' (a — b)
-        self.hyphen_dash = hyphen_dash        # the book writes its dashes as a lone "-"
-        self.latin = latin                    # Latin-script text: case-based rules on
-        self.heading_class = heading_class    # class copied onto headings we create
+    def __init__(self, dash_style='tight', latin=True, heading_class=None, is_ornament=None, remove_ornaments=False, hyphen_dash=False):
+        self.dash_style = dash_style  # 'tight' (a—b) or 'spaced' (a — b)
+        self.hyphen_dash = hyphen_dash  # the book writes its dashes as a lone "-"
+        self.latin = latin  # Latin-script text: case-based rules on
+        self.heading_class = heading_class  # class copied onto headings we create
         # True for a tiny decorative image. Such images are kept unless
         # remove_ornaments is set: they are part of the book's design.
         self.is_ornament = is_ornament or (lambda src: False)
@@ -88,11 +93,12 @@ class Stats:
         self.counts.update(other.counts)
         for rule, items in other.samples.items():
             s = self.samples.setdefault(rule, [])
-            s.extend(items[:max(0, 5 - len(s))])
+            s.extend(items[: max(0, 5 - len(s))])
         self.removed_images |= other.removed_images
 
 
 # --- text slots ------------------------------------------------------------
+
 
 def _slots(el):
     """All text positions inside el in document order: (node, 'text'|'tail')."""
@@ -104,6 +110,7 @@ def _slots(el):
                 out.append((c, 'text'))
                 walk(c)
             out.append((c, 'tail'))
+
     walk(el)
     return out
 
@@ -129,16 +136,16 @@ def _apply(slots, edits):
         for slot, t in zip(slots, texts):
             lo, hi = pos, pos + len(t)
             pos = hi
-            if b > a and lo < b and hi > a:        # overlaps the deleted span
+            if b > a and lo < b and hi > a:  # overlaps the deleted span
                 s, e = max(a, lo) - lo, min(b, hi) - lo
                 t = t[:s] + (new if not done else '') + t[e:]
                 done = True
                 _set(slot, t)
-            elif b == a and new and not done and lo < a <= hi:   # pure insertion
-                t = t[:a - lo] + new + t[a - lo:]
+            elif b == a and new and not done and lo < a <= hi:  # pure insertion
+                t = t[: a - lo] + new + t[a - lo :]
                 done = True
                 _set(slot, t)
-        if not done and slots:                    # insertion at 0
+        if not done and slots:  # insertion at 0
             _set(slots[0], new + _get(slots[0]))
 
 
@@ -151,6 +158,7 @@ def _has_alnum(s):
 
 
 # --- per-paragraph text rules ----------------------------------------------
+
 
 def _del_spaces(m, S):
     return [(m.start(), m.end(), '')]
@@ -165,8 +173,8 @@ def _ins_before(m, S):
 
 
 def _hyphen_space(m, S):
-    if re.match(r'(?:and|or|to|nor)\b', S[m.end():m.end() + 4]):
-        return []          # "pre- and post-war" keeps its space
+    if re.match(r'(?:and|or|to|nor)\b', S[m.end() : m.end() + 4]):
+        return []  # "pre- and post-war" keeps its space
     return [(m.start(), m.end(), '')]
 
 
@@ -199,32 +207,20 @@ _OPENING_QUOTE = r'(?<=(?<![^\s—(\[“‘])“)'
 # (name, regex, edit function, applies to these Options)
 TEXT_RULES = [
     ('ascii dash -> em dash', re.compile(r'(?<!-)-{2,3}(?!-)'), _to_emdash, _always),
-    ('spaced hyphen -> em dash',
-     re.compile(r'(?<=[A-Za-z”’.!?,]) - (?=[A-Za-z“‘])'), _to_emdash, _always),
-    ('space before , ; ! ? stuck to the next word',
-     re.compile(r'(?<=[A-Za-z0-9”’)])[ ]+([,;!?])(?=[A-Za-z“‘(])'), _move_space, _always),
+    ('spaced hyphen -> em dash', re.compile(r'(?<=[A-Za-z”’.!?,]) - (?=[A-Za-z“‘])'), _to_emdash, _always),
+    ('space before , ; ! ? stuck to the next word', re.compile(r'(?<=[A-Za-z0-9”’)])[ ]+([,;!?])(?=[A-Za-z“‘(])'), _move_space, _always),
     # a , ; : after a sentence end is a misread quote mark: not ours to fix
-    ('space before , ; : ! ?',
-     re.compile(r'(?:(?<=[^\s.!?])[ ]+(?=[,;:!?])|(?<=[.!?])[ ]+(?=[!?]))'), _del_spaces, _always),
+    ('space before , ; : ! ?', re.compile(r'(?:(?<=[^\s.!?])[ ]+(?=[,;:!?])|(?<=[.!?])[ ]+(?=[!?]))'), _del_spaces, _always),
     # not " .04": that period is a decimal point
-    ('space before period', re.compile(r'(?<=[^\s.,;:])[ ]+(?=\.(?![ ]*\.|\d))'),
-     _del_spaces, _always),
-    ('space before closing quote/paren', re.compile(r'(?<=\S)[ ]+(?=[”)])'),
-     _del_spaces, _always),
-    ('space after opening quote/paren', re.compile(r'(?:%s|(?<=\())[ ]+(?=\S)' % _OPENING_QUOTE),
-     _del_spaces, _always),
-    ('missing space after , ; ! ?', re.compile(r'(?<=[A-Za-z])[,;!?](?=[A-Za-z“‘(])'),
-     _ins_after, _always),
-    ('missing space after period',
-     re.compile(r'(?<=[a-z]{2})\.(?=[A-Z](?:[a-z]|\b))'), _ins_after, _latin),
-    ('missing space after colon', re.compile(r'(?<=[A-Za-z]):(?=[A-Za-z])'),
-     _ins_after, _always),
-    ('missing space after closing quote', re.compile(r'(?<=[.!?,]”)(?=[A-Za-z])'),
-     _ins_before, _always),
-    ('missing space before opening quote', re.compile(r'(?<=[.!?,;:])(?=[“‘])'),
-     _ins_before, _always),
-    ('broken hyphenated word', re.compile(r'(?<=[a-z]-)[ ]+(?=[a-z])'),
-     _hyphen_space, _latin_hyphen_breaks),
+    ('space before period', re.compile(r'(?<=[^\s.,;:])[ ]+(?=\.(?![ ]*\.|\d))'), _del_spaces, _always),
+    ('space before closing quote/paren', re.compile(r'(?<=\S)[ ]+(?=[”)])'), _del_spaces, _always),
+    ('space after opening quote/paren', re.compile(rf'(?:{_OPENING_QUOTE}|(?<=\())[ ]+(?=\S)'), _del_spaces, _always),
+    ('missing space after , ; ! ?', re.compile(r'(?<=[A-Za-z])[,;!?](?=[A-Za-z“‘(])'), _ins_after, _always),
+    ('missing space after period', re.compile(r'(?<=[a-z]{2})\.(?=[A-Z](?:[a-z]|\b))'), _ins_after, _latin),
+    ('missing space after colon', re.compile(r'(?<=[A-Za-z]):(?=[A-Za-z])'), _ins_after, _always),
+    ('missing space after closing quote', re.compile(r'(?<=[.!?,]”)(?=[A-Za-z])'), _ins_before, _always),
+    ('missing space before opening quote', re.compile(r'(?<=[.!?,;:])(?=[“‘])'), _ins_before, _always),
+    ('broken hyphenated word', re.compile(r'(?<=[a-z]-)[ ]+(?=[a-z])'), _hyphen_space, _latin_hyphen_breaks),
 ]
 DASH_RULES = {
     'tight': [
@@ -232,10 +228,8 @@ DASH_RULES = {
         ('space around em dash', re.compile(r'(?<=—)[ ]+'), _del_spaces),
     ],
     'spaced': [
-        ('missing space around em dash', re.compile(r'(?<=[^\s“‘(\[—])(?=—)'),
-         _ins_before),
-        ('missing space around em dash', re.compile(r'(?<=—)(?=[^\s”’)\],.!?;:—])'),
-         _ins_before),
+        ('missing space around em dash', re.compile(r'(?<=[^\s“‘(\[—])(?=—)'), _ins_before),
+        ('missing space around em dash', re.compile(r'(?<=—)(?=[^\s”’)\],.!?;:—])'), _ins_before),
     ],
 }
 
@@ -271,7 +265,7 @@ def fix_text(el, opts, stats):
     slots = _slots(el)
     _normalize_ws(slots)
     S = ''.join(_get(s) for s in slots)
-    if not _has_alnum(S):       # scene breaks like "* * *"
+    if not _has_alnum(S):  # scene breaks like "* * *"
         return
     rules = [(n, rx, fn) for n, rx, fn, applies in TEXT_RULES if applies(opts)]
     rules.extend(DASH_RULES[opts.dash_style])
@@ -287,10 +281,11 @@ def fix_text(el, opts, stats):
                 edits.extend(es)
         if edits:
             _apply(slots, edits)
-    _normalize_ws(slots)       # never leave a double space behind
+    _normalize_ws(slots)  # never leave a double space behind
 
 
 # --- structure ---------------------------------------------------------------
+
 
 def _remove(el):
     """Remove el but keep the text that follows it."""
@@ -337,8 +332,7 @@ def remove_blank_blocks(container, opts, stats):
         if el.tag == P and _is_empty(el):
             stats.add('empty paragraph')
             _remove(el)
-        elif (el.tag == DIV and len(el) == 0 and not _text(el).strip()
-              and re.match(r'^calibre_pb_\d+$', el.get('id') or '')):
+        elif el.tag == DIV and len(el) == 0 and not _text(el).strip() and re.match(r'^calibre_pb_\d+$', el.get('id') or ''):
             stats.add('empty page-break div')
             _remove(el)
 
@@ -358,7 +352,7 @@ def _make_heading(el, opts, text=None):
 
 def detect_headings(body, opts, stats):
     for p in list(body.iter(P)):
-        if len(p):          # only plain-text paragraphs
+        if len(p):  # only plain-text paragraphs
             continue
         text = re.sub(WS, ' ', p.text or '').strip()
         if text and HEADING_RE.match(text) and len(text) <= 70:
@@ -371,13 +365,12 @@ def detect_headings(body, opts, stats):
             if opts.heading_class:
                 heading.set('class', opts.heading_class)
             heading.text = re.sub(WS, ' ', m.group(1))
-            before = (p.text or '')
-            p.text = before[:m.start()].rstrip()
+            before = p.text or ''
+            p.text = before[: m.start()].rstrip()
             tail = p.tail
             p.addnext(heading)
             p.tail = tail
-            stats.add('chapter heading split from paragraph', before[-40:],
-                      p.text[-25:] + ' | <h2>' + heading.text)
+            stats.add('chapter heading split from paragraph', before[-40:], p.text[-25:] + ' | <h2>' + heading.text)
 
 
 def _title_like(text):
@@ -397,11 +390,10 @@ def promote_first_title(body, opts, stats):
         if not isinstance(el.tag, str) or el.tag != P:
             continue
         text = re.sub(WS, ' ', _text(el)).strip()
-        if not text:            # an ornament image paragraph before the title
+        if not text:  # an ornament image paragraph before the title
             continue
         nxt = el.getnext()
-        if (_title_like(text) and nxt is not None and nxt.tag == P
-                and len(_text(nxt).strip()) >= 60 and not len(el)):
+        if _title_like(text) and nxt is not None and nxt.tag == P and len(_text(nxt).strip()) >= 60 and not len(el):
             _make_heading(el, opts, text)
             stats.add('first line promoted to heading', text, '<h2>' + text)
         return
@@ -434,7 +426,7 @@ def merge_broken_paragraphs(container, opts, stats):
         return
     prev = None
     for el in list(container):
-        if el.getparent() is not container:      # already joined into prev
+        if el.getparent() is not container:  # already joined into prev
             continue
         if el.tag != P:
             prev = None
@@ -443,8 +435,7 @@ def merge_broken_paragraphs(container, opts, stats):
             prev = el
             continue
         pt, nt = _text(prev).rstrip(), _text(el).lstrip()
-        if (not pt or not nt or not _has_alnum(pt) or not _has_alnum(nt)
-                or HEADING_END_RE.search(pt) or HEADING_START_RE.match(nt)):
+        if not pt or not nt or not _has_alnum(pt) or not _has_alnum(nt) or HEADING_END_RE.search(pt) or HEADING_START_RE.match(nt):
             prev = el
             continue
         if _should_merge_simple(pt, nt):
@@ -498,8 +489,7 @@ def _visible_before(h, body, opts):
             if src is not None:
                 if not opts.is_ornament(src):
                     return True
-            elif prev.tag in CONTENT_TAGS or any(
-                    d.tag in CONTENT_TAGS for d in prev.iterdescendants()):
+            elif prev.tag in CONTENT_TAGS or any(d.tag in CONTENT_TAGS for d in prev.iterdescendants()):
                 return True
         node = node.getparent()
     return False
@@ -507,8 +497,7 @@ def _visible_before(h, body, opts):
 
 def _is_ornament_block(el, opts):
     src = _sole_image(el)
-    return (isinstance(el.tag, str) and src is not None and not _text(el).strip()
-            and opts.is_ornament(src))
+    return isinstance(el.tag, str) and src is not None and not _text(el).strip() and opts.is_ornament(src)
 
 
 def style_headings(body, opts):
@@ -537,8 +526,7 @@ def keep_ornaments_with_text(body, opts):
         if not _is_ornament_block(el, opts):
             continue
         prev = el.getprevious()
-        if (prev is not None and prev.tag == P and _text(prev).strip()
-                and 'page-break-after' not in (prev.get('style') or '')):
+        if prev is not None and prev.tag == P and _text(prev).strip() and 'page-break-after' not in (prev.get('style') or ''):
             prev.set('style', KEEP_WITH_NEXT)
 
 
@@ -561,8 +549,7 @@ def clean_document(root, opts):
     body = next(root.iter(BODY), None)
     if body is None:
         return stats
-    containers = [body] + [d for d in body.iter(DIV)
-                           if any(c.tag == P for c in d)]
+    containers = [body] + [d for d in body.iter(DIV) if any(c.tag == P for c in d)]
     for c in containers:
         remove_blank_blocks(c, opts, stats)
     detect_headings(body, opts, stats)
@@ -580,7 +567,7 @@ def clean_document(root, opts):
 
 # --- book-wide detection helpers ----------------------------------------------
 
-_DASH = r'(?:—|(?<!-)-{2,3}(?!-))'      # em dash or an ASCII "--" stand-in
+_DASH = r'(?:—|(?<!-)-{2,3}(?!-))'  # em dash or an ASCII "--" stand-in
 
 
 def detect_dash_style(texts):
@@ -588,12 +575,12 @@ def detect_dash_style(texts):
     (a—b, the default and the usual US style). Counts "--" like an em dash."""
     tight = spaced = 0
     for t in texts:
-        tight += len(re.findall(r'(?<=\S)%s(?=\S)' % _DASH, t))
-        spaced += len(re.findall(r'(?<=\s)%s(?=\s)' % _DASH, t))
+        tight += len(re.findall(rf'(?<=\S){_DASH}(?=\S)', t))
+        spaced += len(re.findall(rf'(?<=\s){_DASH}(?=\s)', t))
     return 'spaced' if spaced > tight and spaced >= 5 else 'tight'
 
 
-HYPHEN_DASH_MIN = 5      # hyphens right before a quote mark that mean "dash"
+HYPHEN_DASH_MIN = 5  # hyphens right before a quote mark that mean "dash"
 
 
 def detect_hyphen_dash(texts):

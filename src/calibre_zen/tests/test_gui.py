@@ -137,7 +137,9 @@ class TestMainWindow(ZenTestCase):
                 self.assertIn(name, self.gui.iactions)
                 self.assertFalse(self.gui.iactions[name].qaction.icon().isNull(), 'no icon')
         menu = self.gui.iactions['Book Cleanup'].qaction.menu()
-        self.assertEqual([ac.text() for ac in menu.actions()], ['Clean selected books', 'Preview changes (modifies nothing)', '', 'Delete the originals of selected books'])
+        self.assertEqual(
+            [ac.text() for ac in menu.actions()], ['Clean selected books', 'Preview changes (modifies nothing)', '', 'Delete the originals of selected books']
+        )
 
     def test_book_cleanup_is_a_job_in_the_jobs_list(self):
         "A click starts one job, the window is not blocked, and the book changes when it ends."
@@ -146,7 +148,7 @@ class TestMainWindow(ZenTestCase):
         from calibre_zen.tests.test_books import make_epub
 
         api = self.gui.current_db.new_api
-        book_id = sorted(api.all_book_ids())[0]
+        book_id = min(api.all_book_ids())
         src = os.path.join(self.mkdtemp(), 'in.epub')
         make_epub(src)
         api.add_format(book_id, 'EPUB', src, run_hooks=False)
@@ -191,7 +193,9 @@ class TestMainWindow(ZenTestCase):
         known = list(self.gui.job_manager.jobs)  # the list is kept sorted, so the new job is not necessarily last
         call()
         new = []
-        self.assertTrue(wait_until(lambda: new.extend(j for j in self.gui.job_manager.jobs if j not in known) or new, timeout_ms=10000), 'the job never reached the list')
+        self.assertTrue(
+            wait_until(lambda: new.extend(j for j in self.gui.job_manager.jobs if j not in known) or new, timeout_ms=10000), 'the job never reached the list'
+        )
         job = new[0]
         self.assertTrue(wait_until(lambda: job.is_finished, timeout_ms=30000))
         self.assertFalse(job.failed, job.details)
@@ -255,7 +259,7 @@ class TestMainWindow(ZenTestCase):
         action = self.gui.iactions['Update On Device']
         self.assertFalse(action.qaction.icon().isNull())
         api = self.gui.current_db.new_api
-        book_id = sorted(api.all_book_ids())[0]
+        book_id = min(api.all_book_ids())
         edited = os.path.join(self.mkdtemp(), 'edited.epub')
         make_epub(edited)
         api.add_format(book_id, 'EPUB', edited, run_hooks=False)
@@ -312,7 +316,7 @@ class TestMainWindow(ZenTestCase):
         from calibre.devices.folder_device.driver import FOLDER_DEVICE
 
         action = self.gui.iactions['Update On Device']
-        self.gui.library_view.select_rows([sorted(self.gui.current_db.new_api.all_book_ids())[0]], using_ids=True)
+        self.gui.library_view.select_rows([min(self.gui.current_db.new_api.all_book_ids())], using_ids=True)
         manager = self.gui.device_manager
         with (
             mock.patch.object(manager, 'connected_device', FOLDER_DEVICE(self.mkdtemp())),
@@ -699,8 +703,9 @@ class TestMainWindow(ZenTestCase):
         self.assertFalse(panel.isVisible(), 'a second click puts it away')
 
     def test_the_new_job_arrow_comes_down_on_the_jobs_segment(self):
-        from calibre.gui2 import config
         from qt.core import QPoint
+
+        from calibre.gui2 import config
 
         pointer, segment = self.gui.jobs_pointer, self.gui.zen_status.jobs
         hidden = self.gui.jobs_button
@@ -708,7 +713,7 @@ class TestMainWindow(ZenTestCase):
         self.addCleanup(pointer.animation.stop)
         config.set('disable_animations', False)
         pointer.start()
-        self.assertIs(self.gui.jobs_button, hidden, 'calibre\'s own button is put back')
+        self.assertIs(self.gui.jobs_button, hidden, "calibre's own button is put back")
         tip = pointer.rect_at(1.0).center().x()
         left = segment.mapTo(self.gui, QPoint(0, 0)).x()
         self.assertTrue(left <= tip <= left + segment.width(), f'the arrow ends at x={tip}, the segment spans {left}..{left + segment.width()}')

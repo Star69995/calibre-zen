@@ -41,7 +41,7 @@ class TestSendFormats(ZenTestCase):
 
     def test_the_saved_order_is_untouched(self):
         dm = self.manager(Device())
-        dm.device
+        self.assertIs(dm.device, dm.connected_device)  # reading it is what adopts the order
         self.assertEqual(Device.settings().format_map, Device.ORDER)
 
     def test_a_device_is_adopted_once(self):

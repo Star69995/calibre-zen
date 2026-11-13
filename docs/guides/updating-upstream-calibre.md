@@ -104,7 +104,7 @@ Unpack into a short folder such as `C:\zt\b918`: a long `TARGETDIR` made `msiexe
 
 On a Windows machine one widget test, `test_widgets.TestToolbarOverflow.test_the_tray_is_a_surface_while_it_is_open`, may never return, on the previous release too, and takes the whole `./zen-test` run with it. Run the suite one module at a time with `timeout 600 ./zen-test <module>` (the module names are in `src/calibre_zen/tests/`) and compare module by module; the hung one still reports the 39 others.
 
-Some tests fail on Windows before any change (see CLAUDE.md), so judge the run against a baseline: run the same suite on the previous `zen` with the previous release's binary (a second worktree), keep the `FAIL:`/`ERROR:` lines of both logs, and compare them with `comm -13`. What is only in the merge's list is yours to fix. 9.17.0 had two, the audits above, and the 18 Windows failures were identical on both sides.
+The suite passes on Windows (9.18.0 ended with every module green), so a failure is the merge's. If one appears that you cannot explain, run the same module on the previous `zen` with the previous release's binary (a second worktree) and compare the `FAIL:`/`ERROR:` lines with `comm -13`. What is only in the merge's list is yours to fix; 9.17.0 and 9.18.0 each had the audits above. A test that times out only while the machine is busy (`test_host`'s auto-add did once) is run again alone before it is called a failure.
 
 Run the lint and format checks with the Ruff version pinned in `.github/workflows/zen-ci.yml`. At the time of this guide, it is 0.16.8:
 
@@ -119,7 +119,7 @@ Upstream rewrites its Ruff configuration in `pyproject.toml` from time to time, 
 uvx ruff@0.16.8 check --fix src/calibre_zen packaging .calibre-zen scripts
 ```
 
-`ruff format --check` on `src/calibre_zen/i18n.py` already failed before 9.17.0 (it wants Python 3.14's unparenthesised `except A, B:`); leave it unless you are changing that file.
+Both checks pass on the fork's own paths as of 9.18.0 (`ruff format src/calibre_zen packaging` was run once over the whole overlay), so any finding after a merge is new. Upstream's own files are never reformatted.
 
 9.18.0 turned on the `ANN` (type annotation) rules for the whole tree, 3,000 findings in the fork's paths. They are switched off for those paths in `pyproject.toml` (a row in the BUILDING.md table) rather than annotating the fork's code; a new release may add other rules, so compare the finding list with the previous `zen` under the same ruff and fix only what is new. It also made `test_tray`'s check of `run_gui`'s signature fail, because upstream annotated it: the test now takes an optional return annotation.
 

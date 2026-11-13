@@ -37,7 +37,7 @@ from __future__ import annotations
 
 from typing import NamedTuple
 
-from qt.core import QCheckBox, QFrame, QHBoxLayout, QLabel, QLineEdit, QPushButton, QScrollArea, QToolButton, QVBoxLayout, QWidget, Qt
+from qt.core import QCheckBox, QFrame, QHBoxLayout, QLabel, QLineEdit, QPushButton, QScrollArea, Qt, QToolButton, QVBoxLayout, QWidget
 
 from calibre.utils.icu import primary_sort_key
 from calibre_zen import popovers

@@ -39,7 +39,9 @@ class TestPlan(ZenTestCase):
 
         plan = make_plan([main, card, None], [1, 2, 3, 4], lambda i: have[i])
 
-        self.assertEqual([(i.book_id, i.card, i.fmt) for i in plan.items], [(1, 0, 'EPUB'), (3, 0, 'EPUB'), (1, 1, 'EPUB')], 'a book on two places is replaced in both')
+        self.assertEqual(
+            [(i.book_id, i.card, i.fmt) for i in plan.items], [(1, 0, 'EPUB'), (3, 0, 'EPUB'), (1, 1, 'EPUB')], 'a book on two places is replaced in both'
+        )
         self.assertEqual([(i.book_id, i.fmt) for i in plan.no_format], [(2, 'AZW3')], 'the device has azw3, the library only an epub: left alone')
         self.assertEqual(plan.off_device, [4])
 

@@ -59,7 +59,6 @@ class TestIdentity(unittest.TestCase):
         "Installing beside calibre depends on these never being calibre's."
         from calibre.constants import __appname__, ismacos
         from calibre.utils.ipc import gui_socket_address, viewer_socket_address
-
         from calibre_zen.tests.base import endpoint_name
 
         for addr in (gui_socket_address(), viewer_socket_address()):
