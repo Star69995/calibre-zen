@@ -162,10 +162,11 @@ lipo -info "$C/MacOS/$APPNAME" | sed 's/^/    /'
 #             app for a file type by id, so with calibre's ids it may open
 #             calibre's own reader whenever calibre is installed as well
 #
-# Exactly the three calibre 9.x ships, so a new nested app upstream fails here
+# Exactly the three calibre 9.x ships (listed in byte order: macOS's own sort
+# is locale-aware and puts them the other way round), so a new nested app upstream fails here
 # instead of shipping as calibre's.
 say "replacing the nested apps' stubs"
-stubs=$(cd "$C" && find . -path '*.app/Contents/MacOS/*-placeholder-for-codesigning' | sort)
+stubs=$(cd "$C" && find . -path '*.app/Contents/MacOS/*-placeholder-for-codesigning' | LC_ALL=C sort)
 expected="./ebook-viewer.app/Contents/MacOS/ebook-viewer-placeholder-for-codesigning
 ./ebook-viewer.app/Contents/ebook-edit.app/Contents/MacOS/ebook-edit-placeholder-for-codesigning
 ./ebook-viewer.app/Contents/ebook-edit.app/Contents/headless.app/Contents/MacOS/calibre-parallel-placeholder-for-codesigning"
