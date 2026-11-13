@@ -328,11 +328,13 @@ case "$got" in
 *) die "the worker app runs calibre's own Python: $got" ;;
 esac
 for exe in "$V/MacOS/ebook-viewer-placeholder-for-codesigning" "$E/MacOS/ebook-edit-placeholder-for-codesigning"; do
-    got=$(script -q /dev/null "${NESTED_ENV[@]}" "$exe" --version </dev/null 2>&1 | tr -d '\r') \
-        || die "$(basename "$exe") did not start: $got"
+    # script(1) gives the program a terminal, and on a closed stdin it ends the
+    # program with a status of its own once the version line is out, so the
+    # status is not the test: the version line is.
+    got=$(script -q /dev/null "${NESTED_ENV[@]}" "$exe" --version </dev/null 2>&1 | tr -d '\r') || true
     case "$got" in
     *"($APPNAME "*) echo "    $(printf '%s\n' "$got" | grep -o "[a-z-]* ($APPNAME [^)]*)")" ;;
-    *) die "$(basename "$exe") runs calibre's own Python: $got" ;;
+    *) die "$(basename "$exe") did not print the fork's version line (it did not start, or it runs calibre's own Python): $got" ;;
     esac
 done
 
