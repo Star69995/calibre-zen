@@ -1021,7 +1021,8 @@ class TestKeepSharing(TrayTestCase):
             os.environ.pop(k.GUI_CMD_ENV, None)
             env = handoff.tray_env()
             self.assertEqual(env[HELLO_ENV], '1')
-            self.assertEqual(json.loads(env[k.GUI_CMD_ENV]), [exe, '-e', '/repo/.calibre-zen/bootstrap.py', '--'])
+            # The script is made absolute, which on Windows puts a drive and backslashes on it.
+            self.assertEqual(json.loads(env[k.GUI_CMD_ENV]), [exe, '-e', os.path.abspath(argv[0]), '--'])
             # Opened from a tray already: keep the command it was given.
             os.environ[k.GUI_CMD_ENV] = '["/bin/given"]'
             self.assertEqual(handoff.tray_env()[k.GUI_CMD_ENV], '["/bin/given"]')

@@ -69,6 +69,17 @@ def work_dir() -> str:
     return os.environ.get('CALIBRE_ZEN_TEST_DIR') or tempfile.gettempdir()
 
 
+def endpoint_name() -> str:
+    """
+    The app's name as an IPC endpoint carries it. A Windows pipe is spelled
+    like a class name, `CalibreZenMarginGUI`, as calibre/utils/ipc names it;
+    elsewhere the name is used as it is.
+    """
+    from calibre.constants import __appname__, iswindows
+
+    return __appname__.title().replace('-', '') if iswindows else __appname__
+
+
 def make_library(path: str, books=BOOKS) -> str:
     """
     A new library at `path` holding `books`, metadata only. Returns the path.

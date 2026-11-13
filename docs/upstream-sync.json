@@ -1,11 +1,14 @@
 {
-  "_comment": "The newest release of each source this fork has pulled from. Written by the update-upstream-calibre skill in the same commit as the pull, so it matches what zen holds. For calibre, 'pulled' is merged and must equal packaging/upstream.json 'version'. For Calibre Zen nothing is merged, only cherry-picked: 'reviewed' is the origin/zen commit whose changes were read (start the next read after it) and 'taken' lists the commits cherry-picked. Its web app and website are never taken.",
+  "_comment": "The newest release of each source this fork has pulled from. Written by the update-upstream-calibre skill in the same commit as the pull, so it matches what zen holds. For calibre, 'pulled' is merged and must equal packaging/upstream.json 'version'. For Calibre Zen nothing is merged, only cherry-picked: 'reviewed' is the origin/zen commit whose changes were read (start the next read after it) and 'taken' lists the commits cherry-picked. Its web app and website are never taken. 'picked' (calibre) lists upstream commits cherry-picked after the pulled tag; the identity test accepts the files they touch.",
   "calibre": {
     "repo": "kovidgoyal/calibre",
     "remote": "upstream",
     "pulled": "v9.18.0",
     "commit": "a995c609b9899a8a5d8edbbceefec4566729841e",
-    "date": "2026-11-06"
+    "date": "2026-11-06",
+    "picked": [
+      "5501f3688532883f8df57741780f04e4dc41fa1c"
+    ]
   },
   "calibre_zen": {
     "repo": "purplecandy/calibre-zen",

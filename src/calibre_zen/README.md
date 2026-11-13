@@ -176,6 +176,7 @@ locales/<lang>.po     translations of the strings only this fork has; `he` ships
 toolbars.py           one main toolbar: the device's bar is the main one plus what a device adds -- see "One main toolbar"
 device_columns.py     more columns in the list of books on a device: Format, Folder and Path from each book's file name; Series, Tags, Publisher, Published, Rating and Languages from its metadata, hidden until shown
 busy.py               Preferences opens while jobs run; only a clashing save waits -- see "Settings while jobs run"
+prefs_overview.py     Preferences opens on its overview whole: the window grows by what the scroll bar says is missing, never past the screen
 library_dialog.py     the Choose library dialog as three choices -- see "Choose library"
 send_default.py       what the Send to device button does, chosen in a window -- see "Send to device's default"
 send_formats.py       PDF last in a device's format order, as the main window reads it -- see "Send to device's default"

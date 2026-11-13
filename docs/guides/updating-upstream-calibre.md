@@ -18,7 +18,7 @@ cd "../calibre-upstream-$new_version"
 git status --short
 ```
 
-Merge the **release tag**, never upstream `master`. The source must match the binary that packaging downloads.
+Merge the **release tag**, never upstream `master`. The source must match the binary that packaging downloads. The one exception is a single fix the maintainer wants before the next release: cherry-pick it with `-x` and list its SHA under `calibre.picked` in `docs/upstream-sync.json` (the identity test then accepts the files it touches); the next release that contains it empties the list.
 
 ```sh
 git merge --no-commit --no-ff "v$new_version"

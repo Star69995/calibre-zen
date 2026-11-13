@@ -337,10 +337,8 @@ class TestMainWindow(ZenTestCase):
 
     def test_the_test_window_leaves_a_running_window_s_socket_alone(self):
         "tests/main.py isolate_ipc: a run beside an open calibre-zen must not take its socket."
-        from calibre.constants import __appname__
-
         address = self.gui.listener.address
-        self.assertIn(__appname__, address)
+        self.assertIn(base.endpoint_name(), address)
         if address.startswith('\0'):
             self.assertTrue(address[1:].startswith('zentest'), address)
         elif not address.startswith('\\\\'):
@@ -1028,6 +1026,15 @@ class TestMainWindow(ZenTestCase):
         self.assertEqual(tweaks[clicks.TWEAK], clicks.OURS)
         self.assertEqual(parse_python_tweaks(default_tweaks_raw())[clicks.TWEAK], clicks.OURS)
         self.assertIn(f'# Default: {clicks.OURS}.', default_tweaks_raw())
+
+    def test_double_click_default_is_rewritten_with_either_line_ending(self):
+        from calibre_zen.centre import clicks
+
+        for eol in ('\n', '\r\n'):
+            with self.subTest(eol=repr(eol)):
+                raw = f"# Default: {clicks.UPSTREAM}.{eol}# Example: {clicks.TWEAK} = 'do_nothing'{eol}{clicks.TWEAK} = '{clicks.UPSTREAM}'{eol}"
+                want = f"# Default: {clicks.OURS}.{eol}# Example: {clicks.TWEAK} = 'do_nothing'{eol}{clicks.TWEAK} = '{clicks.OURS}'{eol}"
+                self.assertEqual(clicks.rewrite(raw), want)
 
     def test_double_click_on_a_cover_still_reads(self):
         "The grid reads the same tweak; with our default a cover still opens the book."

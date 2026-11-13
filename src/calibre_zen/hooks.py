@@ -155,6 +155,10 @@ What is patched, and why it is patched rather than edited:
         back, with the reason and the jobs named, only for a page that would
         clash with them. CALIBRE_ZEN_BUSY=0.
 
+    Preferences.showEvent
+        Wrapped -- see prefs_overview.py. The dialog opens on its overview with
+        no scroll bar, growing by what is missing and never past the screen.
+
     look_feel.ConfigWidget.genesis
         Wrapped -- see lookfeel.py. Preferences -> Look & feel opens on a notice
         that these settings pull against this app's look, with a button that
@@ -230,6 +234,7 @@ from calibre_zen import (
     library_dialog,
     lookfeel,
     onboarding,
+    prefs_overview,
     rating,
     reader,
     report,
@@ -613,6 +618,7 @@ def _patch_palette_manager(pm) -> None:
         guard.run_install('onboarding', onboarding.install)
         guard.run_install('lookfeel', lookfeel.install)
         guard.run_install('busy', busy.install)
+        guard.run_install('prefs-overview', prefs_overview.install)
         guard.run_install('keep-sharing', handoff.install)
         guard.run_install('books', books.install)
         if not self.using_calibre_style:
