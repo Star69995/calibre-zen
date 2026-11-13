@@ -436,6 +436,7 @@ All marked `# calibre-zen:` so a merge conflict is obvious.
 | `pyproject.toml` | ruff's `ANN` rules (upstream's typing, on for the whole tree since 9.18) are off for the fork's own paths |
 | `src/calibre/gui2/__init__.py` | the overlay's entry point after `PaletteManager` |
 | `setup/install.py` | also copies `.qss`, `.svg`, `.ttf` out of `src/` |
+| `setup/__init__.py` | `__appname__` is fixed to `calibre`: setup/ reads it as the name of the source tree (package directory, translation catalogue, entry points), which the fork's `__appname__` is not. Without it `setup.py bootstrap` finds no translations and calibre's own `CI` workflow stops there |
 | `bypy/macos/__main__.py` | bundle identity, for the day a real build is wanted |
 
 ## If a real build is ever needed

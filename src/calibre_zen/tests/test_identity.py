@@ -114,6 +114,7 @@ class TestIdentity(unittest.TestCase):
         allowed = {
             'src/calibre/gui2/__init__.py',  # the hook
             'setup/install.py',  # also copy .qss/.svg/.ttf
+            'setup/__init__.py',  # the source tree's name stays 'calibre', so calibre's own CI can build it
             # fork identity, every hunk marked and listed in BUILDING.md
             'src/calibre/constants.py',
             'src/calibre/utils/ipc/__init__.py',

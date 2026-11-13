@@ -153,7 +153,10 @@ def initialize_constants():
         src = f.read().decode('utf-8')
     nv = re.search(r'numeric_version\s+=\s+\((\d+), (\d+), (\d+)\)', src)
     __version__ = '.'.join((nv.group(1), nv.group(2), nv.group(3)))
-    __appname__ = re.search(r'__appname__\s+=\s+(u{0,1})[\'"]([^\'"]+)[\'"]', src).group(2)
+    # calibre-zen: setup/ drives calibre's own source tree, where the package directory, the
+    # translation catalogue and the entry points are all named 'calibre'. The fork's
+    # __appname__ is its install identity (BUILDING.md), not the name of that tree.
+    __appname__ = 'calibre'
     with open(os.path.join(SRC, 'calibre/linux.py'), 'rb') as sf:
         epsrc = re.compile(r'entry_points = (\{.*?\})', re.DOTALL).search(sf.read().decode('utf-8')).group(1)
     entry_points = eval(epsrc, {'__appname__': __appname__})
